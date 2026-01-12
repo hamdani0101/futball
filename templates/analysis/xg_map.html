@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}xG Map - {{ season.competition.name }} {{ season.name }}{% endblock %}
+{% block extra_css %}
+<style>
+  h1 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<h1>
+    xG Map - {{ season.competition.name }} {{ season.name }}
+</h1>
+<canvas id="xgScatter" height="120"></canvas>
+{% endblock %}
+
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+const teams = {{ teams|safe }};
+const xgf = {{ xgf|safe }};
+const xga = {{ xga|safe }};
+
+const data = teams.map((team, i) => ({
+  label: team,
+  data: [{ x: xgf[i], y: xga[i] }]
+}));
+
+const ctx = document.getElementById("xgScatter").getContext("2d");
+
+new Chart(ctx, {
+  type: "scatter",
+  data: {
+    datasets: data
+  },
+  options: {
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: ctx =>
+            ctx.dataset.label +
+            ": xGF=" + ctx.raw.x +
+            ", xGA=" + ctx.raw.y
+        }
+      }
+    },
+    scales: {
+      x: {
+        title: { display: true, text: "xG For (Attacking Strength)" }
+      },
+      y: {
+        title: { display: true, text: "xG Against (Defensive Weakness)" },
+        reverse: true
+      }
+    }
+  }
+});
+</script>
+{% endblock %}
