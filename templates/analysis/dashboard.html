@@ -6,15 +6,27 @@
 <h1>League Dashboard</h1>
 
 <form method="get" style="margin-bottom:24px;">
-  <label for="season"><strong>Season:</strong></label>
-  <select name="season" id="season" onchange="this.form.submit()">
-    {% for s in seasons %}
-      <option value="{{ s.id }}"
-        {% if s.id == selected_season.id %}selected{% endif %}>
-        {{ s.competition.name }} {{ s.name }}
+  <label for="competition"><strong>Competition:</strong></label>
+  <select name="competition" id="competition">
+    {% for c in competitions %}
+      <option value="{{ c.id }}"
+        {% if c.id == selected_season.competition.id %}selected{% endif %}>
+        {{ c.name }}
       </option>
     {% endfor %}
   </select>
+  <label for="season"><strong>Season:</strong></label>
+  <select name="season" id="season">
+    {% for s in seasons %}
+      {% if s.competition.id == selected_season.competition.id %}
+      <option value="{{ s.id }}"
+        {% if s.id == selected_season.id %}selected{% endif %}>
+        {{ s.name }}
+      </option>
+      {% endif %}
+    {% endfor %}
+  </select>
+  <button type="submit">Filter</button>
 </form>
 
 
@@ -82,12 +94,6 @@ table {
 th,td {
   padding:8px;
   border-bottom:1px solid #e5e7eb;
-}
-select {
-  padding:6px 10px;
-  border-radius:6px;
-  border:1px solid #cbd5f5;
-  background:#fff;
 }
 
 </style>

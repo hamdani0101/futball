@@ -68,11 +68,10 @@ class Command(BaseCommand):
                         "home_score": int(row["FTHG"]),
                         "away_score": int(row["FTAG"]),
 
-                        # 🔥 INI KUNCINYA
-                        "home_shots": int(row.get("HS", 0)),
-                        "away_shots": int(row.get("AS", 0)),
-                        "home_shots_on_target": int(row.get("HST", 0)),
-                        "away_shots_on_target": int(row.get("AST", 0)),
+                        "home_shots": int(row.get("HS", 0) or 0),
+                        "away_shots": int(row.get("AS", 0) or 0),
+                        "home_shots_on_target": int(row.get("HST", 0) or 0),
+                        "away_shots_on_target": int(row.get("AST", 0) or 0),
                     },
                 )
 

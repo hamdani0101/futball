@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}League Table - {{ season.competition.name }} {{ season.name }}{% endblock %}
+{% block title %}League Table - {{ selected_season.competition.name }} {{ selected_season.name }}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -51,8 +51,9 @@
   }
 
   /* Qualification zones */
-  tr.ucl { border-left: 5px solid #22c55e; }
-  tr.europa { border-left: 5px solid #3b82f6; }
+  tr.ucl { border-left: 5px solid #3b82f6; }
+  tr.europa { border-left: 5px solid #f77a06ff; }
+  tr.conference-league { border-left: 5px solid #09ff00ff; }
   tr.relegation { border-left: 5px solid #ef4444; }
 
   .legend {
@@ -79,11 +80,37 @@
   .green { background: #22c55e; }
   .blue { background: #3b82f6; }
   .red { background: #ef4444; }
+  .orange { background: #f77a06ff; }
 </style>
 {% endblock %}
 
 {% block content %}
-<h1>League Table {{ season.competition.name }} {{ season.name }}</h1>
+<h1>Klasemen</h1>
+
+<form method="get" style="margin-bottom:24px;">
+  <label for="competition"><strong>Competition:</strong></label>
+  <select name="competition" id="competition">
+    {% for c in competitions %}
+      <option value="{{ c.id }}"
+        {% if c.id == selected_season.competition.id %}selected{% endif %}>
+        {{ c.name }}
+      </option>
+    {% endfor %}
+  </select>
+  <label for="season"><strong>Season:</strong></label>
+  <select name="season" id="season">
+    {% for s in seasons %}
+      {% if s.competition.id == selected_season.competition.id %}
+      <option value="{{ s.id }}"
+        {% if s.id == selected_season.id %}selected{% endif %}>
+        {{ s.name }}
+      </option>
+      {% endif %}
+    {% endfor %}
+  </select>
+  <button type="submit">Filter</button>
+</form>
+<h1>League Table {{ selected_season.competition.name }} {{ selected_season.name }}</h1>
 <table>
   <thead>
     <tr>
@@ -99,13 +126,17 @@
       <th>Pts</th>
     </tr>
   </thead>
-
   <tbody>
     {% for row in table %}
     <tr class="
-      {% if row.rank <= 4 %}ucl
-      {% elif row.rank <= 6 %}europa
-      {% elif row.rank >= 18 %}relegation
+      {% if row.rank <= champions_league_cutoff %}
+        ucl
+      {% elif row.rank <= europa_league_cutoff %}
+        europa
+      {% elif row.rank <= conference_league_cutoff %}
+        conference-league
+      {% elif row.rank > relegation_cutoff %}
+        relegation
       {% endif %}
     ">
       <td>{{ row.rank }}</td>
@@ -124,8 +155,9 @@
 </table>
 
 <div class="legend">
-  <span><span class="dot green"></span> UEFA Champions League</span>
-  <span><span class="dot blue"></span> Europa League</span>
+  <span><span class="dot blue"></span> UEFA Champions League</span>
+  <span><span class="dot orange"></span> Europa League</span>
+  <span><span class="dot green"></span> Europa Conference League</span>
   <span><span class="dot red"></span> Relegation</span>
 </div>
 {% endblock %}
