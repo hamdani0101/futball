@@ -2,10 +2,10 @@ import pprint
 from django.shortcuts import render
 from django.db.models import Sum
 from django.core import serializers
-from analysis.models import Season
-from analysis.services.league_table import build_league_table
-from analysis.services.xg import build_xg_table
-from analysis.models import Season, Competition, Match
+from futball.models import Season
+from futball.services.league_table import build_league_table
+from futball.services.xg import build_xg_table
+from futball.models import Season, Competition, Match
 
 
 def league_table_view(request):
@@ -87,7 +87,7 @@ def league_table_view(request):
     
     return render(
         request,
-        "analysis/league_table.html",
+        "futball/league_table.html",
         {
             "competitions": competitions,
             "seasons": seasons,
@@ -138,7 +138,7 @@ def xg_map_view(request):
 
     return render(
         request,
-        "analysis/xg_map.html",
+        "futball/xg_map.html",
         {
             "competitions": competitions,
             "seasons": seasons,
@@ -203,7 +203,7 @@ def dashboard_view(request):
 
     return render(
         request,
-        "analysis/dashboard.html",
+        "futball/dashboard.html",
         {
             "competitions": competitions,
             "seasons": seasons,

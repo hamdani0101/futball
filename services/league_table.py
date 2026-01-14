@@ -1,5 +1,5 @@
 from collections import defaultdict
-from analysis.models import Match
+from futball.models import Match
 
 
 def build_league_table(season):

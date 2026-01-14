@@ -1,0 +1,145 @@
+ body {
+    margin: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f5f7fa;
+    color: #0f172a;
+}
+
+/* ===== NAVBAR ===== */
+.navbar {
+    background: #0f172a;
+    color: #ffffff;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.navbar .brand {
+    width: auto;
+    height: 100%;
+}
+
+.navbar .brand a {
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: 0.03em;
+}
+
+.navbar ul {
+    list-style: none;
+    display: flex;
+    gap: 18px;
+    margin: 0;
+    padding: 0;
+}
+
+.navbar a {
+    color: #e5e7eb;
+    text-decoration: none;
+    font-size: 14px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    transition: background 0.2s ease;
+}
+
+.navbar a:hover {
+    background: #1e293b;
+}
+
+.navbar a.active {
+    background: #2563eb;
+    color: #ffffff;
+}
+
+/* ===== PAGE CONTENT ===== */
+.container {
+    display: grid;
+    grid-template-columns: auto auto auto;
+    column-gap: 40px;
+    padding: 24px;
+}
+
+/* ===== FOOTER ===== */
+footer {
+    margin-top: 40px;
+    padding: 16px;
+    text-align: center;
+    font-size: 12px;
+    color: #64748b;
+}
+
+.content {
+    width: 100%;
+    padding: 16px;
+}
+
+.news-section {
+    width: 100%;
+    padding: 16px;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.news-title {
+    font-size: 18px;
+    margin-bottom: 12px;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 6px;
+}
+
+.news-item {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.news-thumbnail {
+    margin-bottom: 8px;
+    width: 100%;
+}
+
+.news-thumbnail img {
+    width: 100%;
+    border-radius: 6px;
+}
+
+.news-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.news-headline {
+    font-size: 16px;
+    margin: 0 0 6px 0;
+}
+
+.news-summary {
+    font-size: 14px;
+    color: #475569;
+    margin-bottom: 6px;
+}
+
+.news-date {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-bottom: 6px;
+}
+
+.news-link a {
+    font-size: 14px;
+    color: #2563eb;
+    text-decoration: none;
+}
+
+select {
+    padding:6px 10px;
+    border-radius:6px;
+    border:1px solid #cbd5f5;
+    background:#fff;
+}

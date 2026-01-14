@@ -1,5 +1,6 @@
 from django.apps import AppConfig
 
 
-class AnalysisConfig(AppConfig):
-    name = 'analysis'
+class FutballConfig(AppConfig):
+    name = 'futball'
+    verbose_name = "Futball Analysis"

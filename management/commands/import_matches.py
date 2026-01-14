@@ -1,7 +1,7 @@
 import csv
 from datetime import datetime
 from django.core.management.base import BaseCommand
-from analysis.models import Competition, Season, Team, Match
+from futball.models import Competition, Season, Team, Match
 
 
 class Command(BaseCommand):

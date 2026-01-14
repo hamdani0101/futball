@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('analysis', '0002_alter_match_match_id'),
+        ('futball', '0002_alter_match_match_id'),
     ]
 
     operations = [

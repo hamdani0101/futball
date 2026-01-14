@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h1>League Dashboard</h1>
+
+<form method="get" style="margin-bottom:24px;">
+  <label for="competition"><strong>Competition:</strong></label>
+  <select name="competition" id="competition">
+    {% for c in competitions %}
+      <option value="{{ c.id }}"
+        {% if c.id == selected_season.competition.id %}selected{% endif %}>
+        {{ c.name }}
+      </option>
+    {% endfor %}
+  </select>
+  <label for="season"><strong>Season:</strong></label>
+  <select name="season" id="season">
+    {% for s in seasons %}
+      {% if s.competition.id == selected_season.competition.id %}
+      <option value="{{ s.id }}"
+        {% if s.id == selected_season.id %}selected{% endif %}>
+        {{ s.name }}
+      </option>
+      {% endif %}
+    {% endfor %}
+  </select>
+  <button type="submit">Filter</button>
+</form>
+
+
+<!-- KPI CARDS -->
+<div style="display:grid; grid-template-columns: repeat(4,1fr); gap:16px; margin-bottom:24px;">
+  <div class="card">Matches<br><strong>{{ total_matches }}</strong></div>
+  <div class="card">Goals<br><strong>{{ total_goals }}</strong></div>
+  <div class="card">Avg Goals / Match<br><strong>{{ avg_goals }}</strong></div>
+  <div class="card">Leader<br><strong>{{ leader }}</strong></div>
+</div>
+
+<!-- INSIGHT -->
+<div style="display:grid; grid-template-columns: repeat(2,1fr); gap:16px; margin-bottom:24px;">
+  <div class="card">🔥 Best Attack (xG)<br><strong>{{ top_attack }}</strong></div>
+  <div class="card">🛡️ Best Defence (xGA)<br><strong>{{ best_defence }}</strong></div>
+</div>
+
+<!-- TABLES -->
+<div style="display:grid; grid-template-columns: 2fr 1fr; gap:24px;">
+  <div>
+    <h3>Top 5 Teams</h3>
+    <table>
+      <tr><th>#</th><th>Team</th><th>Pts</th></tr>
+      {% for team, stats in top_5 %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ team }}</td>
+        <td>{{ stats.points }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <div>
+    <h3>Relegation Zone</h3>
+    <table>
+      <tr><th>#</th><th>Team</th><th>Pts</th></tr>
+      {% for team, stats in bottom_3 %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ team }}</td>
+        <td>{{ stats.points }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+</div>
+
+<style>
+.card {
+  background:#fff;
+  padding:16px;
+  border-radius:10px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
+  text-align:center;
+  font-size:14px;
+}
+.card strong {
+  font-size:22px;
+}
+table {
+  width:100%;
+  border-collapse:collapse;
+}
+th,td {
+  padding:8px;
+  border-bottom:1px solid #e5e7eb;
+}
+
+</style>
+{% endblock %}

@@ -32,7 +32,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=50)),
-                ('competition', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='analysis.competition')),
+                ('competition', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='futball.competition')),
             ],
         ),
         migrations.CreateModel(
@@ -43,9 +43,9 @@ class Migration(migrations.Migration):
                 ('match_date', models.DateField()),
                 ('home_score', models.IntegerField(default=0)),
                 ('away_score', models.IntegerField(default=0)),
-                ('season', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='analysis.season')),
-                ('away_team', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='away_matches', to='analysis.team')),
-                ('home_team', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='home_matches', to='analysis.team')),
+                ('season', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='futball.season')),
+                ('away_team', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='away_matches', to='futball.team')),
+                ('home_team', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='home_matches', to='futball.team')),
             ],
         ),
         migrations.CreateModel(
@@ -58,8 +58,8 @@ class Migration(migrations.Migration):
                 ('y', models.FloatField()),
                 ('xg', models.FloatField()),
                 ('outcome', models.CharField(max_length=50)),
-                ('match', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='analysis.match')),
-                ('team', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='analysis.team')),
+                ('match', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='futball.match')),
+                ('team', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='futball.team')),
             ],
         ),
     ]
