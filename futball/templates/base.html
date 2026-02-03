@@ -9,7 +9,9 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- Compiled and minified CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Slab:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'futball/css/futball.css' %}">
 
   {% block extra_css %}{% endblock %}
@@ -18,41 +20,27 @@
 <body>
 
   <!-- NAVBAR -->
-  <nav class="navbar">
-    <div class="brand">
-      <a href="{% url 'dashboard' %}">⚽ FutBall</a>
+  <nav>
+    <div class="nav-wrapper bg-primary">
+      <a href="{% url 'dashboard' %}" class="brand-logo">⚽ FutBall</a>
+      <ul id="nav-mobile" class="right hide-on-med-and-down">
+        <li class="{% if request.path == '/futball/' %}active{% endif %}"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        <li class="{% if '/futball/klasemen/' in request.path %}active{% endif %}"><a href="{% url 'league-table' %}">Klasemen</a></li>
+        <li class="{% if '/futball/xg/' in request.path %}active{% endif %}"><a href="{% url 'xg-map' %}">xG Map</a></li>
+      </ul>
     </div>
-
-    <ul>
-      <li>
-        <a href="{% url 'dashboard' %}"
-          class="{% if request.path == '/futball/' %}active{% endif %}">
-          Dashboard
-        </a>
-      </li>
-      <li>
-        <a href="{% url 'league-table' %}"
-           class="{% if '/futball/table/' in request.path %}active{% endif %}">
-          Klasemen
-        </a>
-      </li>
-      <li>
-        <a href="{% url 'xg-map' %}"
-           class="{% if '/futball/xg/' in request.path %}active{% endif %}">
-          xG Map
-        </a>
-      </li>
-    </ul>
   </nav>
 
   <!-- CONTENT -->
   <div class="row">
-    <div class="col s9">
+    <div class="col s12 l9">
       <div class="content">
+        <h2>{% block c_title %}{% endblock %}</h2>
+        
         {% block content %}{% endblock %}
       </div>    
     </div>
-    <div class="col s3">
+    <div class="col s12 l3">
       <div class="news-section">
         <h2 class="news-title">Football News</h2>
           {% for i in 5|times %}
@@ -66,7 +54,7 @@
                   <p>This is a summary of news item {{ i }}. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
                 </div>
                 <div class="news-date">
-                  <small>Published on 2024-06-0{{ i }}</small>
+                  <small>Published on 2026-06-0{{ i }}</small>
                 </div>
                 <div class="news-link">
                   <a href="#">Read more</a>
@@ -87,6 +75,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
   <script src="{% static 'futball/js/futball.js' %}"></script>
   <script>
+    M.AutoInit();
+    
     const competitionSelect = document.getElementById("competition");
     if (competitionSelect) {
         //get data season per competition
@@ -96,6 +86,11 @@
         competitionSelect.addEventListener("change", () => {
           const selectedCompetitionId = competitionSelect.value;
           const seasonSelect = document.getElementById("season");
+          
+          //delete select wrapper
+          const instance = M.FormSelect.getInstance(seasonSelect);
+          if (instance) instance.destroy();
+
           seasonSelect.innerHTML = "";
           seasonsData.forEach(s => {
             if (s.fields.competition == selectedCompetitionId) {
@@ -105,6 +100,9 @@
               seasonSelect.appendChild(option);
             }
           });
+
+          //re-initialize
+          M.FormSelect.init(seasonSelect);
       });
     }
   </script>

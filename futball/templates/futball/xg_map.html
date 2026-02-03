@@ -1,54 +1,53 @@
 {% extends "base.html" %}
 
 {% block title %}xG Map - {{ selected_season.competition.name }} {{ selected_season.name }}{% endblock %}
-{% block extra_css %}
-<style>
-  .xg-map-container {
-    width: 100%;
-    max-width: 1100px;
-    margin: auto;
-    background: #ffffff;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-    border-radius: 10px;
-    padding: 20px;
-  }
-</style>
-{% endblock %}
+{% block extra_css %}{% endblock %}
 
+{% block c_title %}XG Map{% endblock %}
 
 {% block content %}
-<h1>XG Map</h1>
+<div class="competition-search">
+  <form method="get" class="search-form">
+    <div class="input-field field">
+      <select name="competition" id="competition">
+        {% for c in competitions %}
+          <option value="{{ c.id }}"
+          {% if c.id == selected_season.competition.id %}selected{% endif %}>
+            {{ c.name }}
+          </option>
+        {% endfor %}
+      </select>
+      <label>Competition:</label>
+    </div>
+    <div class="input-field field">
+      <select name="season" id="season">
+        {% for s in seasons %}
+          {% if s.competition.id == selected_season.competition.id %}
+            <option value="{{ s.id }}"
+            {% if s.id == selected_season.id %}selected{% endif %}>
+              {{ s.name }}
+            </option>
+          {% endif %}
+        {% endfor %}
+      </select>
+      <label>Season:</label>
+    </div>
+    <button class="btn waves-effect waves-light" type="submit" >Search
+      <i class="material-icons right">search</i>
+    </button> 
+  </form>
+</div>
 
-<form method="get" style="margin-bottom:24px;">
-  <label for="competition"><strong>Competition:</strong></label>
-  <select name="competition" id="competition">
-    {% for c in competitions %}
-      <option value="{{ c.id }}"
-        {% if c.id == selected_season.competition.id %}selected{% endif %}>
-        {{ c.name }}
-      </option>
-    {% endfor %}
-  </select>
-  <label for="season"><strong>Season:</strong></label>
-  <select name="season" id="season">
-    {% for s in seasons %}
-      {% if s.competition.id == selected_season.competition.id %}
-      <option value="{{ s.id }}"
-        {% if s.id == selected_season.id %}selected{% endif %}>
-        {{ s.name }}
-      </option>
-      {% endif %}
-    {% endfor %}
-  </select>
-  <button type="submit">Filter</button>
-</form>
-
-<h1>
-    xG Map - {{ selected_season.competition.name }} {{ selected_season.name }}
-</h1>
-<div class="xg-map-container">
-  <div style="width: 100%;">
-    <canvas id="xgScatter" height="100"></canvas>
+<div class="row">
+  <div class="col s12">
+    <h5>
+        {{ selected_season.competition.name }} {{ selected_season.name }}
+    </h5>
+    <div class="chart-shell">
+      <div class="chart-frame">
+        <canvas id="xgScatter" height="100"></canvas>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}
