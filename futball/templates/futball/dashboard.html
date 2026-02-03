@@ -10,16 +10,10 @@
       <div class="input-field field">
         <select name="competition" id="competition">
           {% for c in competitions %}
-          <option
-            value="{{ c.id }}"
-            {%
-            if
-            c.id=""
-            ="selected_season.competition.id"
-            %}selected{%
-            endif
-            %}
-          >
+            <option value="{{ c.id }}"
+            {% if c.id == selected_season.competition.id%}
+              selected
+            {% endif%}>
             {{ c.name }}
           </option>
           {% endfor %}
@@ -30,11 +24,10 @@
         <select name="season" id="season">
           {% for s in seasons %} 
             {% if s.competition.id == selected_season.competition.id %}
-            <option
-              value="{{ s.id }}"
-              {% if s.id == selected_season.id %}
-              selected
-              {% endif %}>
+              <option value="{{ s.id }}"
+                {% if s.id == selected_season.id %}
+                selected
+                {% endif %}>
               {{ s.name }}
             </option>
             {% endif %} 
