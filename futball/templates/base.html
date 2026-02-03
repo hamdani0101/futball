@@ -26,7 +26,7 @@
       <ul id="nav-mobile" class="right hide-on-med-and-down">
         <li class="{% if request.path == '/futball/' %}active{% endif %}"><a href="{% url 'dashboard' %}">Dashboard</a></li>
         <li class="{% if '/futball/klasemen/' in request.path %}active{% endif %}"><a href="{% url 'league-table' %}">Klasemen</a></li>
-        <li class="{% if '/futball/xg/' in request.path %}active{% endif %}"><a href="{% url 'xg-map' %}">xG Map</a></li>
+        <li class="{% if '/futball/xg-pitch/' in request.path %}active{% endif %}"><a href="{% url 'xg-pitch-map' %}">xG Map</a></li>
       </ul>
     </div>
   </nav>

@@ -1,10 +1,11 @@
 from django.urls import path
-from .views import league_table_view, dashboard_view, xg_map_view
+from . import views
 
 urlpatterns = [
-    path("", dashboard_view, name="dashboard"),
-    path("klasemen/", league_table_view, name="league-table"),
-    path("xg/", xg_map_view, name="xg-map"),
+    path("", views.dashboard_view, name="dashboard"),
+    path("klasemen/", views.league_table_view, name="league-table"),
+    path("xg/", views.xg_map_view, name="xg-map"),
+    path("xg-pitch/", views.xg_pitch_map_view, name="xg-pitch-map"),
 ]
 
 

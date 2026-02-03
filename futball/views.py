@@ -5,7 +5,7 @@ from django.core import serializers
 from futball.models import Season
 from futball.services.league_table import build_league_table
 from futball.services.xg import build_xg_table
-from futball.models import Season, Competition, Match
+from futball.models import Season, Competition, Match, Team, Shot
 
 
 def league_table_view(request):
@@ -148,6 +148,54 @@ def xg_map_view(request):
             "teams": teams,
             "xgf": xgf,
             "xga": xga,
+        },
+    )
+    
+def xg_pitch_map_view(request):
+    competitions = Competition.objects.all().order_by("name")
+    seasons_all = Season.objects.all().order_by("-name")
+    teams_all = Team.objects.all().order_by("name")
+
+    competition_id = request.GET.get("competition")
+    season_id = request.GET.get("season")
+    team_id = request.GET.get("team")
+
+    # fallback competition
+    if competition_id:
+        seasons = seasons_all.filter(competition_id=competition_id)
+    else:
+        seasons = seasons_all.filter(competition=competitions.first())
+
+    # fallback season
+    season = seasons.get(id=season_id) if season_id else seasons.first()
+
+    # ambil semua match di season
+    matches = season.match_set.all()
+
+    # base queryset shot
+    shots = Shot.objects.filter(match__in=matches)
+
+    # filter team (opsional)
+    if team_id:
+        shots = shots.filter(team_id=team_id)
+
+    # serialize shots → frontend
+    shots_json = serializers.serialize(
+        "json",
+        shots,
+        fields=("x", "y", "xg", "outcome")
+    )
+
+    return render(
+        request,
+        "futball/xg_pitch_map.html",
+        {
+            "competitions": competitions,
+            "seasons": seasons,
+            "teams": teams_all,
+            "selected_season": season,
+            "shots_json": shots_json,
+            "selected_team": int(team_id) if team_id else None,
         },
     )
 
