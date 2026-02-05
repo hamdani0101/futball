@@ -76,35 +76,71 @@
   <script src="{% static 'futball/js/futball.js' %}"></script>
   <script>
     M.AutoInit();
-    
-    const competitionSelect = document.getElementById("competition");
-    if (competitionSelect) {
-        //get data season per competition
-        const seasonsData = JSON.parse("{{ season_json_data|escapejs }}");
 
-        //update season options when competition changes
-        competitionSelect.addEventListener("change", () => {
-          const selectedCompetitionId = competitionSelect.value;
-          const seasonSelect = document.getElementById("season");
-          
-          //delete select wrapper
-          const instance = M.FormSelect.getInstance(seasonSelect);
-          if (instance) instance.destroy();
+    (() => {
+      const competitionSelect = document.getElementById("competition");
+      const seasonSelect = document.getElementById("season");
+      const teamSelect = document.getElementById("team");
+      if (competitionSelect) {
+          //get data season per competition
+          const seasonsData = JSON.parse("{{ season_json_data|escapejs }}");
 
-          seasonSelect.innerHTML = "";
-          seasonsData.forEach(s => {
-            if (s.fields.competition == selectedCompetitionId) {
-              const option = document.createElement("option");
-              option.value = s.pk;
-              option.text =  s.fields.name;
-              seasonSelect.appendChild(option);
+          //update season options when competition changes
+          competitionSelect.addEventListener("change", () => {
+            const selectedCompetitionId = competitionSelect.value;
+
+            //delete select wrapper
+            const instance = M.FormSelect.getInstance(seasonSelect);
+            if (instance) instance.destroy();
+
+            seasonSelect.innerHTML = "";
+            seasonsData.forEach(s => {
+              if (s.fields.competition == selectedCompetitionId) {
+                const option = document.createElement("option");
+                option.value = s.pk;
+                option.text =  s.fields.name;
+                seasonSelect.appendChild(option);
+              }
+            });
+
+            //re-initialize
+            M.FormSelect.init(seasonSelect);
+
+            if (typeof window.updateTeamsForSeason === "function") {
+              window.updateTeamsForSeason();
             }
-          });
+        });
+      }
 
-          //re-initialize
-          M.FormSelect.init(seasonSelect);
-      });
-    }
+      window.updateTeamsForSeason = () => {
+        if (!teamSelect || !seasonSelect) return;
+
+        const instance = M.FormSelect.getInstance(teamSelect);
+        if (instance) instance.destroy();
+
+        teamSelect.innerHTML = '<option value="" selected>All Teams</option>';
+
+        const teamsBySeason = window.teamsBySeason || {};
+        const seasonId = seasonSelect.value;
+        const teams = seasonId ? (teamsBySeason[seasonId] || []) : [];
+        teams.forEach(t => {
+          const option = document.createElement("option");
+          option.value = t.id;
+          option.text = t.name;
+          teamSelect.appendChild(option);
+        });
+
+        M.FormSelect.init(teamSelect);
+      };
+
+      if (seasonSelect) {
+        seasonSelect.addEventListener("change", () => {
+          if (typeof window.updateTeamsForSeason === "function") {
+            window.updateTeamsForSeason();
+          }
+        });
+      }
+    })();
   </script>
   {% block extra_js %}{% endblock %}
 </body>

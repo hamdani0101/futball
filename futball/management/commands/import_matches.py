@@ -40,23 +40,45 @@ class Command(BaseCommand):
             type=str,
             help="Dataset name (e.g. bundesliga) or 'all'",
         )
+        parser.add_argument(
+            "--statsbomb-matches",
+            type=str,
+            default="",
+            help=(
+                "Path to StatsBomb matches.json to align match_id with "
+                "StatsBomb match ids"
+            ),
+        )
+        parser.add_argument(
+            "--team-map",
+            type=str,
+            default="",
+            help=(
+                "Optional CSV map with headers "
+                "`statsbomb_name,csv_name` to normalize team names"
+            ),
+        )
 
     def get_datasets(self, dataset_arg):
-        data_root = os.path.join(settings.BASE_DIR, "data")
+        data_root = os.path.join(settings.BASE_DIR, "data", "match")
 
         if dataset_arg == "all":
-            return [
-                d for d in os.listdir(data_root)
-                if os.path.isdir(os.path.join(data_root, d))
-                and os.path.exists(
-                    os.path.join(data_root, d, "datapackage.json")
-                )
-            ]
+            datasets = []
+            for d in os.listdir(data_root):
+                dataset_dir = os.path.join(data_root, d)
+                if not os.path.isdir(dataset_dir):
+                    continue
+                if (
+                    os.path.exists(os.path.join(dataset_dir, "datapackage.yaml"))
+                    or os.path.exists(os.path.join(dataset_dir, "datapackage.json"))
+                ):
+                    datasets.append(d)
+            return sorted(datasets)
 
         return [dataset_arg]
     
-    def import_dataset(self, dataset):
-        dataset_path = os.path.join(settings.BASE_DIR, "data", dataset)
+    def import_dataset(self, dataset, statsbomb_index):
+        dataset_path = os.path.join(settings.BASE_DIR, "data", "match", dataset)
 
         datapackage = self.load_datapackage(dataset_path)
 
@@ -96,14 +118,33 @@ class Command(BaseCommand):
                 season=season,
                 date_format=date_format,
                 encoding=encoding,
+                statsbomb_index=statsbomb_index,
             )
 
 
         
     def load_datapackage(self, dataset_path):
-        path = os.path.join(dataset_path, "datapackage.json")
-        with open(path, encoding="utf-8") as f:
-            return json.load(f)
+        yaml_path = os.path.join(dataset_path, "datapackage.yaml")
+        json_path = os.path.join(dataset_path, "datapackage.json")
+
+        if os.path.exists(yaml_path):
+            try:
+                import yaml
+            except ModuleNotFoundError as exc:
+                raise ModuleNotFoundError(
+                    "PyYAML is required to read datapackage.yaml"
+                ) from exc
+
+            with open(yaml_path, encoding="utf-8") as f:
+                return yaml.safe_load(f)
+
+        if os.path.exists(json_path):
+            with open(json_path, encoding="utf-8") as f:
+                return json.load(f)
+
+        raise FileNotFoundError(
+            f"No datapackage.yaml or datapackage.json in {dataset_path}"
+        )
 
 
     # --------------------
@@ -135,6 +176,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         datasets = self.get_datasets(options["dataset"])
+        statsbomb_index = self.load_statsbomb_index(
+            options.get("statsbomb_matches") or "",
+            options.get("team_map") or "",
+        )
 
         if not datasets:
             self.stderr.write(
@@ -146,21 +191,30 @@ class Command(BaseCommand):
             self.stdout.write(
                 self.style.WARNING(f"\n=== Importing dataset: {dataset} ===")
             )
-            self.import_dataset(dataset)
+            self.import_dataset(dataset, statsbomb_index)
 
         self.stdout.write(
             self.style.SUCCESS("\nAll dataset imports completed 🎉")
         )
 
 
-    def import_csv(self, csv_path, season, date_format, encoding):
+    def import_csv(self, csv_path, season, date_format, encoding, statsbomb_index):
         created = skipped = 0
 
         with open(csv_path, newline="", encoding=encoding) as f:
             reader = csv.DictReader(f)
 
             for row in reader:
-                match_id = f"{row['Date']}-{row['HomeTeam']}-{row['AwayTeam']}"
+                match_date = datetime.strptime(
+                    row["Date"], date_format
+                ).date()
+                match_id = self.resolve_match_id(
+                    statsbomb_index=statsbomb_index,
+                    match_date=match_date,
+                    home_team=row["HomeTeam"],
+                    away_team=row["AwayTeam"],
+                    fallback_date=row["Date"],
+                )
 
                 if Match.objects.filter(match_id=match_id).exists():
                     skipped += 1
@@ -168,10 +222,6 @@ class Command(BaseCommand):
 
                 home_team, _ = Team.objects.get_or_create(name=row["HomeTeam"])
                 away_team, _ = Team.objects.get_or_create(name=row["AwayTeam"])
-
-                match_date = datetime.strptime(
-                    row["Date"], date_format
-                ).date()
 
                 Match.objects.create(
                     match_id=match_id,
@@ -195,3 +245,92 @@ class Command(BaseCommand):
             )
         )
 
+    # --------------------
+    # StatsBomb helpers
+    # --------------------
+
+    @staticmethod
+    def normalize_team(name):
+        return (name or "").strip().lower()
+
+    def load_statsbomb_index(self, matches_path, team_map_path):
+        if not matches_path:
+            return {}
+
+        if not os.path.exists(matches_path):
+            self.stderr.write(
+                self.style.WARNING(
+                    f"StatsBomb matches file not found: {matches_path}"
+                )
+            )
+            return {}
+        if os.path.getsize(matches_path) == 0:
+            self.stderr.write(
+                self.style.WARNING(
+                    f"StatsBomb matches file is empty: {matches_path}"
+                )
+            )
+            return {}
+
+        team_map = {}
+        if team_map_path and os.path.exists(team_map_path):
+            with open(team_map_path, newline="", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    sb = (row.get("statsbomb_name") or "").strip()
+                    csv_name = (row.get("csv_name") or "").strip()
+                    if sb and csv_name:
+                        team_map[self.normalize_team(sb)] = csv_name
+
+        try:
+            with open(matches_path, encoding="utf-8") as f:
+                data = json.load(f)
+        except json.JSONDecodeError:
+            self.stderr.write(
+                self.style.WARNING(
+                    f"StatsBomb matches file is not valid JSON: {matches_path}"
+                )
+            )
+            return {}
+
+        index = {}
+        for m in data:
+            match_id = str(m.get("match_id") or "").strip()
+            match_date = m.get("match_date")
+            home = (m.get("home_team") or {}).get("home_team_name")
+            away = (m.get("away_team") or {}).get("away_team_name")
+
+            if not (match_id and match_date and home and away):
+                continue
+
+            home = team_map.get(self.normalize_team(home), home)
+            away = team_map.get(self.normalize_team(away), away)
+
+            index_key = (
+                match_date,
+                self.normalize_team(home),
+                self.normalize_team(away),
+            )
+            index[index_key] = match_id
+
+        return index
+
+    def resolve_match_id(
+        self,
+        statsbomb_index,
+        match_date,
+        home_team,
+        away_team,
+        fallback_date,
+    ):
+        if statsbomb_index:
+            key = (
+                match_date.strftime("%Y-%m-%d"),
+                self.normalize_team(home_team),
+                self.normalize_team(away_team),
+            )
+            sb_id = statsbomb_index.get(key)
+            if sb_id:
+                return sb_id
+
+        return f"{fallback_date}-{home_team}-{away_team}"

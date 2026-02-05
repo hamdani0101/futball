@@ -1,6 +1,8 @@
 import pprint
+import json
+from django.http import HttpResponse
 from django.shortcuts import render
-from django.db.models import Sum
+from django.db.models import Sum, Count
 from django.core import serializers
 from futball.models import Season
 from futball.services.league_table import build_league_table
@@ -160,24 +162,57 @@ def xg_pitch_map_view(request):
     season_id = request.GET.get("season")
     team_id = request.GET.get("team")
 
-    # fallback competition
-    if competition_id:
-        seasons = seasons_all.filter(competition_id=competition_id)
-    else:
-        seasons = seasons_all.filter(competition=competitions.first())
+    season_json_data = serializers.serialize("json", seasons_all.all())
 
-    # fallback season
-    season = seasons.get(id=season_id) if season_id else seasons.first()
+    selected_competition = (
+        competitions.filter(id=competition_id).first() if competition_id else competitions.first()
+    )
+
+    seasons = (
+        seasons_all.filter(competition=selected_competition)
+        if selected_competition
+        else seasons_all.none()
+    )
+
+    # pilih season dengan shots terbanyak jika belum dipilih
+    if season_id:
+        season = seasons.filter(id=season_id).first()
+    else:
+        season = (
+            seasons.annotate(shot_count=Count("match__shots"))
+            .order_by("-shot_count", "-id")
+            .first()
+        )
 
     # ambil semua match di season
-    matches = season.match_set.all()
+    matches = season.match_set.all() if season else Match.objects.none()
 
     # base queryset shot
     shots = Shot.objects.filter(match__in=matches)
 
+    # teams yang relevan dengan season (dan optional team filter nanti)
+    teams_for_season = (
+        Team.objects.filter(shots__match__in=matches)
+        .distinct()
+        .order_by("name")
+    )
+
+    # mapping season -> teams, untuk update dropdown di frontend
+    teams_by_season = {}
+    for s in seasons:
+        season_teams = (
+            Team.objects.filter(shots__match__season=s)
+            .distinct()
+            .order_by("name")
+            .values("id", "name")
+        )
+        teams_by_season[str(s.id)] = list(season_teams)
+
     # filter team (opsional)
+    selected_team = None
     if team_id:
         shots = shots.filter(team_id=team_id)
+        selected_team = teams_for_season.filter(id=team_id).first()
 
     # serialize shots → frontend
     shots_json = serializers.serialize(
@@ -192,10 +227,14 @@ def xg_pitch_map_view(request):
         {
             "competitions": competitions,
             "seasons": seasons,
-            "teams": teams_all,
+            "teams": teams_for_season,
+            "season_json_data": season_json_data,
+            "teams_by_season": json.dumps(teams_by_season),
+            "selected_competition": selected_competition,
             "selected_season": season,
             "shots_json": shots_json,
-            "selected_team": int(team_id) if team_id else None,
+            "selected_team": selected_team,
+            "total_shots": shots.count(),
         },
     )
 

@@ -1,18 +1,205 @@
 {% extends "base.html" %} 
 
-{% block title %}Dashboard{% endblock %} 
+{% block title %}xG Pitch Map{% endblock %} 
 
-{% block c_title %}League Dashboard{% endblock %}
+{% block c_title %}xG Pitch Map{% endblock %}
+
+{% block extra_css %}
+<style>
+  .xg-layout {
+    display: grid;
+    gap: 18px;
+  }
+  .xg-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+  }
+  .xg-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 12px 16px;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  }
+  .xg-card .label {
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #64748b;
+  }
+  .xg-card .value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-top: 6px;
+  }
+  .xg-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+  .xg-chip {
+    background: #eef2f6;
+    border: 1px solid #e2e8f0;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    color: #0f172a;
+  }
+  .xg-chip strong {
+    font-weight: 700;
+  }
+  .xg-legend {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  .xg-legend .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+    border: 1px solid rgba(0,0,0,0.2);
+  }
+  .xg-legend .goal { background: #ff5252; }
+  .xg-legend .shot { background: #ffd54f; }
+  .pitch-shell {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 14px;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  }
+  .pitch-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .pitch-title h5 {
+    margin: 0;
+  }
+  .pitch-note {
+    font-size: 12px;
+    color: #64748b;
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<pre>{{ shots_json }}</pre>
+<div class="competition-search">
+  <form method="get" class="search-form">
+    <div class="input-field field">
+      <select name="competition" id="competition">
+        {% for c in competitions %}
+          <option value="{{ c.id }}"
+          {% if selected_competition and c.id == selected_competition.id %}selected{% endif %}>
+            {{ c.name }}
+          </option>
+        {% endfor %}
+      </select>
+      <label>Competition:</label>
+    </div>
+    <div class="input-field field">
+      <select name="season" id="season">
+        {% for s in seasons %}
+          {% if selected_competition and s.competition.id == selected_competition.id %}
+            <option value="{{ s.id }}"
+            {% if selected_season and s.id == selected_season.id %}selected{% endif %}>
+              {{ s.name }}
+            </option>
+          {% endif %}
+        {% endfor %}
+      </select>
+      <label>Season:</label>
+    </div>
+    <div class="input-field field">
+      <select name="team" id="team">
+        <option value="" {% if not selected_team %}selected{% endif %}>All Teams</option>
+        {% for t in teams %}
+          <option value="{{ t.id }}" {% if selected_team and t.id == selected_team.id %}selected{% endif %}>
+            {{ t.name }}
+          </option>
+        {% endfor %}
+      </select>
+      <label>Team:</label>
+    </div>
+    <button class="btn waves-effect waves-light" type="submit" >Search
+      <i class="material-icons right">search</i>
+    </button> 
+  </form>
+</div>
 
-<svg viewBox="0 0 120 80" class="pitch" style="width:100%">
-  <rect width="120" height="80" fill="#2e7d32"/>
-</svg>
+<div class="xg-layout">
+  <div class="xg-info">
+    <div class="xg-card">
+      <div class="label">Total Shots</div>
+      <div class="value">{{ total_shots }}</div>
+    </div>
+    <div class="xg-card">
+      <div class="label">Competition</div>
+      <div class="value">
+        {% if selected_competition %}{{ selected_competition.name }}{% else %}-{% endif %}
+      </div>
+    </div>
+    <div class="xg-card">
+      <div class="label">Season</div>
+      <div class="value">
+        {% if selected_season %}{{ selected_season.name }}{% else %}-{% endif %}
+      </div>
+    </div>
+    <div class="xg-card">
+      <div class="label">Team Filter</div>
+      <div class="value">
+        {% if selected_team %}{{ selected_team.name }}{% else %}All Teams{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="xg-meta">
+    <span class="xg-chip">Competition: <strong>{% if selected_competition %}{{ selected_competition.name }}{% else %}-{% endif %}</strong></span>
+    <span class="xg-chip">Season: <strong>{% if selected_season %}{{ selected_season.name }}{% else %}-{% endif %}</strong></span>
+    <span class="xg-chip">Team: <strong>{% if selected_team %}{{ selected_team.name }}{% else %}All Teams{% endif %}</strong></span>
+    {% if total_shots == 0 %}
+      <span class="xg-chip" style="color:#b91c1c; background:#fee2e2; border-color:#fecaca;">Tidak ada data shot untuk filter ini.</span>
+    {% endif %}
+  </div>
+
+  <div class="pitch-shell">
+    <div class="pitch-title">
+      <h5>Shot Map</h5>
+      <div class="pitch-note">Ukuran titik ≈ nilai xG</div>
+    </div>
+    <div class="xg-legend">
+      <span><span class="dot goal"></span>Goal</span>
+      <span><span class="dot shot"></span>Non-goal</span>
+    </div>
+    <svg viewBox="0 0 120 80" class="pitch" style="width:100%; max-width: 900px; height: auto;">
+      <rect width="120" height="80" fill="#2e7d32" stroke="#e2f2e2" stroke-width="0.8"/>
+      <line x1="60" y1="0" x2="60" y2="80" stroke="#e2f2e2" stroke-width="0.6" />
+      <circle cx="60" cy="40" r="9.15" fill="none" stroke="#e2f2e2" stroke-width="0.6"/>
+      <rect x="0" y="18" width="18" height="44" fill="none" stroke="#e2f2e2" stroke-width="0.6"/>
+      <rect x="102" y="18" width="18" height="44" fill="none" stroke="#e2f2e2" stroke-width="0.6"/>
+      <rect x="0" y="30" width="6" height="20" fill="none" stroke="#e2f2e2" stroke-width="0.6"/>
+      <rect x="114" y="30" width="6" height="20" fill="none" stroke="#e2f2e2" stroke-width="0.6"/>
+    </svg>
+  </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
+<script>
+window.teamsBySeason = JSON.parse('{{ teams_by_season|escapejs }}')
+if (typeof window.updateTeamsForSeason === "function") {
+  window.updateTeamsForSeason()
+}
+</script>
 <script>
 const shots = JSON.parse('{{ shots_json|escapejs }}')
 const pitch = document.querySelector(".pitch")
@@ -22,7 +209,8 @@ shots.forEach(s => {
 
   c.setAttribute("cx", s.fields.x)
   c.setAttribute("cy", s.fields.y)
-  c.setAttribute("r", s.fields.xg * 6)
+  const radius = Math.max(1.5, s.fields.xg * 10)
+  c.setAttribute("r", radius)
 
   c.setAttribute(
     "fill",
@@ -30,6 +218,8 @@ shots.forEach(s => {
   )
 
   c.setAttribute("opacity", 0.75)
+  c.setAttribute("stroke", "rgba(0,0,0,0.25)")
+  c.setAttribute("stroke-width", "0.2")
   pitch.appendChild(c)
 })
 </script>

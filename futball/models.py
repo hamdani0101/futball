@@ -4,6 +4,8 @@ from django.db import models
 class Competition(models.Model):
     name = models.CharField(max_length=100)
     country = models.CharField(max_length=100, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
@@ -11,7 +13,9 @@ class Competition(models.Model):
 
 class Season(models.Model):
     competition = models.ForeignKey(Competition, on_delete=models.CASCADE)
-    name = models.CharField(max_length=50)  # e.g. "2023/2024"
+    name = models.CharField(max_length=50)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.competition} {self.name}"
@@ -19,6 +23,8 @@ class Season(models.Model):
 
 class Team(models.Model):
     name = models.CharField(max_length=100, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
@@ -34,13 +40,12 @@ class Match(models.Model):
     home_score = models.IntegerField(default=0)
     away_score = models.IntegerField(default=0)
 
-    # 🔥 FIELD UNTUK xG
     home_shots = models.IntegerField(default=0)
     away_shots = models.IntegerField(default=0)
     home_shots_on_target = models.IntegerField(default=0)
     away_shots_on_target = models.IntegerField(default=0)
-
-
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 class Shot(models.Model):    
     match = models.ForeignKey(
@@ -94,6 +99,17 @@ class Shot(models.Model):
         ],
         blank=True
     )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.team} shot ({self.xg})"
+
+
+class News(models.Model):
+    headline=models.CharField(max_length=155)
+    shortdesc=models.CharField(max_length=155)
+    content=models.TextField()
+    thumbnail=models.CharField(max_length=155)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
