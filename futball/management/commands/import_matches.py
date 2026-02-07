@@ -8,7 +8,7 @@ from django.core.management.base import BaseCommand
 
 from futball.models.competition import Competition
 from futball.models.season import Season
-from futball.models.match import Match, MatchScore, MatchTeamStats
+from futball.models.match import Match, MatchTeamStats
 from futball.models.team import Team
 
 COUNTRY_MAP = {
@@ -239,15 +239,7 @@ class Command(BaseCommand):
                         status="finished",
                     )
                     created += 1
-
-                MatchScore.objects.update_or_create(
-                    match=match,
-                    defaults={
-                        "home_goals": home_goals,
-                        "away_goals": away_goals,
-                    },
-                )
-
+                    
                 MatchTeamStats.objects.update_or_create(
                     match=match,
                     team=home_team,

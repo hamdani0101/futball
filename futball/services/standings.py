@@ -33,7 +33,7 @@ def build_league_table(season):
                 )
             )
         )
-        .select_related("home_team", "away_team", "score")
+        .select_related("home_team", "away_team")
     )
 
     for m in matches:

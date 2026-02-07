@@ -1,3 +1,4 @@
+from django.core.serializers import serialize
 from django.shortcuts import render
 from futball.models.competition import Competition
 from futball.models.season import Season
@@ -23,6 +24,15 @@ def dashboard_view(request):
         season = seasons.first()
 
     data = get_season_summary(season)
+    data.update(
+        {
+            "competitions": competitions,
+            "seasons": seasons,
+            "selected_competition": competition,
+            "selected_season": season,
+            "season_json_data": serialize("json", seasons_all),
+        }
+    )
     return render(request, "futball/dashboard.html", data)
 
 

@@ -1,14 +1,18 @@
 from collections import defaultdict
+from django.db.models import Count, Q, F, Sum
 from futball.models.match import Match
-from django.db.models import Count, Q, F
+from futball.models.shots import Shot
+
 
 def build_xg_table(season):
     table = defaultdict(lambda: {
-        "xgf": 0.0,
-        "xga": 0.0,
+        "team_id": None,
+        "team_name": "",
+        "matches": 0,
         "gf": 0,
         "ga": 0,
-        "matches": 0,
+        "xgf": 0.0,
+        "xga": 0.0,
     })
 
     matches = (
@@ -29,35 +33,38 @@ def build_xg_table(season):
                     shots__outcome="goal"
                 )
             ),
+            home_xg=Sum(
+                "shots__xg",
+                filter=Q(shots__team=F("home_team"))
+            ),
+            away_xg=Sum(
+                "shots__xg",
+                filter=Q(shots__team=F("away_team"))
+            ),
         )
         .select_related("home_team", "away_team")
-        .prefetch_related("team_stats")
     )
 
     for m in matches:
-        home = m.home_team.name
-        away = m.away_team.name
-
-        stats_by_team = {s.team_id: s for s in m.team_stats.all()}
-        home_stats = stats_by_team.get(m.home_team_id)
-        away_stats = stats_by_team.get(m.away_team_id)
+        home = m.home_team
+        away = m.away_team
 
         hg = m.home_goals or 0
         ag = m.away_goals or 0
-        hxg = home_stats.xg if home_stats else 0.0
-        axg = away_stats.xg if away_stats else 0.0
+        hxg = m.home_xg or 0.0
+        axg = m.away_xg or 0.0
 
-        table[home]["matches"] += 1
-        table[away]["matches"] += 1
-
-        table[home]["gf"] += hg
-        table[home]["ga"] += ag
-        table[away]["gf"] += ag
-        table[away]["ga"] += hg
-
-        table[home]["xgf"] += hxg
-        table[home]["xga"] += axg
-        table[away]["xgf"] += axg
-        table[away]["xga"] += hxg
+        for team, gf, ga, xgf, xga in [
+            (home, hg, ag, hxg, axg),
+            (away, ag, hg, axg, hxg),
+        ]:
+            t = table[team.id]
+            t["team_id"] = team.id
+            t["team_name"] = team.name
+            t["matches"] += 1
+            t["gf"] += gf
+            t["ga"] += ga
+            t["xgf"] += xgf
+            t["xga"] += xga
 
     return table

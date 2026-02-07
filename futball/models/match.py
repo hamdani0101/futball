@@ -39,22 +39,6 @@ class Match(models.Model):
             models.Index(fields=["status"]),
         ]
 
-
-class MatchScore(models.Model):
-    match = models.OneToOneField(
-        Match,
-        on_delete=models.CASCADE,
-        related_name="score",
-    )
-    home_goals = models.IntegerField(default=0)
-    away_goals = models.IntegerField(default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"{self.match} {self.home_goals}-{self.away_goals}"
-
-
 class MatchTeamStats(models.Model):
     match = models.ForeignKey(
         Match,
