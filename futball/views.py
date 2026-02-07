@@ -2,7 +2,7 @@ import pprint
 import json
 from django.http import HttpResponse
 from django.shortcuts import render
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, Q
 from django.core import serializers
 from futball.models import Season
 from futball.services.league_table import build_league_table
@@ -197,9 +197,9 @@ def xg_pitch_map_view(request):
         .order_by("name")
     )
 
-    # mapping season -> teams, untuk update dropdown di frontend
+    # mapping season -> teams (semua season), untuk update dropdown di frontend
     teams_by_season = {}
-    for s in seasons:
+    for s in seasons_all:
         season_teams = (
             Team.objects.filter(shots__match__season=s)
             .distinct()
@@ -242,11 +242,9 @@ def dashboard_view(request):
     competitions = Competition.objects.all().order_by("name")
     seasons_all = Season.objects.all().order_by("-name")
 
-    # ambil season dari query param
     competition_id = request.GET.get("competition")
     season_id = request.GET.get("season")
 
-    #kuota champions league berdasarkan liga
 
     if competition_id:
         competition = competitions.get(id=competition_id)
@@ -260,12 +258,14 @@ def dashboard_view(request):
     else:
         season = seasons.first()
 
-    matches = Match.objects.filter(season=season)
+    matches = Match.objects.filter(season=season, status="finished")
     total_matches = matches.count()
 
-    total_goals = matches.aggregate(
-        goals=Sum("home_score") + Sum("away_score")
-    )["goals"] or 0
+    total_goals = Shot.objects.filter(
+        match__in=matches,
+        outcome="goal",
+    ).count()
+
 
     avg_goals = round(total_goals / total_matches, 2) if total_matches else 0
 

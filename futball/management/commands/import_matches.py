@@ -6,20 +6,7 @@ from datetime import datetime
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
-from futball.models import Competition, Season, Team, Match
-
-
-SCHEMA_FIELD_MAP = {
-    "Date": "date",
-    "HomeTeam": "home_team",
-    "AwayTeam": "away_team",
-    "FTHG": "home_score",
-    "FTAG": "away_score",
-    "HS": "home_shots",
-    "AS": "away_shots",
-    "HST": "home_shots_on_target",
-    "AST": "away_shots_on_target",
-}
+from futball.models import Competition, Season, Team, Match, MatchTeamStats
 
 COUNTRY_MAP = {
     "bundesliga": "Germany",
@@ -207,7 +194,7 @@ class Command(BaseCommand):
             for row in reader:
                 match_date = datetime.strptime(
                     row["Date"], date_format
-                ).date()
+                )
                 match_id = self.resolve_match_id(
                     statsbomb_index=statsbomb_index,
                     match_date=match_date,
@@ -223,18 +210,28 @@ class Command(BaseCommand):
                 home_team, _ = Team.objects.get_or_create(name=row["HomeTeam"])
                 away_team, _ = Team.objects.get_or_create(name=row["AwayTeam"])
 
-                Match.objects.create(
+                match = Match.objects.create(
                     match_id=match_id,
                     season=season,
                     home_team=home_team,
                     away_team=away_team,
                     match_date=match_date,
-                    home_score=int(row.get("FTHG") or 0),
-                    away_score=int(row.get("FTAG") or 0),
-                    home_shots=int(row.get("HS") or 0),
-                    away_shots=int(row.get("AS") or 0),
-                    home_shots_on_target=int(row.get("HST") or 0),
-                    away_shots_on_target=int(row.get("AST") or 0),
+                    status="finished",
+                )
+
+                MatchTeamStats.objects.create(
+                    match=match,
+                    team=home_team,
+                    xg=0.0,
+                    shots=int(row.get("HS") or 0),
+                    shots_on_target=int(row.get("HST") or 0),
+                )
+                MatchTeamStats.objects.create(
+                    match=match,
+                    team=away_team,
+                    xg=0.0,
+                    shots=int(row.get("AS") or 0),
+                    shots_on_target=int(row.get("AST") or 0),
                 )
 
                 created += 1

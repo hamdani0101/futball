@@ -1,6 +1,6 @@
 from collections import defaultdict
 from futball.models import Match
-
+from django.db.models import Count, Q, F
 
 def build_xg_table(season):
     table = defaultdict(lambda: {
@@ -11,31 +11,53 @@ def build_xg_table(season):
         "matches": 0,
     })
 
-    matches = Match.objects.filter(season=season)
+    matches = (
+        Match.objects
+        .filter(season=season, status="finished")
+        .annotate(
+            home_goals=Count(
+                "shots",
+                filter=Q(
+                    shots__team=F("home_team"),
+                    shots__outcome="goal"
+                )
+            ),
+            away_goals=Count(
+                "shots",
+                filter=Q(
+                    shots__team=F("away_team"),
+                    shots__outcome="goal"
+                )
+            ),
+        )
+        .select_related("home_team", "away_team")
+        .prefetch_related("team_stats")
+    )
 
     for m in matches:
         home = m.home_team.name
         away = m.away_team.name
 
-        # ambil stats dari CSV (pastikan field ada)
-        hs = getattr(m, "home_shots", 0)
-        hst = getattr(m, "home_shots_on_target", 0)
-        as_ = getattr(m, "away_shots", 0)
-        ast = getattr(m, "away_shots_on_target", 0)
+        stats_by_team = {s.team_id: s for s in m.team_stats.all()}
+        home_stats = stats_by_team.get(m.home_team_id)
+        away_stats = stats_by_team.get(m.away_team_id)
 
-        home_xg = hst * 0.30 + (hs - hst) * 0.08
-        away_xg = ast * 0.30 + (as_ - ast) * 0.08
+        hg = m.home_goals or 0
+        ag = m.away_goals or 0
+        hxg = home_stats.xg if home_stats else 0.0
+        axg = away_stats.xg if away_stats else 0.0
 
-        table[home]["xgf"] += home_xg
-        table[home]["xga"] += away_xg
-        table[home]["gf"] += m.home_score
-        table[home]["ga"] += m.away_score
         table[home]["matches"] += 1
-
-        table[away]["xgf"] += away_xg
-        table[away]["xga"] += home_xg
-        table[away]["gf"] += m.away_score
-        table[away]["ga"] += m.home_score
         table[away]["matches"] += 1
+
+        table[home]["gf"] += hg
+        table[home]["ga"] += ag
+        table[away]["gf"] += ag
+        table[away]["ga"] += hg
+
+        table[home]["xgf"] += hxg
+        table[home]["xga"] += axg
+        table[away]["xgf"] += axg
+        table[away]["xga"] += hxg
 
     return table

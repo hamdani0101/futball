@@ -1,6 +1,6 @@
 from collections import defaultdict
 from futball.models import Match
-
+from django.db.models import Count, Q, F
 
 def build_league_table(season):
     table = defaultdict(lambda: {
@@ -14,7 +14,27 @@ def build_league_table(season):
         "points": 0,
     })
 
-    matches = Match.objects.filter(season=season)
+    matches = (
+        Match.objects
+        .filter(season=season, status="finished")
+        .annotate(
+            home_goals=Count(
+                "shots",
+                filter=Q(
+                    shots__team=F("home_team"),
+                    shots__outcome="goal"
+                )
+            ),
+            away_goals=Count(
+                "shots",
+                filter=Q(
+                    shots__team=F("away_team"),
+                    shots__outcome="goal"
+                )
+            )
+        )
+        .select_related("home_team", "away_team")
+    )
 
     for m in matches:
         home = m.home_team.name
@@ -23,24 +43,29 @@ def build_league_table(season):
         table[home]["played"] += 1
         table[away]["played"] += 1
 
-        table[home]["gf"] += m.home_score
-        table[home]["ga"] += m.away_score
-        table[away]["gf"] += m.away_score
-        table[away]["ga"] += m.home_score
+        # goals for / against
+        table[home]["gf"] += m.home_goals
+        table[home]["ga"] += m.away_goals
+        table[away]["gf"] += m.away_goals
+        table[away]["ga"] += m.home_goals
 
-        if m.home_score > m.away_score:
+        # result
+        if m.home_goals > m.away_goals:
             table[home]["win"] += 1
             table[away]["loss"] += 1
             table[home]["points"] += 3
-        elif m.home_score < m.away_score:
+
+        elif m.home_goals < m.away_goals:
             table[away]["win"] += 1
             table[home]["loss"] += 1
             table[away]["points"] += 3
+
         else:
             table[home]["draw"] += 1
             table[away]["draw"] += 1
             table[home]["points"] += 1
             table[away]["points"] += 1
+
 
     for team in table.values():
         team["gd"] = team["gf"] - team["ga"]

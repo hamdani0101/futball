@@ -103,6 +103,10 @@
               }
             });
 
+            if (seasonSelect.options.length > 0) {
+              seasonSelect.selectedIndex = 0;
+            }
+
             //re-initialize
             M.FormSelect.init(seasonSelect);
 

@@ -87,7 +87,7 @@ class Command(BaseCommand):
             away_team, _ = Team.objects.get_or_create(name=away_mapped)
 
             try:
-                date_obj = datetime.strptime(match_date, "%Y-%m-%d").date()
+                date_obj = datetime.strptime(match_date, "%Y-%m-%d")
             except ValueError:
                 skipped += 1
                 continue
@@ -105,8 +105,7 @@ class Command(BaseCommand):
                 home_team=home_team,
                 away_team=away_team,
                 match_date=date_obj,
-                home_score=int(m.get("home_score") or 0),
-                away_score=int(m.get("away_score") or 0),
+                status="finished",
             )
             created += 1
 
