@@ -1,7 +1,8 @@
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from futball.models import Competition, Season
+from futball.models.competition import Competition
+from futball.models.season import Season
 
 
 DEFAULT_MAP = {

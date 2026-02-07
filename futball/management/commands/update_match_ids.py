@@ -1,12 +1,11 @@
 import csv
 import json
 import os
-from datetime import datetime
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from futball.models import Match
+from futball.models.match import Match
 
 
 def normalize(name):

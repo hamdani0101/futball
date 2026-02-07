@@ -2,7 +2,9 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.db.models import Count, Min
 
-from futball.models import Season, Match, Competition
+from futball.models.season import Season
+from futball.models.match import Match
+from futball.models.competition import Competition
 
 
 class Command(BaseCommand):

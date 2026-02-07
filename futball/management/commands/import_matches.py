@@ -6,7 +6,10 @@ from datetime import datetime
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
-from futball.models import Competition, Season, Team, Match, MatchTeamStats, MatchScore
+from futball.models.competition import Competition
+from futball.models.season import Season
+from futball.models.match import Match, MatchScore, MatchTeamStats
+from futball.models.team import Team
 
 COUNTRY_MAP = {
     "bundesliga": "Germany",

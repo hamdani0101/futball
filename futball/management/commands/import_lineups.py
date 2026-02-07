@@ -1,6 +1,8 @@
 import json
 from django.core.management.base import BaseCommand
-from futball.models import Match, Team, Player, PlayerMatch
+from futball.models.player import Player, PlayerMatch
+from futball.models.match import Match
+from futball.models.team import Team
 
 
 class Command(BaseCommand):

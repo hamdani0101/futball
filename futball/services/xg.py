@@ -1,5 +1,5 @@
 from collections import defaultdict
-from futball.models import Match
+from futball.models.match import Match
 from django.db.models import Count, Q, F
 
 def build_xg_table(season):

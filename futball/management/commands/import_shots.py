@@ -1,11 +1,10 @@
 import csv
 import json
-import os
 from pathlib import Path
-
 from django.core.management.base import BaseCommand
-
-from futball.models import Match, Shot, Team
+from futball.models.shots import Shot
+from futball.models.match import Match
+from futball.models.team import Team
 
 
 OUTCOME_MAP = {

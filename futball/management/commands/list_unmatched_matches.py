@@ -4,7 +4,8 @@ import os
 
 from django.core.management.base import BaseCommand
 
-from futball.models import Match, Team
+from futball.models.match import Match
+from futball.models.team import Team
 
 
 def normalize(name):
