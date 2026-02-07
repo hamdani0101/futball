@@ -1,6 +1,6 @@
 import json
 from django.core.management.base import BaseCommand
-from app.models import Match, Team, Player, PlayerMatch
+from futball.models import Match, Team, Player, PlayerMatch
 
 
 class Command(BaseCommand):
