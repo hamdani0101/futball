@@ -13,7 +13,6 @@ def xg_map_view(request):
     competitions = Competition.objects.all().order_by("name")
     seasons_all = Season.objects.all().order_by("-name")
 
-    # ambil season dari query param
     competition_id = request.GET.get("competition")
     season_id = request.GET.get("season")
 
@@ -59,7 +58,6 @@ def xg_map_view(request):
 def xg_pitch_map_view(request):
     competitions = Competition.objects.all().order_by("name")
     seasons_all = Season.objects.all().order_by("-name")
-    teams_all = Team.objects.all().order_by("name")
 
     competition_id = request.GET.get("competition")
     season_id = request.GET.get("season")
@@ -77,7 +75,6 @@ def xg_pitch_map_view(request):
         else seasons_all.none()
     )
 
-    # pilih season dengan shots terbanyak jika belum dipilih
     if season_id:
         season = seasons.filter(id=season_id).first()
     else:
@@ -87,20 +84,16 @@ def xg_pitch_map_view(request):
             .first()
         )
 
-    # ambil semua match di season
     matches = season.match_set.all() if season else Match.objects.none()
 
-    # base queryset shot
     shots = Shot.objects.filter(match__in=matches)
 
-    # teams yang relevan dengan season (dan optional team filter nanti)
     teams_for_season = (
         Team.objects.filter(shots__match__in=matches)
         .distinct()
         .order_by("name")
     )
 
-    # mapping season -> teams (semua season), untuk update dropdown di frontend
     teams_by_season = {}
     for s in seasons_all:
         season_teams = (
@@ -111,13 +104,11 @@ def xg_pitch_map_view(request):
         )
         teams_by_season[str(s.id)] = list(season_teams)
 
-    # filter team (opsional)
     selected_team = None
     if team_id:
         shots = shots.filter(team_id=team_id)
         selected_team = teams_for_season.filter(id=team_id).first()
 
-    # serialize shots → frontend
     shots_json = serializers.serialize(
         "json",
         shots,
