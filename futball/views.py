@@ -1,5 +1,6 @@
 import pprint
 import json
+import re
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.db.models import Sum, Count, Q
@@ -9,6 +10,12 @@ from futball.services.league_table import build_league_table
 from futball.services.xg import build_xg_table
 from futball.models import Season, Competition, Match, Team, Shot
 
+
+def normalize_competition_name(name: str) -> str:
+    name = name.lower()
+    name = re.sub(r"\(.*?\)", "", name)   # hapus (football)
+    name = re.sub(r"[^a-z\s]", "", name)  # hapus simbol
+    return name.strip()
 
 def league_table_view(request):
     competitions = Competition.objects.all().order_by("name")
@@ -26,43 +33,47 @@ def league_table_view(request):
         competition = competitions.first()
         seasons = seasons_all.filter(competition=competition)
 
+    COMPETITION_ALIAS = {
+        "premier league": "epl",
+        "english premier league": "epl",
+        "epl": "epl",
 
-    match competition.name:
-        case "Premier League":
-            champions_league_places = 4
-            europa_league_places = 2
-            conference_league_places = 1
-            relegation_places = 3
+        "la liga": "laliga",
+        "liga bbva": "laliga",
+        "spanish la liga": "laliga",
 
-        case "La Liga":
-            champions_league_places = 4
-            europa_league_places = 2
-            conference_league_places = 1
-            relegation_places = 3
+        "bundesliga": "bundesliga",
+        "german bundesliga": "bundesliga",
 
-        case "Bundesliga":
-            champions_league_places = 4
-            europa_league_places = 2
-            conference_league_places = 1
-            relegation_places = 3
+        "serie a": "seriea",
+        "italian serie a": "seriea",
 
-        case "Serie A":
-            champions_league_places = 4
-            europa_league_places = 2
-            conference_league_places = 1
-            relegation_places = 3
+        "ligue 1": "ligue1",
+        "french ligue 1": "ligue1",
+    }
 
-        case "Ligue 1":
-            champions_league_places = 3 
-            europa_league_places = 1
-            conference_league_places = 1
-            relegation_places = 3       
+    UEFA_RULES = {
+        "epl": dict(cl=4, el=2, ecl=1, relegation=3),
+        "laliga": dict(cl=4, el=2, ecl=1, relegation=3),
+        "bundesliga": dict(cl=4, el=2, ecl=1, relegation=3),
+        "seriea": dict(cl=4, el=2, ecl=1, relegation=3),
+        "ligue1": dict(cl=3, el=1, ecl=1, relegation=3),
+    }
+    
+    key = normalize_competition_name(competition.name)
+    alias = COMPETITION_ALIAS.get(key)
 
-        case _:
-            champions_league_places = 0
-            europa_league_places = 0
-            conference_league_places = 0
-            relegation_places = 3
+    rules = UEFA_RULES.get(
+        alias,
+        dict(cl=0, el=0, ecl=0, relegation=3)
+    )
+
+
+
+    champions_league_places = rules["cl"]
+    europa_league_places = rules["el"]
+    conference_league_places = rules["ecl"]
+    relegation_places = rules["relegation"]
 
 
     if season_id:

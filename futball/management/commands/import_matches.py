@@ -6,7 +6,7 @@ from datetime import datetime
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
-from futball.models import Competition, Season, Team, Match, MatchTeamStats
+from futball.models import Competition, Season, Team, Match, MatchTeamStats, MatchScore
 
 COUNTRY_MAP = {
     "bundesliga": "Germany",
@@ -186,7 +186,7 @@ class Command(BaseCommand):
 
 
     def import_csv(self, csv_path, season, date_format, encoding, statsbomb_index):
-        created = skipped = 0
+        created = updated = skipped = 0
 
         with open(csv_path, newline="", encoding=encoding) as f:
             reader = csv.DictReader(f)
@@ -203,42 +203,70 @@ class Command(BaseCommand):
                     fallback_date=row["Date"],
                 )
 
-                if Match.objects.filter(match_id=match_id).exists():
-                    skipped += 1
-                    continue
-
                 home_team, _ = Team.objects.get_or_create(name=row["HomeTeam"])
                 away_team, _ = Team.objects.get_or_create(name=row["AwayTeam"])
 
-                match = Match.objects.create(
-                    match_id=match_id,
-                    season=season,
-                    home_team=home_team,
-                    away_team=away_team,
-                    match_date=match_date,
-                    status="finished",
+                home_goals = int(row.get("FTHG") or row.get("HG") or 0)
+                away_goals = int(row.get("FTAG") or row.get("AG") or 0)
+
+                match = Match.objects.filter(match_id=match_id).first()
+                if match:
+                    match.season = season
+                    match.home_team = home_team
+                    match.away_team = away_team
+                    match.match_date = match_date
+                    match.status = "finished"
+                    match.save(
+                        update_fields=[
+                            "season",
+                            "home_team",
+                            "away_team",
+                            "match_date",
+                            "status",
+                        ]
+                    )
+                    updated += 1
+                else:
+                    match = Match.objects.create(
+                        match_id=match_id,
+                        season=season,
+                        home_team=home_team,
+                        away_team=away_team,
+                        match_date=match_date,
+                        status="finished",
+                    )
+                    created += 1
+
+                MatchScore.objects.update_or_create(
+                    match=match,
+                    defaults={
+                        "home_goals": home_goals,
+                        "away_goals": away_goals,
+                    },
                 )
 
-                MatchTeamStats.objects.create(
+                MatchTeamStats.objects.update_or_create(
                     match=match,
                     team=home_team,
-                    xg=0.0,
-                    shots=int(row.get("HS") or 0),
-                    shots_on_target=int(row.get("HST") or 0),
+                    defaults={
+                        "xg": 0.0,
+                        "shots": int(row.get("HS") or 0),
+                        "shots_on_target": int(row.get("HST") or 0),
+                    },
                 )
-                MatchTeamStats.objects.create(
+                MatchTeamStats.objects.update_or_create(
                     match=match,
                     team=away_team,
-                    xg=0.0,
-                    shots=int(row.get("AS") or 0),
-                    shots_on_target=int(row.get("AST") or 0),
+                    defaults={
+                        "xg": 0.0,
+                        "shots": int(row.get("AS") or 0),
+                        "shots_on_target": int(row.get("AST") or 0),
+                    },
                 )
-
-                created += 1
 
         self.stdout.write(
             self.style.SUCCESS(
-                f"{os.path.basename(csv_path)}: {created} created, {skipped} skipped"
+                f"{os.path.basename(csv_path)}: {created} created, {updated} updated, {skipped} skipped"
             )
         )
 

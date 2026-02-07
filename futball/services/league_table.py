@@ -33,10 +33,14 @@ def build_league_table(season):
                 )
             )
         )
-        .select_related("home_team", "away_team")
+        .select_related("home_team", "away_team", "score")
     )
 
     for m in matches:
+        if getattr(m, "score", None) is not None:
+            m.home_goals = m.score.home_goals
+            m.away_goals = m.score.away_goals
+
         home = m.home_team.name
         away = m.away_team.name
 

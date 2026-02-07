@@ -75,6 +75,21 @@ class Match(models.Model):
         ]
 
 
+class MatchScore(models.Model):
+    match = models.OneToOneField(
+        Match,
+        on_delete=models.CASCADE,
+        related_name="score",
+    )
+    home_goals = models.IntegerField(default=0)
+    away_goals = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.match} {self.home_goals}-{self.away_goals}"
+
+
 class MatchTeamStats(models.Model):
     match = models.ForeignKey(
         Match,
@@ -153,6 +168,11 @@ class Shot(models.Model):
         ],
         blank=True
     )
+    player = models.ForeignKey(
+        Player,
+        null=True,
+        on_delete=models.SET_NULL
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -178,6 +198,30 @@ class Shot(models.Model):
             models.Index(fields=["match"]),
             models.Index(fields=["team"]),
         ]
+
+
+class Player(models.Model):
+    external_id = models.IntegerField(unique=True)
+    name = models.CharField(max_length=100)
+    team = models.ForeignKey(Team, on_delete=models.CASCADE)
+    position = models.CharField(max_length=30, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return self.name
+
+class PlayerMatch(models.Model):
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    match = models.ForeignKey(Match, on_delete=models.CASCADE)
+    team = models.ForeignKey(Team, on_delete=models.CASCADE)
+
+    is_starter = models.BooleanField(default=False)
+    minute_on = models.IntegerField(default=0)
+    minute_off = models.IntegerField(default=90)
+
+    class Meta:
+        unique_together = ("player", "match")
 
 class News(models.Model):
     headline=models.CharField(max_length=155)
