@@ -40,6 +40,9 @@ class Command(BaseCommand):
         if not os.path.exists(matches_path):
             self.stderr.write(self.style.ERROR(f"matches.json not found: {matches_path}"))
             return
+        if os.path.getsize(matches_path) == 0:
+            self.stderr.write(self.style.ERROR(f"matches.json is empty: {matches_path}"))
+            return
 
         team_map = {}
         if team_map_path and os.path.exists(team_map_path):
@@ -51,8 +54,15 @@ class Command(BaseCommand):
                     if sb and csv_name:
                         team_map[normalize(sb)] = csv_name
 
-        with open(matches_path, encoding="utf-8") as f:
-            sb_matches = json.load(f)
+        try:
+            with open(matches_path, encoding="utf-8") as f:
+                sb_matches = json.load(f)
+        except json.JSONDecodeError:
+            self.stderr.write(self.style.ERROR(f"matches.json is not valid JSON: {matches_path}"))
+            return
+        if not isinstance(sb_matches, list):
+            self.stderr.write(self.style.ERROR(f"matches.json does not contain a list: {matches_path}"))
+            return
 
         created = 0
         skipped = 0

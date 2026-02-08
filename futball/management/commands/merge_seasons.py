@@ -80,6 +80,11 @@ class Command(BaseCommand):
                     source.delete()
 
                 merged += 1
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        f"Merged Season id={source.id} into id={target.id}"
+                    )
+                )
 
         if dry_run:
             self.stdout.write(

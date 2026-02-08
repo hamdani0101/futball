@@ -55,9 +55,25 @@ class Command(BaseCommand):
                 self.style.ERROR(f"matches.json not found: {matches_path}")
             )
             return
+        if os.path.getsize(matches_path) == 0:
+            self.stderr.write(
+                self.style.ERROR(f"matches.json is empty: {matches_path}")
+            )
+            return
 
-        with open(matches_path, encoding="utf-8") as f:
-            matches = json.load(f)
+        try:
+            with open(matches_path, encoding="utf-8") as f:
+                matches = json.load(f)
+        except json.JSONDecodeError:
+            self.stderr.write(
+                self.style.ERROR(f"matches.json is not valid JSON: {matches_path}")
+            )
+            return
+        if not isinstance(matches, list):
+            self.stderr.write(
+                self.style.ERROR(f"matches.json does not contain a list: {matches_path}")
+            )
+            return
 
         sb_names = set()
         for m in matches:
@@ -99,7 +115,9 @@ class Command(BaseCommand):
                 {"statsbomb_name": sb_name, "csv_name": suggestion}
             )
 
-        os.makedirs(os.path.dirname(out_path), exist_ok=True)
+        out_dir = os.path.dirname(out_path)
+        if out_dir:
+            os.makedirs(out_dir, exist_ok=True)
         with open(out_path, "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=["statsbomb_name", "csv_name"])
             writer.writeheader()

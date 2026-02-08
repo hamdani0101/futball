@@ -1,6 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}League Table - {{ selected_season.competition.name }} {{ selected_season.name }}{% endblock %}
+{% block title %}
+  {% if selected_season %}
+    League Table - {{ selected_season.competition.name }} {{ selected_season.name }}
+  {% else %}
+    League Table
+  {% endif %}
+{% endblock %}
 
 {% block extra_css %}{% endblock %}
 
@@ -13,7 +19,7 @@
       <select name="competition" id="competition">
         {% for c in competitions %}
           <option value="{{ c.id }}"
-          {% if c.id == selected_season.competition.id %}selected{% endif %}>
+          {% if selected_competition and c.id == selected_competition.id %}selected{% endif %}>
             {{ c.name }}
           </option>
         {% endfor %}
@@ -23,12 +29,10 @@
     <div class="input-field field">
       <select name="season" id="season">
         {% for s in seasons %}
-          {% if s.competition.id == selected_season.competition.id %}
-            <option value="{{ s.id }}"
-            {% if s.id == selected_season.id %}selected{% endif %}>
-              {{ s.name }}
-            </option>
-          {% endif %}
+          <option value="{{ s.id }}"
+          {% if selected_season and s.id == selected_season.id %}selected{% endif %}>
+            {{ s.name }}
+          </option>
         {% endfor %}
       </select>
       <label>Season:</label>
@@ -41,7 +45,13 @@
 
 <div class="row">
   <div class="col s12">
-    <h5>{{ selected_season.competition.name }} {{ selected_season.name }}</h5>
+    <h5>
+      {% if selected_season %}
+        {{ selected_season.competition.name }} {{ selected_season.name }}
+      {% else %}
+        League Table
+      {% endif %}
+    </h5>
     <div class="table-shell">
       <table class="data-table league-table">
         <thead>

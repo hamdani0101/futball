@@ -5,6 +5,9 @@ from futball.models.shots import Shot
 
 
 def build_xg_table(season):
+    if not season:
+        return {}
+
     table = defaultdict(lambda: {
         "team_id": None,
         "team_name": "",

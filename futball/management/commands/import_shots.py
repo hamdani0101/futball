@@ -182,9 +182,15 @@ class Command(BaseCommand):
 
             x = float(location[0])
             y = float(location[1])
+            if not (0 <= x <= 120 and 0 <= y <= 80):
+                skipped += 1
+                continue
 
             team_name = (event.get("team") or {}).get("name", "")
             team = self.resolve_team(match, team_name)
+            if not team:
+                skipped += 1
+                continue
 
             outcome_name = (shot_payload.get("outcome") or {}).get("name", "")
             outcome = OUTCOME_MAP.get(outcome_name, "off_target")
@@ -195,7 +201,11 @@ class Command(BaseCommand):
             shot_type_name = (shot_payload.get("type") or {}).get("name", "")
             shot_type = SHOT_TYPE_MAP.get(shot_type_name, "")
 
-            xg = shot_payload.get("statsbomb_xg") or 0.0
+            xg = shot_payload.get("statsbomb_xg")
+            try:
+                xg = float(xg) if xg is not None else 0.0
+            except (TypeError, ValueError):
+                xg = 0.0
 
             to_create.append(
                 Shot(
@@ -235,5 +245,4 @@ class Command(BaseCommand):
         if match.away_team.name.lower() == team_name.lower():
             return match.away_team
 
-        team, _ = Team.objects.get_or_create(name=team_name)
-        return team
+        return None

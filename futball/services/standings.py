@@ -3,6 +3,9 @@ from futball.models.match import Match
 from django.db.models import Count, Q, F
 
 def build_league_table(season):
+    if not season:
+        return []
+
     table = defaultdict(lambda: {
         "played": 0,
         "win": 0,

@@ -54,8 +54,15 @@ class Command(BaseCommand):
                     if sb and csv_name:
                         team_map[normalize(sb)] = csv_name
 
-        with open(matches_path, encoding="utf-8") as f:
-            sb_matches = json.load(f)
+        try:
+            with open(matches_path, encoding="utf-8") as f:
+                sb_matches = json.load(f)
+        except json.JSONDecodeError:
+            self.stderr.write(self.style.ERROR(f"matches.json is not valid JSON: {matches_path}"))
+            return
+        if not isinstance(sb_matches, list):
+            self.stderr.write(self.style.ERROR(f"matches.json does not contain a list: {matches_path}"))
+            return
 
         index = {}
         for m in sb_matches:

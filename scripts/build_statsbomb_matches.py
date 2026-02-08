@@ -65,8 +65,16 @@ def main():
         raise SystemExit(
             f"competitions.json not found: {competitions_path}"
         )
+    if competitions_path.stat().st_size == 0:
+        raise SystemExit(
+            f"competitions.json is empty: {competitions_path}"
+        )
 
     competitions = load_json(competitions_path)
+    if not isinstance(competitions, list):
+        raise SystemExit(
+            f"competitions.json does not contain a list: {competitions_path}"
+        )
 
     if args.leagues:
         league_slugs = [s.strip() for s in args.leagues.split(",") if s.strip()]
@@ -98,7 +106,12 @@ def main():
             if not match_file.exists():
                 continue
 
-            matches.extend(load_json(match_file))
+            match_data = load_json(match_file)
+            if not isinstance(match_data, list):
+                raise SystemExit(
+                    f"matches file is not a list: {match_file}"
+                )
+            matches.extend(match_data)
 
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)

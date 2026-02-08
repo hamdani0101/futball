@@ -11,28 +11,36 @@ def dashboard_view(request):
     competition_id = request.GET.get("competition")
     season_id = request.GET.get("season")
 
-    if competition_id:
-        competition = competitions.get(id=competition_id)
-        seasons = seasons_all.filter(competition=competition)
-    else:
-        competition = competitions.first()
-        seasons = seasons_all.filter(competition=competition)
-
-    if season_id:
-        season = seasons.get(id=season_id)
-    else:
-        season = seasons.first()
-
-    data = get_season_summary(season)
-    data.update(
-        {
-            "competitions": competitions,
-            "seasons": seasons,
-            "selected_competition": competition,
-            "selected_season": season,
-            "season_json_data": serialize("json", seasons_all),
-        }
+    competition = (
+        competitions.filter(id=competition_id).first()
+        if competition_id
+        else competitions.first()
     )
+    seasons = seasons_all.filter(competition=competition) if competition else Season.objects.none()
+    season = (
+        seasons.filter(id=season_id).first()
+        if season_id
+        else seasons.first()
+    )
+
+    data = {
+        "competitions": competitions,
+        "seasons": seasons,
+        "selected_competition": competition,
+        "selected_season": season,
+        "season_json_data": serialize("json", seasons_all),
+        "total_matches": 0,
+        "total_goals": 0,
+        "avg_goals": 0,
+        "leader": "-",
+        "top_attack": "-",
+        "best_defence": "-",
+        "top_5": [],
+        "bottom_3": [],
+    }
+    if season:
+        data.update(get_season_summary(season))
+
     return render(request, "futball/dashboard.html", data)
 
 

@@ -57,8 +57,23 @@ class Command(BaseCommand):
         else:
             league_slugs = self.list_datasets(data_match_dir)
 
-        with open(competitions_path, encoding="utf-8") as f:
-            competitions = json.load(f)
+        try:
+            with open(competitions_path, encoding="utf-8") as f:
+                competitions = json.load(f)
+        except json.JSONDecodeError:
+            self.stderr.write(
+                self.style.ERROR(
+                    f"competitions.json is not valid JSON: {competitions_path}"
+                )
+            )
+            return
+        if not isinstance(competitions, list):
+            self.stderr.write(
+                self.style.ERROR(
+                    f"competitions.json does not contain a list: {competitions_path}"
+                )
+            )
+            return
 
         self.stdout.write(self.style.WARNING("=== StatsBomb Seasons Found ==="))
         missing_map = []

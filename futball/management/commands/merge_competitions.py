@@ -70,6 +70,11 @@ class Command(BaseCommand):
                 source.delete()
 
             merged += 1
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"Merged '{source_name}' into '{target_name}'"
+                )
+            )
 
         if dry_run:
             self.stdout.write(

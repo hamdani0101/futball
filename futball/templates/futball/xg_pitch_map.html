@@ -174,7 +174,7 @@
   <div class="pitch-shell">
     <div class="pitch-title">
       <h5>Shot Map</h5>
-      <div class="pitch-note">Ukuran titik ≈ nilai xG</div>
+      <div class="pitch-note">Ukuran titik ~ nilai xG</div>
     </div>
     <div class="xg-legend">
       <span><span class="dot goal"></span>Goal</span>
@@ -195,13 +195,13 @@
 
 {% block extra_js %}
 <script>
-window.teamsBySeason = JSON.parse('{{ teams_by_season|escapejs }}')
+window.teamsBySeason = JSON.parse('{{ teams_by_season|default:"{}"|escapejs }}')
 if (typeof window.updateTeamsForSeason === "function") {
   window.updateTeamsForSeason()
 }
 </script>
 <script>
-const shots = JSON.parse('{{ shots_json|escapejs }}')
+const shots = JSON.parse('{{ shots_json|default:"[]"|escapejs }}')
 const pitch = document.querySelector(".pitch")
 
 shots.forEach(s => {

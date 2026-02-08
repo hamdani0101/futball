@@ -50,6 +50,12 @@ class Command(BaseCommand):
         limit = options["limit"]
         dry_run = options["dry_run"]
 
+        if not open_data_root.exists():
+            self.stderr.write(
+                self.style.ERROR(f"open-data root not found: {open_data_root}")
+            )
+            return
+
         if not matches_json.exists():
             self.stderr.write(
                 self.style.ERROR(f"matches.json not found: {matches_json}")
@@ -76,6 +82,11 @@ class Command(BaseCommand):
                 self.style.ERROR(f"matches.json is not valid JSON: {matches_json}")
             )
             return
+        if not isinstance(matches, list):
+            self.stderr.write(
+                self.style.ERROR(f"matches.json does not contain a list: {matches_json}")
+            )
+            return
 
         match_ids = []
         for m in matches:
@@ -86,7 +97,8 @@ class Command(BaseCommand):
         if limit and limit > 0:
             match_ids = match_ids[:limit]
 
-        out_dir.mkdir(parents=True, exist_ok=True)
+        if not dry_run:
+            out_dir.mkdir(parents=True, exist_ok=True)
 
         copied = 0
         skipped = 0

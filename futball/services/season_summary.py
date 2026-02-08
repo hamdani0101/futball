@@ -5,6 +5,18 @@ from futball.services.standings import build_league_table
 
 
 def get_season_summary(season):
+    if not season:
+        return {
+            "total_matches": 0,
+            "total_goals": 0,
+            "avg_goals": 0,
+            "leader": "-",
+            "top_attack": "-",
+            "best_defence": "-",
+            "top_5": [],
+            "bottom_3": [],
+        }
+
     matches = Match.objects.filter(
         season=season,
         status="finished"

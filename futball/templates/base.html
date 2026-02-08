@@ -83,7 +83,7 @@
       const teamSelect = document.getElementById("team");
       if (competitionSelect) {
           //get data season per competition
-          const seasonsData = JSON.parse("{{ season_json_data|escapejs }}");
+          const seasonsData = JSON.parse("{{ season_json_data|default:'[]'|escapejs }}");
 
           //update season options when competition changes
           competitionSelect.addEventListener("change", () => {

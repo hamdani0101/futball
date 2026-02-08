@@ -32,10 +32,24 @@ class Command(BaseCommand):
         if not os.path.exists(path):
             self.stderr.write(self.style.ERROR(f"File not found: {path}"))
             return
+        if os.path.getsize(path) == 0:
+            self.stderr.write(self.style.ERROR(f"File is empty: {path}"))
+            return
 
         rows = []
         with open(path, newline="", encoding="utf-8") as f:
             reader = csv.DictReader(f)
+            if not reader.fieldnames:
+                self.stderr.write(self.style.ERROR("CSV has no header row."))
+                return
+            required = {"statsbomb_name", "csv_name"}
+            if not required.issubset({h.strip() for h in reader.fieldnames}):
+                self.stderr.write(
+                    self.style.ERROR(
+                        "CSV must include headers: statsbomb_name,csv_name"
+                    )
+                )
+                return
             for row in reader:
                 sb_name = (row.get("statsbomb_name") or "").strip()
                 csv_name = (row.get("csv_name") or "").strip()

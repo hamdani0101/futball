@@ -195,19 +195,29 @@ class Command(BaseCommand):
             reader = csv.DictReader(f)
 
             for row in reader:
-                match_date = datetime.strptime(
-                    row["Date"], date_format
-                )
+                match_date_raw = row.get("Date")
+                home_name = row.get("HomeTeam")
+                away_name = row.get("AwayTeam")
+                if not (match_date_raw and home_name and away_name):
+                    skipped += 1
+                    continue
+
+                try:
+                    match_date = datetime.strptime(match_date_raw, date_format)
+                except ValueError:
+                    skipped += 1
+                    continue
+
                 match_id = self.resolve_match_id(
                     statsbomb_index=statsbomb_index,
                     match_date=match_date,
-                    home_team=row["HomeTeam"],
-                    away_team=row["AwayTeam"],
-                    fallback_date=row["Date"],
+                    home_team=home_name,
+                    away_team=away_name,
+                    fallback_date=match_date_raw,
                 )
 
-                home_team, _ = Team.objects.get_or_create(name=row["HomeTeam"])
-                away_team, _ = Team.objects.get_or_create(name=row["AwayTeam"])
+                home_team, _ = Team.objects.get_or_create(name=home_name)
+                away_team, _ = Team.objects.get_or_create(name=away_name)
 
                 home_goals = int(row.get("FTHG") or row.get("HG") or 0)
                 away_goals = int(row.get("FTAG") or row.get("AG") or 0)

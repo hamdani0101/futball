@@ -1,6 +1,7 @@
 import csv
 import json
 import os
+from datetime import datetime
 
 from django.core.management.base import BaseCommand
 
@@ -43,6 +44,11 @@ class Command(BaseCommand):
                 self.style.ERROR(f"matches.json not found: {matches_path}")
             )
             return
+        if os.path.getsize(matches_path) == 0:
+            self.stderr.write(
+                self.style.ERROR(f"matches.json is empty: {matches_path}")
+            )
+            return
 
         team_map = {}
         if team_map_path and os.path.exists(team_map_path):
@@ -54,8 +60,19 @@ class Command(BaseCommand):
                     if sb and csv_name:
                         team_map[normalize(sb)] = csv_name
 
-        with open(matches_path, encoding="utf-8") as f:
-            sb_matches = json.load(f)
+        try:
+            with open(matches_path, encoding="utf-8") as f:
+                sb_matches = json.load(f)
+        except json.JSONDecodeError:
+            self.stderr.write(
+                self.style.ERROR(f"matches.json is not valid JSON: {matches_path}")
+            )
+            return
+        if not isinstance(sb_matches, list):
+            self.stderr.write(
+                self.style.ERROR(f"matches.json does not contain a list: {matches_path}")
+            )
+            return
 
         missing = 0
         printed = 0
@@ -66,6 +83,10 @@ class Command(BaseCommand):
             home = (m.get("home_team") or {}).get("home_team_name")
             away = (m.get("away_team") or {}).get("away_team_name")
             if not (match_id and match_date and home and away):
+                continue
+            try:
+                match_date_obj = datetime.strptime(match_date, "%Y-%m-%d")
+            except ValueError:
                 continue
 
             home_mapped = team_map.get(normalize(home), home)
@@ -90,7 +111,7 @@ class Command(BaseCommand):
                 continue
 
             exists = Match.objects.filter(
-                match_date=match_date,
+                match_date=match_date_obj,
                 home_team__name=home_mapped,
                 away_team__name=away_mapped,
             ).exists()

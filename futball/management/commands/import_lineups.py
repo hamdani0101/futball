@@ -23,7 +23,7 @@ class Command(BaseCommand):
 
             for team_data in lineups:
                 team_name = team_data["team"]["name"]
-                team = Team.objects.get(name=team_name)
+                team, _ = Team.objects.get_or_create(name=team_name)
 
                 for p in team_data["lineup"]:
                     ext_id = p["player"]["id"]
@@ -36,8 +36,20 @@ class Command(BaseCommand):
                             "name": name,
                             "team": team,
                             "position": position,
-                        }
+                        },
                     )
+                    updated = False
+                    if player.name != name:
+                        player.name = name
+                        updated = True
+                    if player.team_id != team.id:
+                        player.team = team
+                        updated = True
+                    if position and player.position != position:
+                        player.position = position
+                        updated = True
+                    if updated:
+                        player.save(update_fields=["name", "team", "position"])
 
                     PlayerMatch.objects.get_or_create(
                         player=player,

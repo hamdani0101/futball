@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 def normalize_team(name):
-    return (name or "").strip()
+    return (name or "").strip().lower()
 
 
 def load_team_map(path):
@@ -65,6 +65,10 @@ def main():
         raise SystemExit(
             f"matches.json is not valid JSON: {matches_path}"
         ) from exc
+    if not isinstance(matches, list):
+        raise SystemExit(
+            f"matches.json does not contain a list: {matches_path}"
+        )
 
     rows = []
     for m in matches:
@@ -79,10 +83,15 @@ def main():
         home = team_map.get(normalize_team(home), normalize_team(home))
         away = team_map.get(normalize_team(away), normalize_team(away))
 
+        try:
+            formatted_id = format_match_id(match_date, home, away)
+        except ValueError:
+            continue
+
         rows.append(
             {
                 "statsbomb_match_id": match_id,
-                "match_id": format_match_id(match_date, home, away),
+                "match_id": formatted_id,
             }
         )
 

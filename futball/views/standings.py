@@ -22,12 +22,12 @@ def league_table_view(request):
     season_id = request.GET.get("season")
     
 
-    if competition_id:
-        competition = competitions.get(id=competition_id)
-        seasons = seasons_all.filter(competition=competition)
-    else:
-        competition = competitions.first()
-        seasons = seasons_all.filter(competition=competition)
+    competition = (
+        competitions.filter(id=competition_id).first()
+        if competition_id
+        else competitions.first()
+    )
+    seasons = seasons_all.filter(competition=competition) if competition else Season.objects.none()
 
     COMPETITION_ALIAS = {
         "premier league": "epl",
@@ -57,8 +57,10 @@ def league_table_view(request):
         "ligue1": dict(cl=3, el=1, ecl=1, relegation=3),
     }
     
-    key = normalize_competition_name(competition.name)
-    alias = COMPETITION_ALIAS.get(key)
+    alias = None
+    if competition:
+        key = normalize_competition_name(competition.name)
+        alias = COMPETITION_ALIAS.get(key)
 
     rules = UEFA_RULES.get(
         alias,
@@ -72,12 +74,13 @@ def league_table_view(request):
     relegation_places = rules["relegation"]
 
 
-    if season_id:
-        season = seasons.get(id=season_id)
-    else:
-        season = seasons.first()
+    season = (
+        seasons.filter(id=season_id).first()
+        if season_id
+        else seasons.first()
+    )
 
-    table = build_league_table(season)
+    table = build_league_table(season) if season else []
 
     ranked_table = []
     for idx, (team, stats) in enumerate(table, start=1):
@@ -89,10 +92,18 @@ def league_table_view(request):
 
     season_json_data = serializers.serialize("json", seasons_all.all())
 
-    relegation_cutoff = len(ranked_table) - relegation_places
-    champions_league_cutoff = champions_league_places
-    europa_league_cutoff = champions_league_places + europa_league_places
-    conference_league_cutoff = champions_league_places + europa_league_places + conference_league_places
+    if ranked_table:
+        relegation_cutoff = len(ranked_table) - relegation_places
+        champions_league_cutoff = champions_league_places
+        europa_league_cutoff = champions_league_places + europa_league_places
+        conference_league_cutoff = (
+            champions_league_places + europa_league_places + conference_league_places
+        )
+    else:
+        relegation_cutoff = 0
+        champions_league_cutoff = 0
+        europa_league_cutoff = 0
+        conference_league_cutoff = 0
     
     return render(
         request,
@@ -101,7 +112,7 @@ def league_table_view(request):
             "competitions": competitions,
             "seasons": seasons,
             "season_json_data": season_json_data,
-            "selected_competition": season.competition,
+            "selected_competition": competition,
             "selected_season": season,
             "table": ranked_table,
             "relegation_cutoff": relegation_cutoff,

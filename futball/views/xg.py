@@ -16,18 +16,19 @@ def xg_map_view(request):
     competition_id = request.GET.get("competition")
     season_id = request.GET.get("season")
 
-    if competition_id:
-        seasons = seasons_all.filter(competition__id=competition_id)
-    else:
-        competition = competitions.first()
-        seasons = seasons_all.filter(competition=competition)
+    competition = (
+        competitions.filter(id=competition_id).first()
+        if competition_id
+        else competitions.first()
+    )
+    seasons = seasons_all.filter(competition=competition) if competition else Season.objects.none()
+    season = (
+        seasons.filter(id=season_id).first()
+        if season_id
+        else seasons.first()
+    )
 
-    if season_id:
-        season = seasons.get(id=season_id)
-    else:
-        season = seasons.first()
-
-    xg_table = build_xg_table(season)
+    xg_table = build_xg_table(season) if season else {}
 
     teams = []
     xgf = []
@@ -47,7 +48,7 @@ def xg_map_view(request):
             "competitions": competitions,
             "seasons": seasons,
             "season_json_data": season_json_data,
-            "selected_competition": season.competition,
+            "selected_competition": competition,
             "selected_season": season,
             "teams": teams,
             "xgf": xgf,
