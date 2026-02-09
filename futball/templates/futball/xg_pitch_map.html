@@ -89,6 +89,14 @@
     font-size: 12px;
     color: #64748b;
   }
+  .switch {
+    margin-top: 6px;
+  }
+  .switch label {
+    font-size: 13px;
+    color: #0f172a;
+  }
+
 </style>
 {% endblock %}
 
@@ -173,31 +181,33 @@
 
   <div class="pitch-shell">
     <div class="pitch-title">
-      <h5>xG Heatmap</h5>
-      <div class="pitch-note">Intensity ~ akumulasi xG</div>
-      <label>
-        <input type="checkbox" id="toggleHeatmap" checked />
-        Heatmap Mode
-      </label>
+      <h5 id="mapTitle">xG Rect Heatmap</h5>
+      <p class="pitch-note" id="mapNote">Akumulasi xG per area</p>
+      <div class="switch">
+        <label>
+          Circle
+          <input type="checkbox" id="toggleMode" checked>
+          <span class="lever"></span>
+          Rect
+        </label>
+      </div>
     </div>
+
     <div class="xg-legend">
       <span><span class="dot" style="background:#ffeb3b"></span>Low xG</span>
       <span><span class="dot" style="background:#ff5722"></span>High xG</span>
     </div>
-    
     <svg viewBox="0 0 120 80" class="pitch" style="width:100%; max-width:900px;">
-      <rect width="120" height="80" fill="#2e7d32" stroke="#e2f2e2" stroke-width="0.8"/>
-      <line x1="60" y1="0" x2="60" y2="80" stroke="#e2f2e2" stroke-width="0.6" />
+      <!-- pitch lines -->
+      <rect width="120" height="80" fill="#2e7d32"/>
+      <line x1="60" y1="0" x2="60" y2="80" stroke="#e2f2e2" stroke-width="0.6"/>
       <circle cx="60" cy="40" r="9.15" fill="none" stroke="#e2f2e2" stroke-width="0.6"/>
       <rect x="0" y="18" width="18" height="44" fill="none" stroke="#e2f2e2" stroke-width="0.6"/>
       <rect x="102" y="18" width="18" height="44" fill="none" stroke="#e2f2e2" stroke-width="0.6"/>
-      <rect x="0" y="30" width="6" height="20" fill="none" stroke="#e2f2e2" stroke-width="0.6"/>
-      <rect x="114" y="30" width="6" height="20" fill="none" stroke="#e2f2e2" stroke-width="0.6"/>
-      <defs>
-        <filter id="blur">
-          <feGaussianBlur stdDeviation="0.8"/>
-        </filter>
-      </defs>
+
+      <!-- 🔥 data layers -->
+      <g id="rect-layer"></g>
+      <g id="circle-layer"></g>
     </svg>
   </div>
 </div>
@@ -212,34 +222,110 @@ if (typeof window.updateTeamsForSeason === "function") {
 </script>
 <script>
 const shots = JSON.parse('{{ shots_json|default:"[]"|escapejs }}')
-const pitch = document.querySelector(".pitch")
 
-shots.forEach(s => {
-  const g = document.createElementNS("http://www.w3.org/2000/svg", "circle")
+const rectLayer = document.getElementById("rect-layer")
+const circleLayer = document.getElementById("circle-layer")
 
-  g.setAttribute("cx", s.fields.x)
-  g.setAttribute("cy", s.fields.y)
+/* =====================
+   RECT HEATMAP
+===================== */
+function renderRectHeatmap() {
+  rectLayer.innerHTML = ""
 
-  // radius heat influence
-  const r = 2.2 + (s.fields.xg * 9)
-  g.setAttribute("r", r)
+  const GRID_X = 4
+  const GRID_Y = 4
+  const COLS = 120 / GRID_X
+  const ROWS = 80 / GRID_Y
 
-  // warna heat (kuning → merah)
-  const intensity = Math.min(1, s.fields.xg / 0.5)
-  const color = `rgba(255, ${220 - intensity * 160}, 0, ${0.16 + intensity * 0.24})`
+  const grid = Array.from({ length: ROWS }, () =>
+    Array.from({ length: COLS }, () => 0)
+  )
 
-
-  g.setAttribute("fill", color)
-  g.setAttribute("filter", "url(#blur)")
-  g.setAttribute("stroke", "none")
-
-  pitch.appendChild(g)
-})
-
-document.getElementById("toggleHeatmap").addEventListener("change", e => {
-  document.querySelectorAll(".pitch circle").forEach(c => {
-    c.style.display = e.target.checked ? "block" : "none"
+  shots.forEach(s => {
+    const { x, y, xg } = s.fields
+    const c = Math.floor(x / GRID_X)
+    const r = Math.floor(y / GRID_Y)
+    if (grid[r] && grid[r][c] !== undefined) {
+      grid[r][c] += xg
+    }
   })
-})
+
+  const max = Math.max(...grid.flat(), 0.01)
+
+  grid.forEach((row, r) => {
+    row.forEach((value, c) => {
+      if (value <= 0) return
+
+      const intensity = value / max
+      const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect")
+
+      rect.setAttribute("x", c * GRID_X)
+      rect.setAttribute("y", r * GRID_Y)
+      rect.setAttribute("width", GRID_X)
+      rect.setAttribute("height", GRID_Y)
+      rect.setAttribute(
+        "fill",
+        `rgba(255, ${210 - intensity * 150}, 0, ${0.22 + intensity * 0.55})`
+      )
+
+      // 🔥 ini kuncinya
+      rect.setAttribute("stroke", "rgba(0,0,0,0.18)")
+      rect.setAttribute("stroke-width", "0.15")
+
+      rectLayer.appendChild(rect)
+    })
+  })
+}
+
+function renderCircleMap() {
+  circleLayer.innerHTML = ""
+
+  shots.forEach(s => {
+    const { x, y, xg, outcome } = s.fields
+
+    const c = document.createElementNS("http://www.w3.org/2000/svg", "circle")
+    c.setAttribute("cx", x)
+    c.setAttribute("cy", y)
+    c.setAttribute("r", Math.max(1.8, xg * 9))
+
+    c.setAttribute(
+      "fill",
+      outcome === "goal" ? "#ff5252" : "#ffd54f"
+    )
+
+    c.setAttribute("opacity", 0.75)
+    c.setAttribute("stroke", "rgba(0,0,0,0.25)")
+    c.setAttribute("stroke-width", "0.2")
+
+    circleLayer.appendChild(c)
+  })
+}
+
+const toggle = document.getElementById("toggleMode")
+const title = document.getElementById("mapTitle")
+const note = document.getElementById("mapNote")
+
+function updateMode() {
+  if (toggle.checked) {
+    rectLayer.style.display = "block"
+    circleLayer.style.display = "none"
+
+    title.textContent = "xG Rect Heatmap"
+    note.textContent = "Akumulasi xG per area"
+  } else {
+    rectLayer.style.display = "none"
+    circleLayer.style.display = "block"
+
+    title.textContent = "xG Shot Map"
+    note.textContent = "Ukuran titik ~ nilai xG"
+  }
+}
+
+// render awal
+renderRectHeatmap()
+renderCircleMap()
+updateMode()
+
+toggle.addEventListener("change", updateMode)
 </script>
 {% endblock %}

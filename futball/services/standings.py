@@ -19,25 +19,14 @@ def build_league_table(season):
 
     matches = (
         Match.objects
-        .filter(season=season, status="finished")
-        .annotate(
-            home_goals=Count(
-                "shots",
-                filter=Q(
-                    shots__team=F("home_team"),
-                    shots__outcome="goal"
-                )
-            ),
-            away_goals=Count(
-                "shots",
-                filter=Q(
-                    shots__team=F("away_team"),
-                    shots__outcome="goal"
-                )
-            )
+        .filter(
+            season=season,
+            status="finished",
+            score__isnull=False
         )
-        .select_related("home_team", "away_team")
+        .select_related("home_team", "away_team", "score")
     )
+
 
     for m in matches:
         if getattr(m, "score", None) is not None:

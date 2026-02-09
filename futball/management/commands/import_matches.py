@@ -250,25 +250,30 @@ class Command(BaseCommand):
                     )
                     created += 1
                     
+                # HOME TEAM STATS
                 MatchTeamStats.objects.update_or_create(
                     match=match,
                     team=home_team,
                     defaults={
+                        "goals": home_goals,
                         "xg": 0.0,
                         "shots": int(row.get("HS") or 0),
                         "shots_on_target": int(row.get("HST") or 0),
                     },
                 )
+
+                # AWAY TEAM STATS
                 MatchTeamStats.objects.update_or_create(
                     match=match,
                     team=away_team,
                     defaults={
+                        "goals": away_goals,
                         "xg": 0.0,
                         "shots": int(row.get("AS") or 0),
                         "shots_on_target": int(row.get("AST") or 0),
                     },
                 )
-
+        
         self.stdout.write(
             self.style.SUCCESS(
                 f"{os.path.basename(csv_path)}: {created} created, {updated} updated, {skipped} skipped"
