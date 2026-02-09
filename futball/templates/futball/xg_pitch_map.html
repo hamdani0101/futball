@@ -195,7 +195,7 @@
       <rect x="114" y="30" width="6" height="20" fill="none" stroke="#e2f2e2" stroke-width="0.6"/>
       <defs>
         <filter id="blur">
-          <feGaussianBlur stdDeviation="2.2"/>
+          <feGaussianBlur stdDeviation="0.8"/>
         </filter>
       </defs>
     </svg>
@@ -221,12 +221,13 @@ shots.forEach(s => {
   g.setAttribute("cy", s.fields.y)
 
   // radius heat influence
-  const r = 4 + (s.fields.xg * 18)
+  const r = 2.2 + (s.fields.xg * 9)
   g.setAttribute("r", r)
 
   // warna heat (kuning → merah)
-  const intensity = Math.min(1, s.fields.xg / 0.6)
-  const color = `rgba(255, ${200 - intensity * 120}, 0, ${0.25 + intensity * 0.35})`
+  const intensity = Math.min(1, s.fields.xg / 0.5)
+  const color = `rgba(255, ${220 - intensity * 160}, 0, ${0.16 + intensity * 0.24})`
+
 
   g.setAttribute("fill", color)
   g.setAttribute("filter", "url(#blur)")
