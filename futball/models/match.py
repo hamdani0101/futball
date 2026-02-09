@@ -9,8 +9,6 @@ class Match(models.Model):
     home_team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="home_matches")
     away_team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="away_matches")
     match_date = models.DateTimeField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=20, choices=[
             ("scheduled", "Scheduled"),
             ("finished", "Finished"),
@@ -18,6 +16,8 @@ class Match(models.Model):
         ],
         default="scheduled"
     )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
         return f"{self.home_team} vs {self.away_team} ({self.match_date.date()})"

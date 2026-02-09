@@ -5,7 +5,7 @@ from difflib import SequenceMatcher, get_close_matches
 
 from django.core.management.base import BaseCommand
 
-from futball.models import Team
+from futball.models.team import Team
 
 
 def normalize(name):

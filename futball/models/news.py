@@ -10,3 +10,5 @@ class News(models.Model):
     
 class NewsContentImage(models.Model):
     name_file= models.ImageField(upload_to="news/content/")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)

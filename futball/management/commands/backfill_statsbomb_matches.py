@@ -5,7 +5,10 @@ from datetime import datetime
 
 from django.core.management.base import BaseCommand
 
-from futball.models import Competition, Match, Season, Team
+from futball.models.competition import Competition
+from futball.models.match import Match
+from futball.models.season import Season
+from futball.models.team import Team
 
 
 def normalize(name):

@@ -173,14 +173,19 @@
 
   <div class="pitch-shell">
     <div class="pitch-title">
-      <h5>Shot Map</h5>
-      <div class="pitch-note">Ukuran titik ~ nilai xG</div>
+      <h5>xG Heatmap</h5>
+      <div class="pitch-note">Intensity ~ akumulasi xG</div>
+      <label>
+        <input type="checkbox" id="toggleHeatmap" checked />
+        Heatmap Mode
+      </label>
     </div>
     <div class="xg-legend">
-      <span><span class="dot goal"></span>Goal</span>
-      <span><span class="dot shot"></span>Non-goal</span>
+      <span><span class="dot" style="background:#ffeb3b"></span>Low xG</span>
+      <span><span class="dot" style="background:#ff5722"></span>High xG</span>
     </div>
-    <svg viewBox="0 0 120 80" class="pitch" style="width:100%; max-width: 900px; height: auto;">
+    
+    <svg viewBox="0 0 120 80" class="pitch" style="width:100%; max-width:900px;">
       <rect width="120" height="80" fill="#2e7d32" stroke="#e2f2e2" stroke-width="0.8"/>
       <line x1="60" y1="0" x2="60" y2="80" stroke="#e2f2e2" stroke-width="0.6" />
       <circle cx="60" cy="40" r="9.15" fill="none" stroke="#e2f2e2" stroke-width="0.6"/>
@@ -188,6 +193,11 @@
       <rect x="102" y="18" width="18" height="44" fill="none" stroke="#e2f2e2" stroke-width="0.6"/>
       <rect x="0" y="30" width="6" height="20" fill="none" stroke="#e2f2e2" stroke-width="0.6"/>
       <rect x="114" y="30" width="6" height="20" fill="none" stroke="#e2f2e2" stroke-width="0.6"/>
+      <defs>
+        <filter id="blur">
+          <feGaussianBlur stdDeviation="2.2"/>
+        </filter>
+      </defs>
     </svg>
   </div>
 </div>
@@ -205,22 +215,30 @@ const shots = JSON.parse('{{ shots_json|default:"[]"|escapejs }}')
 const pitch = document.querySelector(".pitch")
 
 shots.forEach(s => {
-  const c = document.createElementNS("http://www.w3.org/2000/svg", "circle")
+  const g = document.createElementNS("http://www.w3.org/2000/svg", "circle")
 
-  c.setAttribute("cx", s.fields.x)
-  c.setAttribute("cy", s.fields.y)
-  const radius = Math.max(1.5, s.fields.xg * 10)
-  c.setAttribute("r", radius)
+  g.setAttribute("cx", s.fields.x)
+  g.setAttribute("cy", s.fields.y)
 
-  c.setAttribute(
-    "fill",
-    s.fields.outcome === "goal" ? "#ff5252" : "#ffd54f"
-  )
+  // radius heat influence
+  const r = 4 + (s.fields.xg * 18)
+  g.setAttribute("r", r)
 
-  c.setAttribute("opacity", 0.75)
-  c.setAttribute("stroke", "rgba(0,0,0,0.25)")
-  c.setAttribute("stroke-width", "0.2")
-  pitch.appendChild(c)
+  // warna heat (kuning → merah)
+  const intensity = Math.min(1, s.fields.xg / 0.6)
+  const color = `rgba(255, ${200 - intensity * 120}, 0, ${0.25 + intensity * 0.35})`
+
+  g.setAttribute("fill", color)
+  g.setAttribute("filter", "url(#blur)")
+  g.setAttribute("stroke", "none")
+
+  pitch.appendChild(g)
+})
+
+document.getElementById("toggleHeatmap").addEventListener("change", e => {
+  document.querySelectorAll(".pitch circle").forEach(c => {
+    c.style.display = e.target.checked ? "block" : "none"
+  })
 })
 </script>
 {% endblock %}

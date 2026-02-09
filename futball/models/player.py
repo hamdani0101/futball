@@ -21,6 +21,9 @@ class PlayerMatch(models.Model):
     is_starter = models.BooleanField(default=False)
     minute_on = models.IntegerField(default=0)
     minute_off = models.IntegerField(default=90)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         unique_together = ("player", "match")
