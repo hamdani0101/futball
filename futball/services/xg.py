@@ -3,11 +3,14 @@ from django.db.models import Count, Q, F, Sum
 from futball.models.match import Match
 from futball.models.shots import Shot
 
-
+# Build xG table (Indonesian: Bangun tabel xG)
 def build_xg_table(season):
+    # If no season, return empty table (Indonesian: Jika tidak ada musim, kembalikan tabel kosong)
     if not season:
         return {}
 
+
+    # Initialize table (Indonesian: Inisialisasi tabel)
     table = defaultdict(lambda: {
         "team_id": None,
         "team_name": "",
@@ -18,6 +21,7 @@ def build_xg_table(season):
         "xga": 0.0,
     })
 
+    # Get finished matches (Indonesian: Dapatkan pertandingan yang selesai)
     matches = (
         Match.objects
         .filter(season=season, status="finished")
@@ -48,6 +52,7 @@ def build_xg_table(season):
         .select_related("home_team", "away_team")
     )
 
+    # Process matches (Indonesian: Proses pertandingan)
     for m in matches:
         home = m.home_team
         away = m.away_team
@@ -70,4 +75,5 @@ def build_xg_table(season):
             t["xgf"] += xgf
             t["xga"] += xga
 
+    # Return table (Indonesian: Kembalikan tabel)
     return table

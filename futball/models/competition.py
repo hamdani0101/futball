@@ -1,6 +1,6 @@
 from django.db import models
 
-
+# Competition model (Indonesian: Model kompetisi)
 class Competition(models.Model):
     name = models.CharField(max_length=100)
     country = models.CharField(max_length=100, blank=True)

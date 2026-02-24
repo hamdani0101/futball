@@ -1,5 +1,7 @@
 from django.db import models
 
+
+# Team model (Indonesian: Model tim)
 class Team(models.Model):
     name = models.CharField(max_length=100)
     country = models.CharField(max_length=100, blank=True)
@@ -9,5 +11,6 @@ class Team(models.Model):
     def __str__(self):
         return self.name
 
+    # Unique together name and country (Indonesian: Unik bersama nama dan negara)
     class Meta:
         unique_together = ("name", "country")

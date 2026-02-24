@@ -4,6 +4,7 @@ from futball.models.match import Match
 from futball.models.team import Team
 from futball.models.player import Player
 
+# Shot model (Indonesian: Model tembakan)
 class Shot(models.Model):    
     match = models.ForeignKey(
         Match,
@@ -19,7 +20,7 @@ class Shot(models.Model):
     minute = models.IntegerField()
     second = models.IntegerField(default=0)
 
-    # StatsBomb style coordinates (0–120, 0–80)
+    # StatsBomb style coordinates (0–120, 0–80) (Indonesian: Koordinat style StatsBomb (0–120, 0–80))
     x = models.FloatField()
     y = models.FloatField()
 
@@ -68,11 +69,13 @@ class Shot(models.Model):
     def __str__(self):
         return f"{self.team} shot ({self.xg})"
     
+    # Set is_goal based on outcome (Indonesian: Set is_goal berdasarkan outcome)
     def save(self, *args, **kwargs):
         self.is_goal = self.outcome == "goal"
         self.clean()
         super().save(*args, **kwargs)
 
+    # Validate coordinates and team (Indonesian: Validasi koordinat dan tim)
     def clean(self):
         if not (0 <= self.x <= 120 and 0 <= self.y <= 80):
             raise ValidationError("Shot coordinates out of bounds")
@@ -80,7 +83,7 @@ class Shot(models.Model):
         if self.team not in [self.match.home_team, self.match.away_team]:
             raise ValidationError("Shot team must be home or away team")
 
-    
+    # Ordering and indexes (Indonesian: Pengurutan dan indeks)
     class Meta:
         ordering = ["minute", "second"]
         indexes = [
