@@ -43,18 +43,18 @@
     <div class="col s12 l3">
       <div class="news-section">
         <h2 class="news-title">Football News</h2>
-          {% for i in 5|times %}
+          {% for n in news %}
             <div class="news-item">
               <div class="news-thumbnail">
-                <img src="{% static 'futball/img/news_placeholder.png' %}" alt="News Image {{ i }}">
+                <img src="{{ n.thumbnail.url }}" alt="News Image {{ n.headline }}">
               </div>
               <div class="news-content">
-                <h2 class="news-headline">News Headline {{ i }}</h2>
+                <h2 class="news-headline">{{ n.headline }}</h2>
                 <div class="news-summary">
-                  <p>This is a summary of news item {{ i }}. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                  <p>{{ n.shortdesc }}</p>
                 </div>
                 <div class="news-date">
-                  <small>Published on 2026-06-0{{ i }}</small>
+                  <small>Published on {{ n.created_at }}</small>
                 </div>
                 <div class="news-link">
                   <a href="#">Read more</a>

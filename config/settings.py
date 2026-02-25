@@ -69,6 +69,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'futball.context_processors.global_base_data',
             ],
         },
     },
@@ -133,6 +134,8 @@ STATICFILES_DIRS = [
 ]
 
 MEDIA_URL = "/media/"
+
+MEDIA_ROOT = BASE_DIR / "media"
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost",

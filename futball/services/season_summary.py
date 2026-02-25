@@ -65,8 +65,8 @@ def get_season_summary(season):
         "total_goals": total_goals,
         "avg_goals": avg_goals,
         "leader": leader,
-        "top_attack": top_attack,
-        "best_defence": best_defence,
+        "top_attack": xg_table[top_attack]['team_name'],
+        "best_defence": xg_table[best_defence]['team_name'],
         "top_5": table[:5],
         "bottom_3": table[-3:],
     }
