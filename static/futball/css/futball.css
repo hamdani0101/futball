@@ -223,13 +223,20 @@ nav {
     border-bottom: none;
 }
 
-/* League table specifics */
-.table-shell {
-    background: white;
-    border-radius: 14px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.06);
-    overflow: hidden;
+.data-table td:nth-child(2) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
+
+.data-table td img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+/* League table specifics */
 .league-table {
     border-collapse: collapse;
     font-size: 14px;

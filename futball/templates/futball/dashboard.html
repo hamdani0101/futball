@@ -77,13 +77,19 @@
       <div class="col s12 m6">
         <div class="insight-card">
           <span class="card-label">Best Attack (xG)</span>
-          <strong class="card-value">{{ top_attack }}</strong>
+          <strong class="card-value">
+            <img src="{% if top_attack.logo %}{{ top_attack.logo.url }}{% endif %}" alt="{{ top_attack.team_name }}">
+            {{ top_attack.team_name }}
+          </strong>
         </div>
       </div>
       <div class="col s12 m6">
         <div class="insight-card">
           <span class="card-label">Best Defence (xGA)</span>
-          <strong class="card-value">{{ best_defence }}</strong>
+          <strong class="card-value">
+            <img src="{% if best_defence.logo %}{{ best_defence.logo.url }}{% endif %}" alt="{{ best_defence.team_name }}">
+            {{ best_defence.team_name }}
+          </strong>
         </div>
       </div>
     </div>

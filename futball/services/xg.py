@@ -69,6 +69,7 @@ def build_xg_table(season):
             t = table[team.id]
             t["team_id"] = team.id
             t["team_name"] = team.name
+            t["logo"] = team.logo
             t["matches"] += 1
             t["gf"] += gf
             t["ga"] += ga

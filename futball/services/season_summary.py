@@ -58,6 +58,25 @@ def get_season_summary(season):
         key=lambda team: xg_table[team]["xga"],
         default="-"
     )
+    
+    top_attack = xg_table[top_attack]
+    best_defence = xg_table[best_defence]
+    
+    logo_top_attack = "-"
+    logo_best_defence = "-"
+    if top_attack['logo']:
+        logo_top_attack = top_attack['logo']
+    if best_defence['logo']:
+        logo_best_defence = best_defence['logo']
+    
+    team_with_top_attack = {
+        'team_name': top_attack['team_name'],
+        'logo': logo_top_attack,
+    }
+    team_with_best_defence = {
+        'team_name': best_defence['team_name'],
+        'logo': logo_best_defence,
+    }
 
     # Return summary (Indonesian: Kembalikan ringkasan)
     return {
@@ -65,8 +84,8 @@ def get_season_summary(season):
         "total_goals": total_goals,
         "avg_goals": avg_goals,
         "leader": leader,
-        "top_attack": xg_table[top_attack]['team_name'],
-        "best_defence": xg_table[best_defence]['team_name'],
+        "top_attack": team_with_top_attack,
+        "best_defence": team_with_best_defence,
         "top_5": table[:5],
         "bottom_3": table[-3:],
     }
