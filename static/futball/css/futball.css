@@ -224,45 +224,74 @@ nav {
 }
 
 /* League table specifics */
+.table-shell {
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+    overflow: hidden;
+}
 .league-table {
-    max-width: 1100px;
-    margin: 0 auto;
+    border-collapse: collapse;
+    font-size: 14px;
 }
 
 .league-table thead {
-    background: #1e293b;
-    color: #ffffff;
+    background: #0f172a;
+    color: white;
 }
 
 .league-table th,
 .league-table td {
+    padding: 12px 10px;
     text-align: center;
-    font-size: 14px;
 }
 
-.league-table th {
-    text-transform: uppercase;
-    font-size: 12px;
-    letter-spacing: 0.05em;
+.league-table td:first-child {
+    font-weight: 600;
+    color: #64748b;
 }
 
-.league-table tbody tr:nth-child(even) {
-    background: var(--surface-muted);
-}
-
-.league-table tbody tr:hover {
-    background: #e2e8f0;
+.league-table td strong {
+    font-size: 15px;
+    color: #0f172a;
 }
 
 .league-table td.team {
     text-align: left;
-    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-.league-table tr.ucl { border-left: 5px solid #3b82f6; }
-.league-table tr.europa { border-left: 5px solid #f77a06; }
-.league-table tr.conference-league { border-left: 5px solid #22c55e; }
-.league-table tr.relegation { border-left: 5px solid #ef4444; }
+.league-table td.team img {
+    width: 26px;
+    height: 26px;
+    object-fit: contain;
+}
+
+.league-table tbody tr {
+    transition: background 0.2s ease;
+}
+
+.league-table tbody tr:hover {
+    background: #f1f5f9;
+}
+
+.league-table tbody tr.ucl {
+    background: linear-gradient(to right, rgba(59,130,246,0.08), transparent);
+}
+
+.league-table tbody tr.europa {
+    background: linear-gradient(to right, rgba(245,158,11,0.08), transparent);
+}
+
+.league-table tbody tr.conference-league {
+    background: linear-gradient(to right, rgba(34,197,94,0.08), transparent);
+}
+
+.league-table tbody tr.relegation {
+    background: linear-gradient(to right, rgba(239,68,68,0.08), transparent);
+}
 
 .legend {
     max-width: 1100px;

@@ -82,7 +82,7 @@
             {% endif %}
           ">
             <td>{{ row.rank }}</td>
-            <td class="team">{{ row.team }}</td>
+            <td class="team"><img src="{% if row.logo %}{{ row.logo.url }}{% endif %}" alt="{{ row.team }}"> {{ row.team }}</td>
             <td>{{ row.played }}</td>
             <td>{{ row.win }}</td>
             <td>{{ row.draw }}</td>

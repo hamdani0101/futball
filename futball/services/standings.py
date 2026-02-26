@@ -19,6 +19,7 @@ def build_league_table(season):
         "ga": 0,
         "gd": 0,
         "points": 0,
+        "logo": None,
     })
 
     # Get finished matches (Indonesian: Dapatkan pertandingan yang selesai)
@@ -49,6 +50,9 @@ def build_league_table(season):
 
         home = m.home_team.name
         away = m.away_team.name
+        
+        home_team_logo = m.home_team.logo
+        away_team_logo = m.away_team.logo
 
         table[home]["played"] += 1
         table[away]["played"] += 1
@@ -76,6 +80,8 @@ def build_league_table(season):
             table[home]["points"] += 1
             table[away]["points"] += 1
 
+        table[home]["logo"] = home_team_logo
+        table[away]["logo"] = away_team_logo
 
     # Calculate goal difference (Indonesian: Hitung selisih gol)
     for team in table.values():
