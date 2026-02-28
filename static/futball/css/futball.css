@@ -48,6 +48,10 @@ h1, h2, h3, h4, h5 {
     letter-spacing: 0.01em;
 }
 
+a, button {
+    transition: all 0.2s ease;
+}
+
 .bg-light {
     background-color: var(--background-color);
 }
@@ -66,36 +70,35 @@ h1, h2, h3, h4, h5 {
 
 /* ===== NAVBAR ===== */
 nav {
-    background: transparent;
+    background: linear-gradient(120deg, #0b1220, #0f172a);
     box-shadow: 0 6px 20px rgba(15, 23, 42, 0.15);
 }
 
-.nav-wrapper {
-    padding: 0 20px;
-}
-
-.nav-wrapper .brand-logo {
-    font-family: "Fraunces", "Times New Roman", serif;
-    font-weight: 700;
-    font-size: 22px;
+.nav-wrapper ul {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    height: 100%;
 }
 
-.nav-wrapper ul a {
-    color: #e2e8f0;
+.nav-wrapper ul li a {
+    padding: 8px 16px;
+    border-radius: var(--radius-pill);
     font-weight: 500;
+    color: #cbd5e1;
     transition: all 0.2s ease;
+    height: 100%;
 }
 
-.nav-wrapper ul a:hover {
-    background: rgba(255, 255, 255, 0.12);
+.nav-wrapper ul li a:hover {
+    background: rgba(255,255,255,0.08);
+    color: white;
 }
 
 .nav-wrapper ul li.active a {
-    background: rgba(14, 165, 233, 0.22);
-    color: #ffffff;
+    background: rgba(14,165,233,0.2);
+    color: #fff;
+    height: 100%;
 }
 
 /* ===== PAGE CONTENT ===== */
@@ -160,21 +163,65 @@ nav {
     min-height: 92px;
 }
 
+.stat-card,
+.insight-card,
+.table-card,
+.competition-search,
+.news-section,
+.chart-shell {
+    transition: all 0.25s ease;
+}
+
+.stat-card:hover,
+.insight-card:hover,
+.table-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+}
+
+.insight-card {
+    min-height: 110px;
+}
+
+.insight-card .card-value {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    line-height: 1.2;
+}
+
+.insight-card .card-value img {
+    width: 24px;
+    height: 24px;   
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
 .card-label {
-    font-size: 14px;
+    font-size: 12px;
+    font-weight: 600;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.08em;
 }
 
 .card-value {
-    font-size: 22px;
+    font-size: 26px;
+    margin-top: 4px;
     font-weight: 700;
     color: var(--text-color);
 }
 
 .table-row {
     margin-bottom: var(--space-7);
+}
+
+.table-row .col.l4 .table-card {
+    border-left: 4px solid #ef4444;
+}
+
+.table-row .col.l8 .table-card {
+    border-left: 4px solid var(--secondary-color);
 }
 
 .table-shell {
@@ -204,6 +251,11 @@ nav {
 .data-table {
     width: 100%;
     border-collapse: collapse;
+}
+
+.data-table tbody tr:hover,
+.league-table tbody tr:hover {
+    background: rgba(14, 165, 233, 0.06);
 }
 
 .data-table th,
@@ -243,19 +295,38 @@ nav {
 }
 
 .league-table thead {
-    background: #0f172a;
-    color: white;
+    background: linear-gradient(90deg, #0f172a, #111827);
+    color: #e2e8f0;
+}
+
+.league-table thead th {
+    font-size: 12px;
+    letter-spacing: 0.08em;
 }
 
 .league-table th,
 .league-table td {
-    padding: 12px 10px;
+    padding: 10px 8px;
     text-align: center;
 }
 
 .league-table td:first-child {
-    font-weight: 600;
-    color: #64748b;
+    position: relative;
+    font-weight: 700;
+    color: var(--text-muted);
+    width: 40px;
+}
+
+.league-table td:first-child::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 25%;
+    height: 50%;
+    width: 3px;
+    background: var(--secondary-color);
+    border-radius: 3px;
+    opacity: 0.4;
 }
 
 .league-table td strong {
