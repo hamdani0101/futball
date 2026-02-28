@@ -24,45 +24,61 @@
     <div class="nav-wrapper bg-primary">
       <a href="{% url 'dashboard' %}" class="brand-logo">⚽ FutBall</a>
       <ul id="nav-mobile" class="right hide-on-med-and-down">
-        <li class="{% if request.path == '/futball/' %}active{% endif %}"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        <li class="{% if request.path == '/futball/' %}active{% endif %}"><a href="{% url 'dashboard' %}">Home</a></li>
+        <li><a href="#">Fixtures</a></li>
         <li class="{% if '/futball/klasemen/' in request.path %}active{% endif %}"><a href="{% url 'league-table' %}">Klasemen</a></li>
-        <li class="{% if '/futball/xg-pitch/' in request.path %}active{% endif %}"><a href="{% url 'xg-pitch-map' %}">xG Map</a></li>
+        <li><a href="#">Stats</a></li>
+        <li><a href="#">News</a></li>
       </ul>
     </div>
+    <a href="#" data-target="mobile-nav" class="sidenav-trigger">
+      <i class="material-icons">menu</i>
+    </a>
   </nav>
+  <ul class="sidenav" id="mobile-nav">
+    <li><a href="{% url 'dashboard' %}">Home</a></li>
+    <li><a href="#">Fixtures</a></li>
+    <li><a href="{% url 'league-table' %}">Klasemen</a></li>
+    <li><a href="#">Stats</a></li>
+    <li><a href="#">News</a></li>
+  </ul>
 
   <!-- CONTENT -->
-  <div class="row">
-    <div class="col s12 l9">
-      <div class="content">
-        <h2>{% block c_title %}{% endblock %}</h2>
-        
-        {% block content %}{% endblock %}
-      </div>    
-    </div>
-    <div class="col s12 l3">
-      <div class="news-section">
-        <h2 class="news-title">Football News</h2>
-          {% for n in news %}
-            <div class="news-item">
-              <div class="news-thumbnail">
-                <img src="{{ n.thumbnail.url }}" alt="News Image {{ n.headline }}">
-              </div>
-              <div class="news-content">
-                <h2 class="news-headline">{{ n.headline }}</h2>
-                <div class="news-summary">
-                  <p>{{ n.shortdesc }}</p>
-                </div>
-                <div class="news-date">
-                  <small>Published on {{ n.created_at }}</small>
-                </div>
-                <div class="news-link">
-                  <a href="#">Read more</a>
-                </div>
-              </div>
-            </div>
-          {% endfor %}
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col s12 l9">
+        <div class="content">
+          <h2>{% block c_title %}{% endblock %}</h2>
+          
+          {% block content %}{% endblock %}
+        </div>    
       </div>
+      {% if news %}
+      <div class="col s12 l3">
+        <div class="news-section">
+          <h2 class="news-title">News</h2>
+            {% for n in news %}
+              <div class="news-item">
+                <div class="news-thumbnail">
+                  <img src="{{ n.thumbnail.url }}" alt="News Image {{ n.headline }}">
+                </div>
+                <div class="news-content">
+                  <h3 class="news-headline">{{ n.headline }}</h3>
+                  <div class="news-summary">
+                    <p>{{ n.shortdesc }}</p>
+                  </div>
+                  <div class="news-date">
+                    <small>Published on {{ n.created_at|date:"F j, Y" }}</small>
+                  </div>
+                  <div class="news-link">
+                    <a href="#">Read more</a>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+        </div>
+      </div>
+      {% endif %}
     </div>
   </div>
 
@@ -74,8 +90,13 @@
   <!-- Compiled and minified JavaScript -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
   <script src="{% static 'futball/js/futball.js' %}"></script>
+  <script id="season-data" type="application/json">
+    {{ season_json_data|safe }}
+  </script>
   <script>
     M.AutoInit();
+    
+    M.Sidenav.init(document.querySelectorAll('.sidenav'));
 
     (() => {
       const competitionSelect = document.getElementById("competition");
@@ -83,7 +104,7 @@
       const teamSelect = document.getElementById("team");
       if (competitionSelect) {
           //get data season per competition
-          const seasonsData = JSON.parse("{{ season_json_data|default:'[]'|escapejs }}");
+          const seasonsData = JSON.parse(document.getElementById("season-data").textContent);
 
           //update season options when competition changes
           competitionSelect.addEventListener("change", () => {

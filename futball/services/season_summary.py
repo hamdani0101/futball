@@ -40,7 +40,25 @@ def get_season_summary(season):
 
     # standings (Indonesian: Standings)
     table = build_league_table(season)
-    leader = table[0][0] if table else "-"
+    if table:
+        # Sort by points (descending)
+        sorted_table = sorted(
+            table,
+            key=lambda x: x[1]['points'],
+            reverse=True
+        )
+
+        leader_name, leader_data = sorted_table[0]
+
+        leaders = {
+            'team_name': leader_name,
+            'logo': leader_data.get('logo', '-')
+        }
+    else:
+        leaders = {
+            'team_name': '-',
+            'logo': '-'
+        }
 
     # xG analytics (Indonesian: Analitik xG)
     xg_table = build_xg_table(season)
@@ -83,7 +101,7 @@ def get_season_summary(season):
         "total_matches": total_matches,
         "total_goals": total_goals,
         "avg_goals": avg_goals,
-        "leader": leader,
+        "leader": leaders,
         "top_attack": team_with_top_attack,
         "best_defence": team_with_best_defence,
         "top_5": table[:5],

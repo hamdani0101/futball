@@ -43,68 +43,68 @@
   </form>
 </div>
 
-<div class="row">
-  <div class="col s12">
-    <h5>
-      {% if selected_season %}
-        {{ selected_season.competition.name }} {{ selected_season.name }}
-      {% else %}
-        League Table
-      {% endif %}
-    </h5>
-    <div class="table-shell">
-      <table class="data-table league-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Team</th>
-            <th>P</th>
-            <th>W</th>
-            <th>D</th>
-            <th>L</th>
-            <th>GF</th>
-            <th>GA</th>
-            <th>GD</th>
-            <th>Pts</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for row in table %}
-          <tr class="
-            {% if row.rank <= champions_league_cutoff %}
-              ucl
-            {% elif row.rank <= europa_league_cutoff %}
-              europa
-            {% elif row.rank <= conference_league_cutoff %}
-              conference-league
-            {% elif row.rank > relegation_cutoff %}
-              relegation
-            {% endif %}
-          ">
-            <td>{{ row.rank }}</td>
-            <td class="team"><img src="{% if row.logo %}{{ row.logo.url }}{% endif %}" alt="{{ row.team }}"> {{ row.team }}</td>
-            <td>{{ row.played }}</td>
-            <td>{{ row.win }}</td>
-            <td>{{ row.draw }}</td>
-            <td>{{ row.loss }}</td>
-            <td>{{ row.gf }}</td>
-            <td>{{ row.ga }}</td>
-            <td>{{ row.gd }}</td>
-            <td><strong>{{ row.points }}</strong></td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    
-    <div class="legend">
-      <span><span class="dot blue"></span> UEFA Champions League</span>
-      <span><span class="dot orange"></span> Europa League</span>
-      <span><span class="dot green"></span> Europa Conference League</span>
-      <span><span class="dot red"></span> Relegation</span>
+  <div class="row">
+    <div class="col s12">
+      <h5>
+        {% if selected_season %}
+          {{ selected_season.competition.name }} {{ selected_season.name }}
+        {% else %}
+          League Table
+        {% endif %}
+      </h5>
+      <div class="table-shell">
+        <table class="data-table league-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Team</th>
+              <th>P</th>
+              <th>W</th>
+              <th>D</th>
+              <th>L</th>
+              <th>GF</th>
+              <th>GA</th>
+              <th>GD</th>
+              <th>Pts</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in table %}
+            <tr class="
+              {% if row.rank <= champions_league_cutoff %}
+                ucl
+              {% elif row.rank <= europa_league_cutoff %}
+                europa
+              {% elif row.rank <= conference_league_cutoff %}
+                conference-league
+              {% elif row.rank > relegation_cutoff %}
+                relegation
+              {% endif %}
+            ">
+              <td>{{ row.rank }}</td>
+              <td class="team"><img src="{% if row.logo %}{{ row.logo.url }}{% endif %}" alt="{{ row.team }}"> {{ row.team }}</td>
+              <td>{{ row.played }}</td>
+              <td>{{ row.win }}</td>
+              <td>{{ row.draw }}</td>
+              <td>{{ row.loss }}</td>
+              <td>{{ row.gf }}</td>
+              <td>{{ row.ga }}</td>
+              <td>{{ row.gd }}</td>
+              <td><strong>{{ row.points }}</strong></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="legend">
+        <span><span class="dot blue"></span> UEFA Champions League</span>
+        <span><span class="dot orange"></span> Europa League</span>
+        <span><span class="dot green"></span> Europa Conference League</span>
+        <span><span class="dot red"></span> Relegation</span>
+      </div>
     </div>
   </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}

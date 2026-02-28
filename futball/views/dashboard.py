@@ -1,4 +1,5 @@
 from django.core.serializers import serialize
+from django.http import HttpResponse
 from django.shortcuts import render
 from futball.models.competition import Competition
 from futball.models.season import Season

@@ -65,7 +65,10 @@
       <div class="col s12 m6 l3">
         <div class="stat-card">
           <span class="card-label">Leader</span>
-          <strong class="card-value">{{ leader }}</strong>
+          <strong class="card-value">
+            <img src="{% if leader.logo %}{{ leader.logo.url }}{% endif %}" alt="{{ leader.team_name }}">
+            {{ leader.team_name }}
+          </strong>
         </div>
       </div>
     </div>
