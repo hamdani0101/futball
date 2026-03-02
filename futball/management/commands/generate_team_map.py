@@ -1,3 +1,5 @@
+"""Management command to generate team map."""
+
 import csv
 import json
 import os

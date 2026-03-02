@@ -1,3 +1,5 @@
+"""Competition model definitions and related metadata."""
+
 from django.db import models
 
 # Competition model (Indonesian: Model kompetisi)

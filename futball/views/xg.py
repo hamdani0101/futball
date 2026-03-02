@@ -1,3 +1,5 @@
+"""Views for expected-goals maps and shot visualization pages."""
+
 import json
 from django.shortcuts import render
 from django.db.models import Count

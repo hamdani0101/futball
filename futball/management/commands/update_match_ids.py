@@ -1,3 +1,5 @@
+"""Management command to update match ids."""
+
 import csv
 import json
 import os

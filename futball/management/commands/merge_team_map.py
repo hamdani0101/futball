@@ -1,3 +1,5 @@
+"""Management command to merge team map."""
+
 import csv
 import os
 

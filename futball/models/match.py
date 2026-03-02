@@ -1,3 +1,5 @@
+"""Core match and match-related statistics models."""
+
 from django.db import models
 from django.core.exceptions import ValidationError
 from futball.models.season import Season

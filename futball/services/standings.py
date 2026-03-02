@@ -1,3 +1,5 @@
+"""Service layer for computing league standings and table rows."""
+
 from collections import defaultdict
 from futball.models.match import Match
 from django.db.models import Count, Q, F

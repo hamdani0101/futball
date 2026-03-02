@@ -1,3 +1,5 @@
+"""News and media content models for the dashboard experience."""
+
 from django.db import models
 
 # News model (Indonesian: Model berita)

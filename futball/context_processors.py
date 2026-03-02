@@ -1,3 +1,5 @@
+"""Context processors that expose shared futball data to templates."""
+
 from django.core.cache import cache
 from futball.models.news import News
 

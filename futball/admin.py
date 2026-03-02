@@ -1,3 +1,5 @@
+"""Admin registrations for futball app models."""
+
 from django.contrib import admin
 from futball.models.competition import Competition
 from futball.models.season import Season

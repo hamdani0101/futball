@@ -1,3 +1,5 @@
+"""Django application configuration for the futball app."""
+
 from django.apps import AppConfig
 
 

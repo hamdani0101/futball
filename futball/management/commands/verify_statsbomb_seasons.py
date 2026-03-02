@@ -1,3 +1,5 @@
+"""Management command to verify statsbomb seasons."""
+
 import json
 from pathlib import Path
 

@@ -1,3 +1,5 @@
+"""Management command to fetch statsbomb events."""
+
 import json
 import shutil
 from pathlib import Path

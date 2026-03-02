@@ -1,3 +1,5 @@
+"""Dashboard views that assemble top-level league and news context."""
+
 from django.core.serializers import serialize
 from django.http import HttpResponse
 from django.shortcuts import render

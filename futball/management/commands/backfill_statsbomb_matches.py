@@ -1,3 +1,5 @@
+"""Management command to backfill statsbomb matches."""
+
 import csv
 import json
 import os

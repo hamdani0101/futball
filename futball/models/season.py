@@ -1,3 +1,5 @@
+"""Season model definitions for organizing competitions over time."""
+
 from django.db import models
 from futball.models.competition import Competition
 

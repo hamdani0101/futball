@@ -1,3 +1,5 @@
+"""Management command to import shots."""
+
 import csv
 import json
 from pathlib import Path

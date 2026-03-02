@@ -1,3 +1,5 @@
+"""Shot-level models used for xG and shooting analytics."""
+
 from django.db import models
 from django.core.exceptions import ValidationError
 from futball.models.match import Match

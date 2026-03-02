@@ -1,3 +1,5 @@
+"""Views for league-table and standings pages."""
+
 import re
 from django.shortcuts import render
 from django.http import HttpResponse

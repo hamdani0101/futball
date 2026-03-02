@@ -1,3 +1,5 @@
+"""Service functions for expected-goals and shot-map calculations."""
+
 from collections import defaultdict
 from django.db.models import Count, Q, F, Sum
 from futball.models.match import Match

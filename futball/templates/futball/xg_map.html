@@ -1,3 +1,4 @@
+<!-- xG map template for shot data visualization. -->
 {% extends "base.html" %}
 
 {% block title %}
@@ -63,11 +64,14 @@
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{{ teams|json_script:"xg-teams" }}
+{{ xgf|json_script:"xg-xgf" }}
+{{ xga|json_script:"xg-xga" }}
 
 <script>
-const teams = {{ teams|safe }};
-const xgf = {{ xgf|safe }};
-const xga = {{ xga|safe }};
+const teams = JSON.parse(document.getElementById("xg-teams").textContent);
+const xgf = JSON.parse(document.getElementById("xg-xgf").textContent);
+const xga = JSON.parse(document.getElementById("xg-xga").textContent);
 
 const data = teams.map((team, i) => ({
   label: team,

@@ -1,3 +1,5 @@
+"""Player and player-match relationship models."""
+
 from django.db import models
 from futball.models.team import Team
 from futball.models.match import Match

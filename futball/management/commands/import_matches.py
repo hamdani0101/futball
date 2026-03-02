@@ -1,3 +1,5 @@
+"""Management command to import matches."""
+
 import csv
 import json
 import os

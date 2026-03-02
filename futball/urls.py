@@ -1,3 +1,5 @@
+"""URL routing for futball app views."""
+
 from django.urls import path
 from futball.views.dashboard import dashboard_view
 from futball.views.standings import league_table_view

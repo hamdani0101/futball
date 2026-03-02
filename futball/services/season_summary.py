@@ -1,3 +1,5 @@
+"""Service utilities for generating season summary data."""
+
 from futball.models.match import Match
 from futball.models.shots import Shot
 from futball.services.xg import build_xg_table

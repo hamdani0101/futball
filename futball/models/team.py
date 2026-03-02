@@ -1,3 +1,5 @@
+"""Team model definitions, identity mapping, and assets."""
+
 from django.db import models
 
 

@@ -1,3 +1,4 @@
+<!-- Base layout template shared by futball pages. -->
 {% load static %}
 {% load range_filter %}
 
@@ -90,9 +91,7 @@
   <!-- Compiled and minified JavaScript -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
   <script src="{% static 'futball/js/futball.js' %}"></script>
-  <script id="season-data" type="application/json">
-    {{ season_json_data|safe }}
-  </script>
+  {{ season_json_data|json_script:"season-data" }}
   <script>
     M.AutoInit();
     
@@ -104,7 +103,9 @@
       const teamSelect = document.getElementById("team");
       if (competitionSelect) {
           //get data season per competition
-          const seasonsData = JSON.parse(document.getElementById("season-data").textContent);
+          const seasonsData = JSON.parse(
+            JSON.parse(document.getElementById("season-data").textContent)
+          );
 
           //update season options when competition changes
           competitionSelect.addEventListener("change", () => {
