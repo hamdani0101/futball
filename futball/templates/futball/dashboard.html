@@ -1,161 +1,339 @@
 <!-- Dashboard page template for standings, fixtures, and news. -->
-{% extends "base.html" %} 
+{% extends "base.html" %}
 
-{% block title %}Dashboard{% endblock %} 
-
+{% block title %}Dashboard{% endblock %}
 {% block c_title %}League Dashboard{% endblock %}
 
+{% block extra_css %}
+<style>
+  .dash-page {
+    display: grid;
+    gap: 22px;
+  }
+
+  .dash-filter .btn {
+    border-radius: 12px;
+    background: var(--primary-color);
+  }
+
+  .dash-filter .btn:hover {
+    background: #1f2937;
+  }
+
+  .dash-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .dash-stat {
+    border-radius: 18px;
+    padding: 18px;
+    color: #fff;
+    min-height: 128px;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.14);
+    display: grid;
+    gap: 10px;
+    align-content: space-between;
+  }
+
+  .dash-stat .head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    opacity: 0.9;
+  }
+
+  .dash-stat .value {
+    font-size: 38px;
+    line-height: 1;
+    font-weight: 700;
+    font-family: "Roboto Slab", serif;
+  }
+
+  .dash-stat .sub {
+    font-size: 14px;
+    opacity: 0.92;
+  }
+
+  .dash-stat.primary { background: linear-gradient(120deg, var(--primary-color), #1f2937); }
+  .dash-stat.blue { background: linear-gradient(120deg, #0ea5e9, #2563eb); }
+  .dash-stat.green { background: linear-gradient(120deg, #22c55e, #16a34a); }
+  .dash-stat.orange { background: linear-gradient(120deg, #f97316, #ea580c); }
+
+  .dash-panel {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 22px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .dash-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .dash-panel-header h4 {
+    margin: 0;
+    font-size: 31px;
+  }
+
+  .dash-tag {
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    background: rgba(11, 18, 32, 0.08);
+    color: var(--primary-color);
+  }
+
+  .dash-insight-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .dash-insight {
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 14px;
+    display: grid;
+    gap: 8px;
+  }
+
+  .dash-insight strong {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 20px;
+  }
+
+  .dash-insight img,
+  .dash-table td img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+  }
+
+  .dash-insight span {
+    color: #64748b;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .dash-table-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 14px;
+  }
+
+  .dash-table-card {
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .dash-table-title {
+    margin: 0;
+    padding: 12px 14px;
+    font-size: 20px;
+    background: #f8fafc;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .dash-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .dash-table th,
+  .dash-table td {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .dash-table th {
+    text-transform: uppercase;
+    font-size: 12px;
+    color: #64748b;
+    letter-spacing: 0.06em;
+  }
+
+  .dash-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .dash-table td.team {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+  }
+
+  .dash-table td.points {
+    text-align: right;
+    color: var(--primary-color);
+    font-weight: 700;
+  }
+
+  @media (max-width: 1100px) {
+    .dash-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .dash-table-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 760px) {
+    .dash-insight-grid { grid-template-columns: 1fr; }
+    .dash-stat .value { font-size: 30px; }
+    .dash-panel-header h4 { font-size: 24px; }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="competition-search">
-  <form method="get" class="search-form">
+<div class="dash-page">
+  <div class="competition-search dash-filter">
+    <form method="get" class="search-form">
       <div class="input-field field">
         <select name="competition" id="competition">
           {% for c in competitions %}
-            <option value="{{ c.id }}"
-            {% if selected_competition and c.id == selected_competition.id %}
-              selected
-            {% endif %}>
-            {{ c.name }}
-          </option>
+            <option value="{{ c.id }}" {% if selected_competition and c.id == selected_competition.id %}selected{% endif %}>
+              {{ c.name }}
+            </option>
           {% endfor %}
         </select>
         <label>Competition:</label>
       </div>
       <div class="input-field field">
         <select name="season" id="season">
-          {% for s in seasons %} 
-            <option value="{{ s.id }}"
-              {% if selected_season and s.id == selected_season.id %}
-              selected
-              {% endif %}>
-            {{ s.name }}
-          </option>
+          {% for s in seasons %}
+            <option value="{{ s.id }}" {% if selected_season and s.id == selected_season.id %}selected{% endif %}>
+              {{ s.name }}
+            </option>
           {% endfor %}
         </select>
         <label>Season:</label>
       </div>
-      <button class="btn waves-effect waves-light btn-accent" type="submit">
+      <button class="btn waves-effect waves-light" type="submit">
         Search
         <i class="material-icons right">search</i>
       </button>
-  </form>
-</div>
-
-<div class="row">
-  <!-- KPI CARDS -->
-  <div class="col s12">
-    <div class="row kpi-row">
-      <div class="col s12 m6 l3">
-        <div class="stat-card">
-          <span class="card-label">Matches</span>
-          <strong class="card-value">{{ total_matches }}</strong>
-        </div>
-      </div>
-      <div class="col s12 m6 l3">
-        <div class="stat-card">
-          <span class="card-label">Goals</span>
-          <strong class="card-value">{{ total_goals }}</strong>
-        </div>
-      </div>
-      <div class="col s12 m6 l3">
-        <div class="stat-card">
-          <span class="card-label">Avg Goals / Match</span>
-          <strong class="card-value">{{ avg_goals }}</strong>
-        </div>
-      </div>
-      <div class="col s12 m6 l3">
-        <div class="stat-card">
-          <span class="card-label">Leader</span>
-          <strong class="card-value">
-            <img src="{% if leader.logo %}{{ leader.logo.url }}{% endif %}" alt="{{ leader.team_name }}">
-            {{ leader.team_name }}
-          </strong>
-        </div>
-      </div>
-    </div>
+    </form>
   </div>
 
-  <!-- INSIGHT -->
-  <div class="col s12">
-    <div class="row insight-row">
-      <div class="col s12 m6">
-        <div class="insight-card">
-          <span class="card-label">Best Attack (xG)</span>
-          <strong class="card-value">
-            <img src="{% if top_attack.logo %}{{ top_attack.logo.url }}{% endif %}" alt="{{ top_attack.team_name }}">
-            {{ top_attack.team_name }}
-          </strong>
-        </div>
-      </div>
-      <div class="col s12 m6">
-        <div class="insight-card">
-          <span class="card-label">Best Defence (xGA)</span>
-          <strong class="card-value">
-            <img src="{% if best_defence.logo %}{{ best_defence.logo.url }}{% endif %}" alt="{{ best_defence.team_name }}">
-            {{ best_defence.team_name }}
-          </strong>
-        </div>
-      </div>
-    </div>
-  </div>
+  <section class="dash-stat-grid">
+    <article class="dash-stat primary">
+      <div class="head"><span>Matches</span><i class="material-icons tiny">event</i></div>
+      <div class="value">{{ total_matches }}</div>
+      <div class="sub">Played in selected season</div>
+    </article>
+    <article class="dash-stat blue">
+      <div class="head"><span>Goals</span><i class="material-icons tiny">gps_fixed</i></div>
+      <div class="value">{{ total_goals }}</div>
+      <div class="sub">Total goals scored</div>
+    </article>
+    <article class="dash-stat green">
+      <div class="head"><span>Avg Goals</span><i class="material-icons tiny">show_chart</i></div>
+      <div class="value">{{ avg_goals }}</div>
+      <div class="sub">Per match average</div>
+    </article>
+    <article class="dash-stat orange">
+      <div class="head"><span>Leader</span><i class="material-icons tiny">emoji_events</i></div>
+      <div class="value">{% if leader.team_name %}1{% else %}0{% endif %}</div>
+      <div class="sub">{% if leader.team_name %}{{ leader.team_name }}{% else %}No data{% endif %}</div>
+    </article>
+  </section>
 
-  <!-- TABLES -->
-  <div class="col s12">
-    <div class="row table-row">
-      <div class="col s12 l8">
-        <div class="table-card">
-          <h5 class="table-title">Top 5 Teams</h5>
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Team</th>
-                <th>Pts</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for team, stats in top_5 %}
+  <section class="dash-panel">
+    <div class="dash-panel-header">
+      <h4>Season Insights</h4>
+      <span class="dash-tag">LIVE DATA</span>
+    </div>
+
+    <div class="dash-insight-grid">
+      <article class="dash-insight">
+        <span>Best Attack (xG)</span>
+        <strong>
+          {% if top_attack.logo %}<img src="{{ top_attack.logo.url }}" alt="{{ top_attack.team_name }}">{% endif %}
+          {% if top_attack.team_name %}{{ top_attack.team_name }}{% else %}-{% endif %}
+        </strong>
+      </article>
+      <article class="dash-insight">
+        <span>Best Defence (xGA)</span>
+        <strong>
+          {% if best_defence.logo %}<img src="{{ best_defence.logo.url }}" alt="{{ best_defence.team_name }}">{% endif %}
+          {% if best_defence.team_name %}{{ best_defence.team_name }}{% else %}-{% endif %}
+        </strong>
+      </article>
+    </div>
+  </section>
+
+  <section class="dash-panel">
+    <div class="dash-panel-header">
+      <h4>Standings Snapshot</h4>
+      <a class="dash-tag" href="{% url 'league-table' %}">Full Table</a>
+    </div>
+
+    <div class="dash-table-grid">
+      <article class="dash-table-card">
+        <h5 class="dash-table-title">Top 5 Teams</h5>
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Team</th>
+              <th style="text-align:right;">Pts</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for team, stats in top_5 %}
               <tr>
                 <td>{{ forloop.counter }}</td>
-                <td>
-                  <img src="{% if stats.logo %}{{ stats.logo.url }}{% endif %}" alt="{{ team }}">
-                  {{ team }}
-                </td>
-                <td>{{ stats.points }}</td>
+                <td class="team">{% if stats.logo %}<img src="{{ stats.logo.url }}" alt="{{ team }}">{% endif %} {{ team }}</td>
+                <td class="points">{{ stats.points }}</td>
               </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="col s12 l4">
-        <div class="table-card">
-          <h5 class="table-title">Relegation Zone</h5>
-          <table class="data-table">
-            <thead>
+            {% empty %}
               <tr>
-                <th>#</th>
-                <th>Team</th>
-                <th>Pts</th>
+                <td colspan="3">No table data available.</td>
               </tr>
-            </thead>
-            <tbody>
-              {% for team, stats in bottom_3 %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </article>
+
+      <article class="dash-table-card">
+        <h5 class="dash-table-title">Relegation Zone</h5>
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Team</th>
+              <th style="text-align:right;">Pts</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for team, stats in bottom_3 %}
               <tr>
                 <td>{{ forloop.counter }}</td>
-                <td>
-                  <img src="{% if stats.logo %}{{ stats.logo.url }}{% endif %}" alt="{{ team }}">
-                  {{ team }}
-                </td>
-                <td>{{ stats.points }}</td>
+                <td class="team">{% if stats.logo %}<img src="{{ stats.logo.url }}" alt="{{ team }}">{% endif %} {{ team }}</td>
+                <td class="points">{{ stats.points }}</td>
               </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            {% empty %}
+              <tr>
+                <td colspan="3">No table data available.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </article>
     </div>
-  </div>
+  </section>
 </div>
 {% endblock %}

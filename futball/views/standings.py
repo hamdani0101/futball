@@ -2,7 +2,6 @@
 
 import re
 from django.shortcuts import render
-from django.http import HttpResponse
 from django.core import serializers
 from futball.services.standings import build_league_table
 from futball.models.season import Season
@@ -14,6 +13,41 @@ def normalize_competition_name(name: str) -> str:
     name = re.sub(r"\(.*?\)", "", name)   # hapus (football)
     name = re.sub(r"[^a-z\s]", "", name)  # hapus simbol
     return name.strip()
+
+
+def season_start_year(season_name: str) -> int | None:
+    # Support formats like 2024/25, 2024-2025, 2024, 2425.
+    years = re.findall(r"\d{4}", season_name or "")
+    if years:
+        return int(years[0])
+
+    compact = re.search(r"\b(\d{2})(\d{2})\b", season_name or "")
+    if not compact:
+        return None
+
+    yy = int(compact.group(1))
+    return 1900 + yy if yy >= 90 else 2000 + yy
+
+
+# Easy place to adjust quotas per competition.
+UEFA_RULES = {
+    "epl": dict(cl=4, el=2, ecl=1, relegation=3),
+    "laliga": dict(cl=4, el=2, ecl=1, relegation=3),
+    "bundesliga": dict(cl=4, el=2, ecl=1, relegation=3),
+    "seriea": dict(cl=4, el=2, ecl=1, relegation=3),
+    "ligue1": dict(cl=3, el=1, ecl=1, relegation=3),
+}
+
+
+def get_quota_rules(alias: str | None, season_name: str | None) -> dict:
+    rules = UEFA_RULES.get(alias, dict(cl=0, el=0, ecl=0, relegation=3)).copy()
+
+    # UEFA Conference League starts from 2021/22.
+    start_year = season_start_year(season_name or "")
+    if start_year is not None and start_year <= 2020:
+        rules["ecl"] = 0
+
+    return rules
 
 def league_table_view(request):
     competitions = Competition.objects.all().order_by("name")
@@ -51,29 +85,11 @@ def league_table_view(request):
         "french ligue": "ligue1",
     }
 
-    UEFA_RULES = {
-        "epl": dict(cl=4, el=2, ecl=1, relegation=3),
-        "laliga": dict(cl=4, el=2, ecl=1, relegation=3),
-        "bundesliga": dict(cl=4, el=2, ecl=1, relegation=3),
-        "seriea": dict(cl=4, el=2, ecl=1, relegation=3),
-        "ligue1": dict(cl=3, el=1, ecl=1, relegation=3),
-    }
     
     alias = None
     if competition:
         key = normalize_competition_name(competition.name)
         alias = COMPETITION_ALIAS.get(key)
-
-    rules = UEFA_RULES.get(
-        alias,
-        dict(cl=0, el=0, ecl=0, relegation=3)
-    )
-
-
-    champions_league_places = rules["cl"]
-    europa_league_places = rules["el"]
-    conference_league_places = rules["ecl"]
-    relegation_places = rules["relegation"]
 
 
     season = (
@@ -81,6 +97,12 @@ def league_table_view(request):
         if season_id
         else seasons.first()
     )
+
+    rules = get_quota_rules(alias, season.name if season else None)
+    champions_league_places = rules["cl"]
+    europa_league_places = rules["el"]
+    conference_league_places = rules["ecl"]
+    relegation_places = rules["relegation"]
 
     table = build_league_table(season) if season else []
 
@@ -121,5 +143,6 @@ def league_table_view(request):
             "champions_league_cutoff": champions_league_cutoff,
             "europa_league_cutoff": europa_league_cutoff,
             "conference_league_cutoff": conference_league_cutoff,
+            "conference_league_places": conference_league_places,
         },
     )

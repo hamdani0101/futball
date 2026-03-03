@@ -9,104 +9,299 @@
   {% endif %}
 {% endblock %}
 
-{% block extra_css %}{% endblock %}
-
 {% block c_title %}Klasemen{% endblock %}
 
+{% block extra_css %}
+<style>
+  .standings-page {
+    display: grid;
+    gap: 22px;
+  }
+
+  .standings-filter .btn {
+    border-radius: 12px;
+    background: var(--primary-color);
+  }
+
+  .standings-filter .btn:hover {
+    background: #1f2937;
+  }
+
+  .standings-head {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr 1fr;
+    gap: 14px;
+  }
+
+  .standings-kpi {
+    border-radius: 18px;
+    color: #fff;
+    padding: 16px 18px;
+    min-height: 110px;
+    display: grid;
+    gap: 7px;
+    align-content: space-between;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
+  }
+
+  .standings-kpi.main {
+    background: linear-gradient(120deg, var(--primary-color), #1f2937);
+  }
+
+  .standings-kpi.blue {
+    background: linear-gradient(120deg, #0284c7, #2563eb);
+  }
+
+  .standings-kpi.orange {
+    background: linear-gradient(120deg, #f59e0b, #ea580c);
+  }
+
+  .standings-kpi .label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    opacity: 0.92;
+  }
+
+  .standings-kpi .value {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .standings-card {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+  }
+
+  .standings-title {
+    margin: 0;
+    padding: 16px 18px;
+    font-size: 26px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .standings-tag {
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 6px 12px;
+    background: rgba(11, 18, 32, 0.08);
+    color: var(--primary-color);
+  }
+
+  .standings-table-wrap {
+    overflow-x: auto;
+  }
+
+  .standings-table {
+    width: 100%;
+    min-width: 860px;
+    border-collapse: collapse;
+  }
+
+  .standings-table th,
+  .standings-table td {
+    padding: 12px 10px;
+    border-bottom: 1px solid var(--border-color);
+    text-align: center;
+  }
+
+  .standings-table th {
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #64748b;
+    background: #f8fafc;
+  }
+
+  .standings-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .standings-table td.team {
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 220px;
+    font-weight: 600;
+  }
+
+  .standings-table td.team img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+  }
+
+  .standings-table td.points {
+    color: var(--primary-color);
+    font-weight: 700;
+  }
+
+  .standings-table tbody tr:hover {
+    background: rgba(11, 18, 32, 0.04);
+  }
+
+  .standings-table tbody tr.ucl {
+    background: linear-gradient(to right, rgba(59, 130, 246, 0.12), transparent);
+  }
+
+  .standings-table tbody tr.europa {
+    background: linear-gradient(to right, rgba(245, 158, 11, 0.12), transparent);
+  }
+
+  .standings-table tbody tr.conference-league {
+    background: linear-gradient(to right, rgba(34, 197, 94, 0.12), transparent);
+  }
+
+  .standings-table tbody tr.relegation {
+    background: linear-gradient(to right, rgba(239, 68, 68, 0.12), transparent);
+  }
+
+  .standings-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 18px;
+    padding: 16px 18px;
+    border-top: 1px solid var(--border-color);
+    font-size: 13px;
+    color: #475569;
+  }
+
+  .standings-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .blue { background: #3b82f6; }
+  .orange { background: #f59e0b; }
+  .green { background: #22c55e; }
+  .red { background: #ef4444; }
+
+  @media (max-width: 1100px) {
+    .standings-head { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="competition-search">
-  <form method="get" class="search-form">
-    <div class="input-field field">
-      <select name="competition" id="competition">
-        {% for c in competitions %}
-          <option value="{{ c.id }}"
-          {% if selected_competition and c.id == selected_competition.id %}selected{% endif %}>
-            {{ c.name }}
-          </option>
-        {% endfor %}
-      </select>
-      <label>Competition:</label>
-    </div>
-    <div class="input-field field">
-      <select name="season" id="season">
-        {% for s in seasons %}
-          <option value="{{ s.id }}"
-          {% if selected_season and s.id == selected_season.id %}selected{% endif %}>
-            {{ s.name }}
-          </option>
-        {% endfor %}
-      </select>
-      <label>Season:</label>
-    </div>
-    <button class="btn waves-effect waves-light" type="submit" >Search
-      <i class="material-icons right">search</i>
-    </button> 
-  </form>
-</div>
-
-  <div class="row">
-    <div class="col s12">
-      <h5>
-        {% if selected_season %}
-          {{ selected_season.competition.name }} {{ selected_season.name }}
-        {% else %}
-          League Table
-        {% endif %}
-      </h5>
-      <div class="table-shell">
-        <table class="data-table league-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Team</th>
-              <th>P</th>
-              <th>W</th>
-              <th>D</th>
-              <th>L</th>
-              <th>GF</th>
-              <th>GA</th>
-              <th>GD</th>
-              <th>Pts</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for row in table %}
-            <tr class="
-              {% if row.rank <= champions_league_cutoff %}
-                ucl
-              {% elif row.rank <= europa_league_cutoff %}
-                europa
-              {% elif row.rank <= conference_league_cutoff %}
-                conference-league
-              {% elif row.rank > relegation_cutoff %}
-                relegation
-              {% endif %}
-            ">
-              <td>{{ row.rank }}</td>
-              <td class="team"><img src="{% if row.logo %}{{ row.logo.url }}{% endif %}" alt="{{ row.team }}"> {{ row.team }}</td>
-              <td>{{ row.played }}</td>
-              <td>{{ row.win }}</td>
-              <td>{{ row.draw }}</td>
-              <td>{{ row.loss }}</td>
-              <td>{{ row.gf }}</td>
-              <td>{{ row.ga }}</td>
-              <td>{{ row.gd }}</td>
-              <td><strong>{{ row.points }}</strong></td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+<div class="standings-page">
+  <div class="competition-search standings-filter">
+    <form method="get" class="search-form">
+      <div class="input-field field">
+        <select name="competition" id="competition">
+          {% for c in competitions %}
+            <option value="{{ c.id }}" {% if selected_competition and c.id == selected_competition.id %}selected{% endif %}>
+              {{ c.name }}
+            </option>
+          {% endfor %}
+        </select>
+        <label>Competition:</label>
       </div>
-      
-      <div class="legend">
-        <span><span class="dot blue"></span> UEFA Champions League</span>
-        <span><span class="dot orange"></span> Europa League</span>
-        <span><span class="dot green"></span> Europa Conference League</span>
-        <span><span class="dot red"></span> Relegation</span>
+      <div class="input-field field">
+        <select name="season" id="season">
+          {% for s in seasons %}
+            <option value="{{ s.id }}" {% if selected_season and s.id == selected_season.id %}selected{% endif %}>
+              {{ s.name }}
+            </option>
+          {% endfor %}
+        </select>
+        <label>Season:</label>
       </div>
-    </div>
+      <button class="btn waves-effect waves-light" type="submit">
+        Search
+        <i class="material-icons right">search</i>
+      </button>
+    </form>
   </div>
+
+  <section class="standings-head">
+    <article class="standings-kpi main">
+      <span class="label">Competition</span>
+      <span class="value">{% if selected_season %}{{ selected_season.competition.name }}{% else %}League Table{% endif %}</span>
+    </article>
+    <article class="standings-kpi blue">
+      <span class="label">Season</span>
+      <span class="value">{% if selected_season %}{{ selected_season.name }}{% else %}-{% endif %}</span>
+    </article>
+    <article class="standings-kpi orange">
+      <span class="label">Teams</span>
+      <span class="value">{{ table|length }}</span>
+    </article>
+  </section>
+
+  <section class="standings-card">
+    <h4 class="standings-title">
+      <span>{% if selected_season %}{{ selected_season.competition.name }} Table{% else %}League Table{% endif %}</span>
+      <span class="standings-tag">Updated</span>
+    </h4>
+
+    <div class="standings-table-wrap">
+      <table class="standings-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th style="text-align:left;">Team</th>
+            <th>P</th>
+            <th>W</th>
+            <th>D</th>
+            <th>L</th>
+            <th>GF</th>
+            <th>GA</th>
+            <th>GD</th>
+            <th>Pts</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in table %}
+          <tr class="{% if row.rank <= champions_league_cutoff %}ucl{% elif row.rank <= europa_league_cutoff %}europa{% elif row.rank <= conference_league_cutoff %}conference-league{% elif row.rank > relegation_cutoff %}relegation{% endif %}">
+            <td>{{ row.rank }}</td>
+            <td class="team"><img src="{% if row.logo %}{{ row.logo.url }}{% endif %}" alt="{{ row.team }}"> {{ row.team }}</td>
+            <td>{{ row.played }}</td>
+            <td>{{ row.win }}</td>
+            <td>{{ row.draw }}</td>
+            <td>{{ row.loss }}</td>
+            <td>{{ row.gf }}</td>
+            <td>{{ row.ga }}</td>
+            <td>{{ row.gd }}</td>
+            <td class="points">{{ row.points }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="10">No standings data available for this season.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="standings-legend">
+      <span><span class="dot blue"></span> UEFA Champions League</span>
+      <span><span class="dot orange"></span> Europa League</span>
+      {% if conference_league_places > 0 %}
+      <span><span class="dot green"></span> Europa Conference League</span>
+      {% endif %}
+      <span><span class="dot red"></span> Relegation</span>
+    </div>
+  </section>
+</div>
 {% endblock %}
 
-{% block extra_js %}
-{% endblock %}
+{% block extra_js %}{% endblock %}

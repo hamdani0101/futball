@@ -73,3 +73,28 @@ class MatchTeamStats(models.Model):
     # Unique together match dan team (Indonesian: Unik bersama match dan team)
     class Meta:
         unique_together = ("match", "team")
+        
+class MatchEvent(models.Model):
+    match = models.ForeignKey(Match, on_delete=models.CASCADE)
+    team = models.ForeignKey(Team, on_delete=models.CASCADE)
+    event_type = models.CharField(max_length=50)
+    minute = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.match} - {self.team} - {self.event_type} - {self.minute}"
+    
+    # Validasi team harus home atau away team dalam match ini (Indonesian: Validasi tim harus home atau away team dalam match ini)
+    def clean(self):
+        if self.team not in [self.match.home_team, self.match.away_team]:
+            raise ValidationError("Team must be home or away team in this match")
+    
+    # Mengoverride method save untuk validasi (Indonesian: Mengoverride method save untuk validasi)
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+    
+    # Unique together match dan team (Indonesian: Unik bersama match dan team)
+    class Meta:
+        unique_together = ("match", "team")

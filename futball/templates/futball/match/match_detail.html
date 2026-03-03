@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+
+{% block title %}{{ match.home_team.name }} vs {{ match.away_team.name }}{% endblock %}
+{% block c_title %}Match Detail{% endblock %}
+
+{% block extra_css %}
+<style>
+  .match-page {
+    display: grid;
+    gap: 22px;
+  }
+
+  .match-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    padding: 9px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border-color);
+    text-decoration: none;
+    color: var(--primary-color);
+    background: #fff;
+  }
+
+  .match-back:hover {
+    border-color: var(--primary-color);
+    background: rgba(11, 18, 32, 0.04);
+  }
+
+  .score-card {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 22px;
+    box-shadow: var(--shadow-sm);
+    padding: 22px;
+    display: grid;
+    gap: 16px;
+  }
+
+  .score-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .score-chip {
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--primary-color);
+    background: rgba(11, 18, 32, 0.08);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .score-chip img {
+    width: 17px;
+    height: 17px;
+    object-fit: contain;
+    flex-shrink: 0;
+  }
+
+  .score-date {
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 600;
+  }
+
+  .score-main {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 14px;
+    align-items: center;
+  }
+
+  .score-team {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+  }
+
+  .score-team.away {
+    justify-content: flex-end;
+  }
+
+  .score-team img {
+    width: 44px;
+    height: 44px;
+    object-fit: contain;
+    flex-shrink: 0;
+  }
+
+  .score-team-name {
+    font-size: 27px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .score-number {
+    font-size: 58px;
+    font-weight: 700;
+    line-height: 1;
+    font-family: "Roboto Slab", serif;
+    color: #1e293b;
+    white-space: nowrap;
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .stat-card {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    box-shadow: var(--shadow-sm);
+    padding: 18px;
+  }
+
+  .stat-card h4 {
+    margin: 0 0 12px;
+    font-size: 22px;
+  }
+
+  .stat-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .stat-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .stat-row:first-of-type {
+    padding-top: 0;
+  }
+
+  .stat-label {
+    text-align: center;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #64748b;
+    font-weight: 700;
+  }
+
+  .stat-value {
+    font-size: 17px;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .stat-value.right {
+    text-align: right;
+  }
+
+  .stat-value.left {
+    text-align: left;
+  }
+
+  @media (max-width: 900px) {
+    .stat-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .score-main {
+      grid-template-columns: 1fr;
+      justify-items: start;
+    }
+
+    .score-team.away {
+      justify-content: flex-start;
+    }
+
+    .score-number {
+      font-size: 44px;
+    }
+
+    .score-team-name {
+      font-size: 23px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="match-page">
+  <a class="match-back" href="{% url 'fixture-list' %}">
+    <i class="material-icons tiny">arrow_back</i>
+    Back to fixtures
+  </a>
+
+  <section class="score-card">
+    <div class="score-meta">
+      <span class="score-chip">
+        {% if match.season.competition.logo %}<img src="{{ match.season.competition.logo.url }}" alt="{{ match.season.competition.name }}">{% endif %}
+        {{ match.season.competition.name }} • {{ match.season.name }}
+      </span>
+      <span class="score-date">{{ match.match_date|date:"D, d M Y • H:i" }}</span>
+    </div>
+
+    <div class="score-main">
+      <div class="score-team">
+        {% if match.home_team.logo %}<img src="{{ match.home_team.logo.url }}" alt="{{ match.home_team.name }}">{% endif %}
+        <span class="score-team-name">{{ match.home_team.name }}</span>
+      </div>
+
+      <div class="score-number">
+        {% if match.status == 'finished' %}
+          {{ home_stats.goals|default:0 }} - {{ away_stats.goals|default:0 }}
+        {% else %}
+          VS
+        {% endif %}
+      </div>
+
+      <div class="score-team away">
+        <span class="score-team-name">{{ match.away_team.name }}</span>
+        {% if match.away_team.logo %}<img src="{{ match.away_team.logo.url }}" alt="{{ match.away_team.name }}">{% endif %}
+      </div>
+    </div>
+  </section>
+
+  <section class="stat-grid">
+    <article class="stat-card">
+      <h4>Team Stats</h4>
+      <div class="stat-row">
+        <span class="stat-value left">{{ home_stats.goals|default:0 }}</span>
+        <span class="stat-label">Goals</span>
+        <span class="stat-value right">{{ away_stats.goals|default:0 }}</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-value left">{{ home_stats.xg|default:0 }}</span>
+        <span class="stat-label">xG</span>
+        <span class="stat-value right">{{ away_stats.xg|default:0 }}</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-value left">{{ home_stats.shots|default:0 }}</span>
+        <span class="stat-label">Shots</span>
+        <span class="stat-value right">{{ away_stats.shots|default:0 }}</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-value left">{{ home_stats.shots_on_target|default:0 }}</span>
+        <span class="stat-label">On Target</span>
+        <span class="stat-value right">{{ away_stats.shots_on_target|default:0 }}</span>
+      </div>
+    </article>
+
+    <article class="stat-card">
+      <h4>Match Info</h4>
+      <div class="stat-row">
+        <span class="stat-value left">{{ match.match_id }}</span>
+        <span class="stat-label">Match ID</span>
+        <span class="stat-value right">{{ match.status|title }}</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-value left">{{ match.home_team.name }}</span>
+        <span class="stat-label">Home</span>
+        <span class="stat-value right">{{ match.away_team.name }}</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-value left">{{ match.season.competition.name }}</span>
+        <span class="stat-label">Competition</span>
+        <span class="stat-value right">{{ match.season.name }}</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-value left">{{ match.match_date|date:"d M Y" }}</span>
+        <span class="stat-label">Kickoff</span>
+        <span class="stat-value right">{{ match.match_date|date:"H:i" }}</span>
+      </div>
+    </article>
+  </section>
+</div>
+{% endblock %}

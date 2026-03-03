@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}Fixtures{% endblock %}
+{% block c_title %}Fixtures{% endblock %}
+
+{% block extra_css %}
+<style>
+  .fixture-page {
+    display: grid;
+    gap: 22px;
+  }
+
+  .fixture-head {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .fixture-kpi {
+    border-radius: 18px;
+    color: #fff;
+    min-height: 110px;
+    padding: 16px 18px;
+    display: grid;
+    gap: 8px;
+    align-content: space-between;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
+  }
+
+  .fixture-kpi.main { background: linear-gradient(120deg, var(--primary-color), #1f2937); }
+  .fixture-kpi.blue { background: linear-gradient(120deg, #0ea5e9, #2563eb); }
+  .fixture-kpi.orange { background: linear-gradient(120deg, #f59e0b, #ea580c); }
+
+  .fixture-kpi .label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    opacity: 0.92;
+  }
+
+  .fixture-kpi .value {
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1.15;
+  }
+
+  .fixture-panel {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    box-shadow: var(--shadow-sm);
+    padding: 20px;
+  }
+
+  .fixture-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .fixture-panel-head h4 {
+    margin: 0;
+    font-size: 30px;
+  }
+
+  .fixture-badge {
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--primary-color);
+    background: rgba(11, 18, 32, 0.08);
+  }
+
+  .fixture-list {
+    display: grid;
+    gap: 12px;
+  }
+
+  .fixture-item {
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 14px;
+    background: #fff;
+    display: grid;
+    gap: 12px;
+  }
+
+  .fixture-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .fixture-chip {
+    border-radius: 999px;
+    padding: 5px 11px;
+    font-size: 12px;
+    font-weight: 700;
+    background: #ede9fe;
+    color: #6d28d9;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .fixture-chip img {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    flex-shrink: 0;
+  }
+
+  .fixture-time {
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 600;
+  }
+
+  .fixture-main {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto;
+    gap: 14px;
+    align-items: center;
+  }
+
+  .team-side {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .team-side.away {
+    justify-content: flex-end;
+  }
+
+  .team-side img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    flex-shrink: 0;
+  }
+
+  .team-name {
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .fixture-vs {
+    font-size: 28px;
+    font-weight: 700;
+    color: #334155;
+  }
+
+  .fixture-link {
+    border-radius: 999px;
+    text-decoration: none;
+    color: #fff;
+    background: var(--primary-color);
+    padding: 8px 13px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .fixture-link:hover {
+    background: #1f2937;
+  }
+
+  .fixture-empty {
+    border: 1px dashed var(--border-color);
+    border-radius: 14px;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 36px 18px;
+  }
+
+  @media (max-width: 1100px) {
+    .fixture-head { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 760px) {
+    .fixture-main {
+      grid-template-columns: 1fr;
+      justify-items: start;
+    }
+
+    .team-side.away {
+      justify-content: flex-start;
+    }
+
+    .fixture-vs {
+      font-size: 20px;
+    }
+
+    .team-name {
+      font-size: 20px;
+      white-space: normal;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="fixture-page">
+  <section class="fixture-head">
+    <article class="fixture-kpi main">
+      <span class="label">Upcoming Matches</span>
+      <span class="value">{{ matches|length }}</span>
+    </article>
+    <article class="fixture-kpi blue">
+      <span class="label">Live Status</span>
+      <span class="value">Scheduled</span>
+    </article>
+    <article class="fixture-kpi orange">
+      <span class="label">Navigation</span>
+      <span class="value">Match Detail Ready</span>
+    </article>
+  </section>
+
+  <section class="fixture-panel">
+    <div class="fixture-panel-head">
+      <h4>Fixture List</h4>
+      <span class="fixture-badge">UPCOMING</span>
+    </div>
+
+    {% if matches %}
+      <div class="fixture-list">
+        {% for match in matches %}
+          <article class="fixture-item">
+            <div class="fixture-meta">
+              <span class="fixture-chip">
+                {% if match.season.competition.logo %}<img src="{{ match.season.competition.logo.url }}" alt="{{ match.season.competition.name }}">{% endif %}
+                {{ match.season.competition.name }}
+              </span>
+              <span class="fixture-time">{{ match.match_date|date:"D, d M Y • H:i" }}</span>
+            </div>
+            <div class="fixture-main">
+              <div class="team-side">
+                {% if match.home_team.logo %}<img src="{{ match.home_team.logo.url }}" alt="{{ match.home_team.name }}">{% endif %}
+                <span class="team-name">{{ match.home_team.name }}</span>
+              </div>
+              <span class="fixture-vs">VS</span>
+              <div class="team-side away">
+                <span class="team-name">{{ match.away_team.name }}</span>
+                {% if match.away_team.logo %}<img src="{{ match.away_team.logo.url }}" alt="{{ match.away_team.name }}">{% endif %}
+              </div>
+              <a class="fixture-link" href="{% url 'match-detail' match.match_id %}">Match Detail</a>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="fixture-empty">No scheduled fixtures available.</div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

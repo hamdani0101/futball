@@ -1,17 +1,35 @@
-"""Service layer for computing league standings and table rows."""
+"""Utilities for building a season league table from finished matches.
+
+The table is computed from ``Match`` records in a given season with
+``status="finished"`` and team-level stats stored in ``team_stats``.
+Each row includes common standings metrics such as wins, draws, losses,
+goals for/against, goal difference, and points.
+"""
 
 from collections import defaultdict
-from futball.models.match import Match
-from django.db.models import Count, Q, F
 
-# Build league table (Indonesian: Bangun tabel liga)
+from futball.models.match import Match
+
+
 def build_league_table(season):
-    # If no season, return empty table (Indonesian: Jika tidak ada musim, kembalikan tabel kosong)
+    """Return sorted standings rows for a season.
+
+    Args:
+        season: Season instance used to filter matches.
+
+    Returns:
+        list[tuple[str, dict]]: A descending sorted list of ``(team_name, row)``
+        where each ``row`` has:
+        ``played``, ``win``, ``draw``, ``loss``, ``gf``, ``ga``, ``gd``,
+        ``points``, and ``logo``.
+
+    Notes:
+        Sorting priority is points, then goal difference, then goals scored.
+    """
     if not season:
         return []
 
-
-    # Initialize table (Indonesian: Inisialisasi tabel)
+    # Default row values for teams encountered in finished matches.
     table = defaultdict(lambda: {
         "played": 0,
         "win": 0,
@@ -24,7 +42,6 @@ def build_league_table(season):
         "logo": None,
     })
 
-    # Get finished matches (Indonesian: Dapatkan pertandingan yang selesai)
     matches = (
         Match.objects
         .filter(
@@ -35,8 +52,7 @@ def build_league_table(season):
         .prefetch_related("team_stats")
     )
 
-
-    # Process matches (Indonesian: Proses pertandingan)
+    # Aggregate per-match goals and apply result rules to both teams.
     for m in matches:
         home_goals = 0
         away_goals = 0
@@ -59,13 +75,13 @@ def build_league_table(season):
         table[home]["played"] += 1
         table[away]["played"] += 1
 
-        # goals for / against (Indonesian: Gol untuk / melawan)
+        # Update goals for/against.
         table[home]["gf"] += m.home_goals
         table[home]["ga"] += m.away_goals
         table[away]["gf"] += m.away_goals
         table[away]["ga"] += m.home_goals
 
-        # result (Indonesian: Hasil)
+        # Apply win/draw/loss and points.
         if m.home_goals > m.away_goals:
             table[home]["win"] += 1
             table[away]["loss"] += 1
@@ -85,16 +101,15 @@ def build_league_table(season):
         table[home]["logo"] = home_team_logo
         table[away]["logo"] = away_team_logo
 
-    # Calculate goal difference (Indonesian: Hitung selisih gol)
+    # Finalize goal difference after processing all matches.
     for team in table.values():
         team["gd"] = team["gf"] - team["ga"]
 
-    # Sort by points, GD, GF (Indonesian: Urutkan berdasarkan poin, GD, GF)
+    # Sort by points, goal difference, and goals for (descending).
     sorted_table = sorted(
         table.items(),
         key=lambda x: (x[1]["points"], x[1]["gd"], x[1]["gf"]),
         reverse=True,
     )
 
-    # Return sorted table (Indonesian: Kembalikan tabel yang diurutkan)
     return sorted_table
