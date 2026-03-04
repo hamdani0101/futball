@@ -1,0 +1,223 @@
+<!-- Pitch-style xG shot map template for match analysis. -->
+{% extends "base.html" %}
+
+{% block title %}xG Pitch Map{% endblock %}
+{% block c_title %}Stats Dashboard{% endblock %}
+
+{% block extra_css %}{% endblock %}
+
+{% block content %}
+<div class="stats-page">
+  <div class="competition-search stats-filter">
+    <form method="get" class="search-form stats-search-3">
+      <div class="input-field field">
+        <select name="competition" id="competition">
+          {% for c in competitions %}
+            <option value="{{ c.id }}" {% if selected_competition and c.id == selected_competition.id %}selected{% endif %}>
+              {{ c.name }}
+            </option>
+          {% endfor %}
+        </select>
+        <label>Competition:</label>
+      </div>
+      <div class="input-field field">
+        <select name="season" id="season">
+          {% for s in seasons %}
+            <option value="{{ s.id }}" {% if selected_season and s.id == selected_season.id %}selected{% endif %}>
+              {{ s.name }}
+            </option>
+          {% endfor %}
+        </select>
+        <label>Season:</label>
+      </div>
+      <div class="input-field field">
+        <select name="team" id="team">
+          <option value="" {% if not selected_team %}selected{% endif %}>All Teams</option>
+          {% for t in teams %}
+            <option value="{{ t.id }}" {% if selected_team and t.id == selected_team.id %}selected{% endif %}>{{ t.name }}</option>
+          {% endfor %}
+        </select>
+        <label>Team:</label>
+      </div>
+      <button class="btn waves-effect waves-light" type="submit">
+        Search
+        <i class="material-icons right">search</i>
+      </button>
+    </form>
+  </div>
+
+  <section class="stats-nav-grid">
+    <a class="stats-nav-card" href="{% url 'stats-dashboard' %}{% if selected_competition %}?competition={{ selected_competition.id }}{% if selected_season %}&season={{ selected_season.id }}{% endif %}{% endif %}">
+      <span class="label">Overview</span>
+      <strong>xG Scatter</strong>
+      <small>Team-level attack and defence map</small>
+    </a>
+    <a class="stats-nav-card active" href="{% url 'xg-pitch-map' %}{% if selected_competition %}?competition={{ selected_competition.id }}{% if selected_season %}&season={{ selected_season.id }}{% endif %}{% endif %}">
+      <span class="label">Detail</span>
+      <strong>xG Pitch Map</strong>
+      <small>Spatial shot quality and outcomes</small>
+    </a>
+  </section>
+
+  <section class="stats-kpi-grid stats-kpi-grid-3">
+    <article class="stats-kpi primary">
+      <span class="label">Total Shots</span>
+      <span class="value">{{ total_shots }}</span>
+      <span class="sub">Filtered events</span>
+    </article>
+    <article class="stats-kpi blue">
+      <span class="label">Competition</span>
+      <span class="value small">{% if selected_competition %}{{ selected_competition.name }}{% else %}-{% endif %}</span>
+      <span class="sub">Current filter</span>
+    </article>
+    <article class="stats-kpi teal">
+      <span class="label">Team Filter</span>
+      <span class="value small">{% if selected_team %}{{ selected_team.name }}{% else %}All Teams{% endif %}</span>
+      <span class="sub">Selected squad</span>
+    </article>
+  </section>
+
+  <section class="stats-panel">
+    <div class="stats-panel-head">
+      <h4 id="mapTitle">xG Rect Heatmap</h4>
+      <div class="stats-panel-actions">
+        <p class="stats-note" id="mapNote">Akumulasi xG per area</p>
+        <div class="switch stats-switch">
+          <label>
+            Circle
+            <input type="checkbox" id="toggleMode" checked>
+            <span class="lever"></span>
+            Rect
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="xg-legend stats-legend">
+      <span><span class="dot" style="background:#ffeb3b"></span>Low xG</span>
+      <span><span class="dot" style="background:#ff5722"></span>High xG</span>
+      <span><span class="dot" style="background:#ff5252"></span>Goal Shot</span>
+    </div>
+
+    {% if total_shots == 0 %}
+      <div class="stats-empty">Tidak ada data shot untuk filter ini.</div>
+    {% endif %}
+
+    <div class="pitch-shell stats-pitch-shell">
+      <svg viewBox="0 0 120 80" class="pitch xg-pitch-canvas">
+        <rect width="120" height="80" fill="#2e7d32"/>
+        <line x1="60" y1="0" x2="60" y2="80" stroke="#e2f2e2" stroke-width="0.6"/>
+        <circle cx="60" cy="40" r="9.15" fill="none" stroke="#e2f2e2" stroke-width="0.6"/>
+        <rect x="0" y="18" width="18" height="44" fill="none" stroke="#e2f2e2" stroke-width="0.6"/>
+        <rect x="102" y="18" width="18" height="44" fill="none" stroke="#e2f2e2" stroke-width="0.6"/>
+        <g id="rect-layer"></g>
+        <g id="circle-layer"></g>
+      </svg>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+window.teamsBySeason = JSON.parse('{{ teams_by_season|default:"{}"|escapejs }}')
+if (typeof window.updateTeamsForSeason === "function") {
+  window.updateTeamsForSeason()
+}
+</script>
+<script>
+const shots = JSON.parse('{{ shots_json|default:"[]"|escapejs }}')
+
+const rectLayer = document.getElementById("rect-layer")
+const circleLayer = document.getElementById("circle-layer")
+
+function renderRectHeatmap() {
+  rectLayer.innerHTML = ""
+
+  const GRID_X = 4
+  const GRID_Y = 4
+  const COLS = 120 / GRID_X
+  const ROWS = 80 / GRID_Y
+
+  const grid = Array.from({ length: ROWS }, () =>
+    Array.from({ length: COLS }, () => 0)
+  )
+
+  shots.forEach(s => {
+    const { x, y, xg } = s.fields
+    const c = Math.floor(x / GRID_X)
+    const r = Math.floor(y / GRID_Y)
+    if (grid[r] && grid[r][c] !== undefined) {
+      grid[r][c] += xg
+    }
+  })
+
+  const max = Math.max(...grid.flat(), 0.01)
+
+  grid.forEach((row, r) => {
+    row.forEach((value, c) => {
+      if (value <= 0) return
+
+      const intensity = value / max
+      const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect")
+
+      rect.setAttribute("x", c * GRID_X)
+      rect.setAttribute("y", r * GRID_Y)
+      rect.setAttribute("width", GRID_X)
+      rect.setAttribute("height", GRID_Y)
+      rect.setAttribute(
+        "fill",
+        `rgba(255, ${210 - intensity * 150}, 0, ${0.22 + intensity * 0.55})`
+      )
+      rect.setAttribute("stroke", "rgba(0,0,0,0.18)")
+      rect.setAttribute("stroke-width", "0.15")
+
+      rectLayer.appendChild(rect)
+    })
+  })
+}
+
+function renderCircleMap() {
+  circleLayer.innerHTML = ""
+
+  shots.forEach(s => {
+    const { x, y, xg, outcome } = s.fields
+
+    const c = document.createElementNS("http://www.w3.org/2000/svg", "circle")
+    c.setAttribute("cx", x)
+    c.setAttribute("cy", y)
+    c.setAttribute("r", Math.max(1.8, xg * 9))
+    c.setAttribute("fill", outcome === "goal" ? "#ff5252" : "#ffd54f")
+    c.setAttribute("opacity", 0.75)
+    c.setAttribute("stroke", "rgba(0,0,0,0.25)")
+    c.setAttribute("stroke-width", "0.2")
+
+    circleLayer.appendChild(c)
+  })
+}
+
+const toggle = document.getElementById("toggleMode")
+const title = document.getElementById("mapTitle")
+const note = document.getElementById("mapNote")
+
+function updateMode() {
+  if (toggle.checked) {
+    rectLayer.style.display = "block"
+    circleLayer.style.display = "none"
+    title.textContent = "xG Rect Heatmap"
+    note.textContent = "Akumulasi xG per area"
+  } else {
+    rectLayer.style.display = "none"
+    circleLayer.style.display = "block"
+    title.textContent = "xG Shot Map"
+    note.textContent = "Ukuran titik mewakili nilai xG"
+  }
+}
+
+renderRectHeatmap()
+renderCircleMap()
+updateMode()
+
+toggle.addEventListener("change", updateMode)
+</script>
+{% endblock %}

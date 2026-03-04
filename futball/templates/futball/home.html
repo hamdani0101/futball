@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+{% block c_title %}Home{% endblock %}
+
+{% block extra_css %}{% endblock %}
+
+{% block content %}
+<div class="home-page">
+  <section class="home-hero">
+    <p class="home-eyebrow">FutBall Control Center</p>
+    <h1>Football insights, fixtures, standings, and stats in one place.</h1>
+    <p class="home-copy">Pilih modul yang ingin kamu buka: dashboard analitik, klasemen, pertandingan, atau berita terbaru.</p>
+    <div class="home-actions">
+      <a class="home-btn primary" href="{% url 'stats-dashboard' %}">Open Dashboard</a>
+      <a class="home-btn" href="{% url 'fixture-list' %}">Open Fixtures</a>
+    </div>
+  </section>
+
+  <section class="home-kpi-grid">
+    <article class="home-kpi">
+      <span class="label">Competitions</span>
+      <span class="value">{{ total_competitions }}</span>
+    </article>
+    <article class="home-kpi">
+      <span class="label">Seasons</span>
+      <span class="value">{{ total_seasons }}</span>
+    </article>
+    <article class="home-kpi">
+      <span class="label">Teams</span>
+      <span class="value">{{ total_teams }}</span>
+    </article>
+    <article class="home-kpi">
+      <span class="label">Upcoming Matches</span>
+      <span class="value">{{ upcoming_matches }}</span>
+    </article>
+  </section>
+
+  <section class="home-nav-grid">
+    <a class="home-nav-card" href="{% url 'stats-dashboard' %}">
+      <span class="label">Analytics</span>
+      <strong>Stats Dashboard</strong>
+      <small>xG scatter and team ranking.</small>
+    </a>
+    <a class="home-nav-card" href="{% url 'xg-pitch-map' %}">
+      <span class="label">Visualization</span>
+      <strong>xG Pitch Map</strong>
+      <small>Shot map and heatmap.</small>
+    </a>
+    <a class="home-nav-card" href="{% url 'league-table' %}">
+      <span class="label">Standings</span>
+      <strong>Klasemen</strong>
+      <small>League table and qualification zones.</small>
+    </a>
+    <a class="home-nav-card" href="{% url 'fixture-list' %}">
+      <span class="label">Matches</span>
+      <strong>Fixtures</strong>
+      <small>Upcoming matches and detail pages.</small>
+    </a>
+    <a class="home-nav-card" href="{% url 'news_list' %}">
+      <span class="label">Update</span>
+      <strong>News Hub</strong>
+      <small>Latest articles and reports.</small>
+    </a>
+  </section>
+</div>
+{% endblock %}

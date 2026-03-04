@@ -32,20 +32,38 @@ def xg_map_view(request):
 
     xg_table = build_xg_table(season) if season else {}
 
-    teams = []
-    xgf = []
-    xga = []
-
+    team_rows = []
     for team, stats in xg_table.items():
-        teams.append(team)
-        xgf.append(round(stats["xgf"] / stats["matches"], 2))
-        xga.append(round(stats["xga"] / stats["matches"], 2))
+        matches = stats.get("matches", 0) or 0
+        if matches <= 0:
+            continue
+        team_rows.append(
+            {
+                "team": stats["team_name"],
+                "logo": stats["logo"],
+                "matches": matches,
+                "xgf_per_match": round(stats["xgf"] / matches, 2),
+                "xga_per_match": round(stats["xga"] / matches, 2),
+            }
+        )
+
+    for row in team_rows:
+        row["xg_diff"] = round(row["xgf_per_match"] - row["xga_per_match"], 2)
+
+    teams = [row["team"] for row in team_rows]
+    xgf = [row["xgf_per_match"] for row in team_rows]
+    xga = [row["xga_per_match"] for row in team_rows]
+    avg_xgf = round(sum(xgf) / len(xgf), 2) if xgf else 0
+    avg_xga = round(sum(xga) / len(xga), 2) if xga else 0
+    top_attack = max(team_rows, key=lambda r: r["xgf_per_match"], default=None)
+    best_defence = min(team_rows, key=lambda r: r["xga_per_match"], default=None)
+    sorted_rows = sorted(team_rows, key=lambda r: r["xg_diff"], reverse=True)
 
     season_json_data = serializers.serialize("json", seasons_all.all())
 
     return render(
         request,
-        "futball/xg_map.html",
+        "futball/stats/xg_map.html",
         {
             "competitions": competitions,
             "seasons": seasons,
@@ -55,6 +73,11 @@ def xg_map_view(request):
             "teams": teams,
             "xgf": xgf,
             "xga": xga,
+            "team_rows": sorted_rows,
+            "avg_xgf": avg_xgf,
+            "avg_xga": avg_xga,
+            "top_attack": top_attack,
+            "best_defence": best_defence,
         },
     )
     
@@ -120,7 +143,7 @@ def xg_pitch_map_view(request):
 
     return render(
         request,
-        "futball/xg_pitch_map.html",
+        "futball/stats/xg_pitch_map.html",
         {
             "competitions": competitions,
             "seasons": seasons,

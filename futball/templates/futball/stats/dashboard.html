@@ -1,201 +1,10 @@
 <!-- Dashboard page template for standings, fixtures, and news. -->
 {% extends "base.html" %}
 
-{% block title %}Dashboard{% endblock %}
-{% block c_title %}League Dashboard{% endblock %}
+{% block title %}Stats Dashboard{% endblock %}
+{% block c_title %}Stats Dashboard{% endblock %}
 
-{% block extra_css %}
-<style>
-  .dash-page {
-    display: grid;
-    gap: 22px;
-  }
-
-  .dash-filter .btn {
-    border-radius: 12px;
-    background: var(--primary-color);
-  }
-
-  .dash-filter .btn:hover {
-    background: #1f2937;
-  }
-
-  .dash-stat-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 14px;
-  }
-
-  .dash-stat {
-    border-radius: 18px;
-    padding: 18px;
-    color: #fff;
-    min-height: 128px;
-    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.14);
-    display: grid;
-    gap: 10px;
-    align-content: space-between;
-  }
-
-  .dash-stat .head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 13px;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    opacity: 0.9;
-  }
-
-  .dash-stat .value {
-    font-size: 38px;
-    line-height: 1;
-    font-weight: 700;
-    font-family: "Roboto Slab", serif;
-  }
-
-  .dash-stat .sub {
-    font-size: 14px;
-    opacity: 0.92;
-  }
-
-  .dash-stat.primary { background: linear-gradient(120deg, var(--primary-color), #1f2937); }
-  .dash-stat.blue { background: linear-gradient(120deg, #0ea5e9, #2563eb); }
-  .dash-stat.green { background: linear-gradient(120deg, #22c55e, #16a34a); }
-  .dash-stat.orange { background: linear-gradient(120deg, #f97316, #ea580c); }
-
-  .dash-panel {
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
-    border-radius: 20px;
-    padding: 22px;
-    box-shadow: var(--shadow-sm);
-  }
-
-  .dash-panel-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
-  }
-
-  .dash-panel-header h4 {
-    margin: 0;
-    font-size: 31px;
-  }
-
-  .dash-tag {
-    border-radius: 999px;
-    padding: 6px 12px;
-    font-size: 12px;
-    font-weight: 700;
-    background: rgba(11, 18, 32, 0.08);
-    color: var(--primary-color);
-  }
-
-  .dash-insight-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
-  }
-
-  .dash-insight {
-    border: 1px solid var(--border-color);
-    border-radius: 14px;
-    padding: 14px;
-    display: grid;
-    gap: 8px;
-  }
-
-  .dash-insight strong {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 20px;
-  }
-
-  .dash-insight img,
-  .dash-table td img {
-    width: 24px;
-    height: 24px;
-    object-fit: contain;
-    flex-shrink: 0;
-  }
-
-  .dash-insight span {
-    color: #64748b;
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-
-  .dash-table-grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 14px;
-  }
-
-  .dash-table-card {
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    overflow: hidden;
-  }
-
-  .dash-table-title {
-    margin: 0;
-    padding: 12px 14px;
-    font-size: 20px;
-    background: #f8fafc;
-    border-bottom: 1px solid var(--border-color);
-  }
-
-  .dash-table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  .dash-table th,
-  .dash-table td {
-    padding: 11px 14px;
-    border-bottom: 1px solid var(--border-color);
-  }
-
-  .dash-table th {
-    text-transform: uppercase;
-    font-size: 12px;
-    color: #64748b;
-    letter-spacing: 0.06em;
-  }
-
-  .dash-table tr:last-child td {
-    border-bottom: none;
-  }
-
-  .dash-table td.team {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 600;
-  }
-
-  .dash-table td.points {
-    text-align: right;
-    color: var(--primary-color);
-    font-weight: 700;
-  }
-
-  @media (max-width: 1100px) {
-    .dash-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .dash-table-grid { grid-template-columns: 1fr; }
-  }
-
-  @media (max-width: 760px) {
-    .dash-insight-grid { grid-template-columns: 1fr; }
-    .dash-stat .value { font-size: 30px; }
-    .dash-panel-header h4 { font-size: 24px; }
-  }
-</style>
-{% endblock %}
+{% block extra_css %}{% endblock %}
 
 {% block content %}
 <div class="dash-page">
@@ -335,5 +144,141 @@
       </article>
     </div>
   </section>
+
+  <section class="stats-page">
+    <section class="stats-nav-grid">
+      <a class="stats-nav-card active" href="{% url 'stats-dashboard' %}{% if selected_competition %}?competition={{ selected_competition.id }}{% if selected_season %}&season={{ selected_season.id }}{% endif %}{% endif %}">
+        <span class="label">Overview</span>
+        <strong>xG Scatter</strong>
+        <small>Integrated in Home Dashboard</small>
+      </a>
+      <a class="stats-nav-card" href="{% url 'xg-pitch-map' %}{% if selected_competition %}?competition={{ selected_competition.id }}{% if selected_season %}&season={{ selected_season.id }}{% endif %}{% endif %}">
+        <span class="label">Detail</span>
+        <strong>xG Pitch Map</strong>
+        <small>Shot location and quality map</small>
+      </a>
+    </section>
+
+    <section class="stats-kpi-grid">
+      <article class="stats-kpi primary">
+        <span class="label">Team Count</span>
+        <span class="value">{{ xg_teams|length }}</span>
+        <span class="sub">In selected season</span>
+      </article>
+      <article class="stats-kpi blue">
+        <span class="label">League Avg xGF</span>
+        <span class="value">{{ xg_avg_xgf }}</span>
+        <span class="sub">Per team per match</span>
+      </article>
+      <article class="stats-kpi teal">
+        <span class="label">League Avg xGA</span>
+        <span class="value">{{ xg_avg_xga }}</span>
+        <span class="sub">Per team per match</span>
+      </article>
+      <article class="stats-kpi steel">
+        <span class="label">Top Attack</span>
+        <span class="value small">{% if xg_top_attack %}{{ xg_top_attack.team }}{% else %}-{% endif %}</span>
+        <span class="sub">{% if xg_top_attack %}xGF {{ xg_top_attack.xgf_per_match }}{% else %}No data{% endif %}</span>
+      </article>
+    </section>
+
+    <section class="stats-panel">
+      <div class="stats-panel-head">
+        <h4>xG Scatter Map</h4>
+        <span class="stats-tag">STATS DASHBOARD</span>
+      </div>
+
+      <div class="chart-shell stats-chart-shell">
+        <div class="chart-frame">
+          <canvas id="dashboardXgScatter" height="95"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section class="stats-panel">
+      <div class="stats-panel-head">
+        <h4>Team xG Ranking</h4>
+        <span class="stats-tag">FORM INDEX</span>
+      </div>
+
+      <div class="stats-table-wrap">
+        <table class="stats-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Team</th>
+              <th>xGF</th>
+              <th>xGA</th>
+              <th>Diff</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in xg_team_rows %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  {% if row.logo %}<img src="{{ row.logo.url }}" alt="{{ row.team }}" class="team-logo-small">{% endif %}
+                  {{ row.team }}
+                </td>
+                <td>{{ row.xgf_per_match }}</td>
+                <td>{{ row.xga_per_match }}</td>
+                <td>{{ row.xg_diff }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="5">No xG data available for selected filter.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </section>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{{ xg_teams|json_script:"dashboard-xg-teams" }}
+{{ xg_xgf|json_script:"dashboard-xg-xgf" }}
+{{ xg_xga|json_script:"dashboard-xg-xga" }}
+<script>
+(() => {
+  const canvas = document.getElementById("dashboardXgScatter");
+  if (!canvas) return;
+
+  const teams = JSON.parse(document.getElementById("dashboard-xg-teams").textContent);
+  const xgf = JSON.parse(document.getElementById("dashboard-xg-xgf").textContent);
+  const xga = JSON.parse(document.getElementById("dashboard-xg-xga").textContent);
+  const datasets = teams.map((team, i) => ({ label: team, data: [{ x: xgf[i], y: xga[i] }] }));
+  const ctx = canvas.getContext("2d");
+
+  new Chart(ctx, {
+    type: "scatter",
+    data: { datasets },
+    options: {
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (item) => `${item.dataset.label}: xGF=${item.raw.x}, xGA=${item.raw.y}`,
+          },
+        },
+      },
+      scales: {
+        x: {
+          title: { display: true, text: "xG For (Attacking Strength)" },
+          grid: { color: "rgba(29, 84, 109, 0.16)" },
+        },
+        y: {
+          title: { display: true, text: "xG Against (Defensive Weakness)" },
+          reverse: true,
+          grid: { color: "rgba(29, 84, 109, 0.16)" },
+        },
+      },
+    },
+  });
+})();
+</script>
 {% endblock %}

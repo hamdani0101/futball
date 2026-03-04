@@ -1,0 +1,185 @@
+<!-- xG map template for shot data visualization. -->
+{% extends "base.html" %}
+
+{% block title %}
+  {% if selected_season %}
+    Stats Dashboard - {{ selected_season.competition.name }} {{ selected_season.name }}
+  {% else %}
+    Stats Dashboard
+  {% endif %}
+{% endblock %}
+{% block extra_css %}{% endblock %}
+
+{% block c_title %}Stats Dashboard{% endblock %}
+
+{% block content %}
+<div class="stats-page">
+  <div class="competition-search stats-filter">
+    <form method="get" class="search-form">
+      <div class="input-field field">
+        <select name="competition" id="competition">
+          {% for c in competitions %}
+            <option value="{{ c.id }}" {% if selected_competition and c.id == selected_competition.id %}selected{% endif %}>
+              {{ c.name }}
+            </option>
+          {% endfor %}
+        </select>
+        <label>Competition:</label>
+      </div>
+      <div class="input-field field">
+        <select name="season" id="season">
+          {% for s in seasons %}
+            <option value="{{ s.id }}" {% if selected_season and s.id == selected_season.id %}selected{% endif %}>
+              {{ s.name }}
+            </option>
+          {% endfor %}
+        </select>
+        <label>Season:</label>
+      </div>
+      <button class="btn waves-effect waves-light" type="submit">
+        Search
+        <i class="material-icons right">search</i>
+      </button>
+    </form>
+  </div>
+
+  <section class="stats-nav-grid">
+    <a class="stats-nav-card active" href="{% url 'stats-dashboard' %}{% if selected_competition %}?competition={{ selected_competition.id }}{% if selected_season %}&season={{ selected_season.id }}{% endif %}{% endif %}">
+      <span class="label">Overview</span>
+      <strong>xG Scatter</strong>
+      <small>Attacking vs Defensive profile</small>
+    </a>
+    <a class="stats-nav-card" href="{% url 'xg-pitch-map' %}{% if selected_competition %}?competition={{ selected_competition.id }}{% if selected_season %}&season={{ selected_season.id }}{% endif %}{% endif %}">
+      <span class="label">Detail</span>
+      <strong>xG Pitch Map</strong>
+      <small>Shot location heatmap and points</small>
+    </a>
+  </section>
+
+  <section class="stats-kpi-grid">
+    <article class="stats-kpi primary">
+      <span class="label">Team Count</span>
+      <span class="value">{{ teams|length }}</span>
+      <span class="sub">In selected season</span>
+    </article>
+    <article class="stats-kpi blue">
+      <span class="label">League Avg xGF</span>
+      <span class="value">{{ avg_xgf }}</span>
+      <span class="sub">Per team per match</span>
+    </article>
+    <article class="stats-kpi teal">
+      <span class="label">League Avg xGA</span>
+      <span class="value">{{ avg_xga }}</span>
+      <span class="sub">Per team per match</span>
+    </article>
+    <article class="stats-kpi steel">
+      <span class="label">Top Attack</span>
+      <span class="value small">{% if top_attack %}{{ top_attack.team }}{% else %}-{% endif %}</span>
+      <span class="sub">{% if top_attack %}xGF {{ top_attack.xgf_per_match }}{% else %}No data{% endif %}</span>
+    </article>
+  </section>
+
+  <section class="stats-panel">
+    <div class="stats-panel-head">
+      <h4>xG Scatter Map</h4>
+      <span class="stats-tag">LIVE STATS</span>
+    </div>
+
+    <div class="chart-shell stats-chart-shell">
+      <div class="chart-frame">
+        <canvas id="xgScatter" height="95"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <section class="stats-panel">
+    <div class="stats-panel-head">
+      <h4>Team xG Ranking</h4>
+      <span class="stats-tag">FORM INDEX</span>
+    </div>
+
+    <div class="stats-table-wrap">
+      <table class="stats-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Team</th>
+            <th>xGF</th>
+            <th>xGA</th>
+            <th>Diff</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in team_rows %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>
+                {% if row.logo %}<img src="{{ row.logo.url }}" alt="{{ row.team }}" class="team-logo-small">{% endif %}
+                {{ row.team }}
+              </td>
+              <td>{{ row.xgf_per_match }}</td>
+              <td>{{ row.xga_per_match }}</td>
+              <td>{{ row.xg_diff }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="5">No xG data available for selected filter.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{{ teams|json_script:"xg-teams" }}
+{{ xgf|json_script:"xg-xgf" }}
+{{ xga|json_script:"xg-xga" }}
+
+<script>
+const teams = JSON.parse(document.getElementById("xg-teams").textContent);
+const xgf = JSON.parse(document.getElementById("xg-xgf").textContent);
+const xga = JSON.parse(document.getElementById("xg-xga").textContent);
+
+const data = teams.map((team, i) => ({
+  label: team,
+  data: [{ x: xgf[i], y: xga[i] }]
+}));
+
+const ctx = document.getElementById("xgScatter").getContext("2d");
+
+new Chart(ctx, {
+  type: "scatter",
+  data: {
+    datasets: data
+  },
+  options: {
+    maintainAspectRatio: false,
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: (ctx) => `${ctx.dataset.label}: xGF=${ctx.raw.x}, xGA=${ctx.raw.y}`
+        }
+      },
+      legend: {
+        display: false
+      }
+    },
+    scales: {
+      x: {
+        title: { display: true, text: "xG For (Attacking Strength)" },
+        grid: { color: "rgba(29, 84, 109, 0.16)" }
+      },
+      y: {
+        title: { display: true, text: "xG Against (Defensive Weakness)" },
+        reverse: true,
+        grid: { color: "rgba(29, 84, 109, 0.16)" }
+      }
+    }
+  }
+});
+</script>
+{% endblock %}

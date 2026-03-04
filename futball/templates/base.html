@@ -23,12 +23,12 @@
   <!-- NAVBAR -->
   <nav>
     <div class="nav-wrapper bg-primary">
-      <a href="{% url 'dashboard' %}" class="brand-logo">⚽ FutBall</a>
+      <a href="{% url 'home' %}" class="brand-logo">⚽ FutBall</a>
       <ul id="nav-mobile" class="right hide-on-med-and-down">
-        <li class="{% if request.path == '/futball/' %}active{% endif %}"><a href="{% url 'dashboard' %}">Home</a></li>
+        <li class="{% if request.path == '/futball/' %}active{% endif %}"><a href="{% url 'home' %}">Home</a></li>
         <li class="{% if '/futball/fixtures/' in request.path %}active{% endif %}"><a href="{% url 'fixture-list' %}">Fixtures</a></li>
         <li class="{% if '/futball/klasemen/' in request.path %}active{% endif %}"><a href="{% url 'league-table' %}">Klasemen</a></li>
-        <li><a href="#">Stats</a></li>
+        <li class="{% if '/futball/stats/' in request.path or '/futball/xg' in request.path %}active{% endif %}"><a href="{% url 'stats-dashboard' %}">Stats</a></li>
         <li class="{% if '/futball/news/' in request.path %}active{% endif %}"><a href="{% url 'news_list' %}">News</a></li>
       </ul>
     </div>
@@ -37,10 +37,10 @@
     </a>
   </nav>
   <ul class="sidenav" id="mobile-nav">
-    <li><a href="{% url 'dashboard' %}">Home</a></li>
+    <li class="{% if request.path == '/futball/' %}active{% endif %}"><a href="{% url 'home' %}">Home</a></li>
     <li class="{% if '/futball/fixtures/' in request.path %}active{% endif %}"><a href="{% url 'fixture-list' %}">Fixtures</a></li>
     <li><a href="{% url 'league-table' %}">Klasemen</a></li>
-    <li><a href="#">Stats</a></li>
+    <li class="{% if '/futball/stats/' in request.path or '/futball/xg' in request.path %}active{% endif %}"><a href="{% url 'stats-dashboard' %}">Stats</a></li>
     <li class="{% if '/futball/news/' in request.path %}active{% endif %}"><a href="{% url 'news_list' %}">News</a></li>
   </ul>
 

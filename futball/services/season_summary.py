@@ -64,6 +64,17 @@ def get_season_summary(season):
 
     # xG analytics (Indonesian: Analitik xG)
     xg_table = build_xg_table(season)
+    if not xg_table:
+        return {
+            "total_matches": total_matches,
+            "total_goals": total_goals,
+            "avg_goals": avg_goals,
+            "leader": leaders,
+            "top_attack": {"team_name": "-", "logo": "-"},
+            "best_defence": {"team_name": "-", "logo": "-"},
+            "top_5": table[:5],
+            "bottom_3": table[-3:],
+        }
 
     # Top attack (Indonesian: Serangan terbaik)
     top_attack = max(
