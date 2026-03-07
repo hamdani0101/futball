@@ -3,7 +3,6 @@
 from collections import defaultdict
 from django.db.models import Count, Q, F, Sum
 from futball.models.match import Match
-from futball.models.shots import Shot
 
 # Build xG table (Indonesian: Bangun tabel xG)
 def build_xg_table(season):

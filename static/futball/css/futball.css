@@ -1,16 +1,16 @@
 /* ===== THEME ===== */
 :root{
-    --primary-color: #061E29;
-    --secondary-color: #1D546D;
-    --accent-color: #5F9598;
+    --primary-color: #001224;
+    --secondary-color: #0070C0;
+    --accent-color: #E01020;
     --background-color: #F3F4F4;
     --surface-color: #ffffff;
     --surface-muted: #e8f4fc;
     --border-color: #8cb8d3;
-    --text-color: #061E29;
-    --text-muted: #1D546D;
-    --shadow-md: 0 12px 30px rgba(6, 30, 41, 0.14);
-    --shadow-sm: 0 8px 20px rgba(6, 30, 41, 0.1);
+    --text-color: #001224;
+    --text-muted: #0070C0;
+    --shadow-md: 0 12px 30px rgba(0, 18, 36, 0.14);
+    --shadow-sm: 0 8px 20px rgba(0, 18, 36, 0.1);
     --radius-xl: 18px;
     --radius-lg: 16px;
     --radius-md: 12px;
@@ -36,8 +36,8 @@ body {
     margin: 0;
     font-family: "Roboto", "Segoe UI", sans-serif;
     background:
-        radial-gradient(1200px 600px at 10% -10%, rgba(29, 84, 109, 0.22), transparent 60%),
-        radial-gradient(900px 500px at 90% 0%, rgba(95, 149, 152, 0.18), transparent 55%),
+        radial-gradient(1200px 600px at 10% -10%, rgba(0, 112, 192, 0.22), transparent 60%),
+        radial-gradient(900px 500px at 90% 0%, rgba(224, 16, 32, 0.18), transparent 55%),
         var(--background-color);
     color: var(--text-color);
     line-height: 1.5;
@@ -70,7 +70,7 @@ button:focus {
 }
 
 .bg-primary {
-    background: linear-gradient(120deg, #061E29 0%, #1D546D 65%, #5F9598 100%);
+    background: linear-gradient(120deg, #001224 0%, #0070C0 65%, #E01020 100%);
 }
 
 .bg-secondary {
@@ -83,8 +83,8 @@ button:focus {
 
 /* ===== NAVBAR ===== */
 nav {
-    background: linear-gradient(120deg, #061E29, #1D546D);
-    box-shadow: 0 6px 20px rgba(6, 30, 41, 0.2);
+    background: linear-gradient(120deg, #001224, #0070C0);
+    box-shadow: 0 6px 20px rgba(0, 18, 36, 0.2);
 }
 
 .nav-wrapper ul {
@@ -111,8 +111,18 @@ nav {
 }
 
 .nav-wrapper ul li.active a {
-    background: rgba(95,149,152,0.32);
+    background: rgba(224,16,32,0.32);
     color: #fff;
+}
+
+.brand-logo {
+  width: 115px;
+  max-width: 115px;
+  height: 100%;
+}
+
+.brand-logo img{
+  width: 100%;
 }
 
 /* ===== PAGE CONTENT ===== */
@@ -309,7 +319,7 @@ nav {
 }
 
 .league-table thead {
-    background: linear-gradient(90deg, #061E29, #1D546D);
+    background: linear-gradient(90deg, #001224, #0070C0);
     color: #ffffff;
 }
 
@@ -584,9 +594,9 @@ footer {
   }
 
   .dash-stat.primary { background: linear-gradient(120deg, var(--primary-color), #1f2937); }
-  .dash-stat.blue { background: linear-gradient(120deg, #1D546D, #5F9598); }
+  .dash-stat.blue { background: linear-gradient(120deg, #0070C0, #E01020); }
   .dash-stat.green { background: linear-gradient(120deg, #22c55e, #16a34a); }
-  .dash-stat.orange { background: linear-gradient(120deg, #5F9598, #1D546D); }
+  .dash-stat.orange { background: linear-gradient(120deg, #E01020, #0070C0); }
 
   .dash-panel {
     background: var(--surface-color);
@@ -647,7 +657,7 @@ footer {
   }
 
   .dash-insight span {
-    color: #1D546D;
+    color: #0070C0;
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.06em;
@@ -687,7 +697,7 @@ footer {
   .dash-table th {
     text-transform: uppercase;
     font-size: 12px;
-    color: #1D546D;
+    color: #0070C0;
     letter-spacing: 0.06em;
   }
 
@@ -755,11 +765,11 @@ footer {
   }
 
   .standings-kpi.blue {
-    background: linear-gradient(120deg, #1D546D, #5F9598);
+    background: linear-gradient(120deg, #0070C0, #E01020);
   }
 
   .standings-kpi.orange {
-    background: linear-gradient(120deg, #5F9598, #1D546D);
+    background: linear-gradient(120deg, #E01020, #0070C0);
   }
 
   .standings-kpi .label {
@@ -824,7 +834,7 @@ footer {
     font-size: 12px;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: #1D546D;
+    color: #0070C0;
     background: #f8fafc;
   }
 
@@ -897,7 +907,7 @@ footer {
   }
 
   .blue { background: #3b82f6; }
-  .orange { background: #5F9598; }
+  .orange { background: #E01020; }
   .green { background: #22c55e; }
   .red { background: #ef4444; }
 
@@ -950,7 +960,7 @@ footer {
   }
 
   .news-stat.secondary {
-    background: linear-gradient(120deg, #1D546D, #5F9598);
+    background: linear-gradient(120deg, #0070C0, #E01020);
   }
 
   .news-stat.success {
@@ -958,7 +968,7 @@ footer {
   }
 
   .news-stat.warn {
-    background: linear-gradient(120deg, #5F9598, #1D546D);
+    background: linear-gradient(120deg, #E01020, #0070C0);
   }
 
   .news-live-card {
@@ -1041,7 +1051,7 @@ footer {
   }
 
   .news-date {
-    color: #1D546D;
+    color: #0070C0;
     font-size: 13px;
     font-weight: 500;
   }
@@ -1058,7 +1068,7 @@ footer {
   }
 
   .news-read-btn:hover {
-    background: #061E29;
+    background: #001224;
   }
 
   .news-empty {
@@ -1172,7 +1182,7 @@ footer {
 
   .article-short {
     margin-bottom: 16px;
-    color: #061E29;
+    color: #001224;
     font-size: 18px;
     font-weight: 500;
   }
@@ -1231,7 +1241,7 @@ footer {
   }
 
   .related-item small {
-    color: #1D546D;
+    color: #0070C0;
   }
 
   @media (max-width: 760px) {
@@ -1272,8 +1282,8 @@ footer {
   }
 
   .fixture-kpi.main { background: linear-gradient(120deg, var(--primary-color), #1f2937); }
-  .fixture-kpi.blue { background: linear-gradient(120deg, #1D546D, #5F9598); }
-  .fixture-kpi.orange { background: linear-gradient(120deg, #5F9598, #1D546D); }
+  .fixture-kpi.blue { background: linear-gradient(120deg, #0070C0, #E01020); }
+  .fixture-kpi.orange { background: linear-gradient(120deg, #E01020, #0070C0); }
 
   .fixture-kpi .label {
     font-size: 12px;
@@ -1346,7 +1356,7 @@ footer {
     font-size: 12px;
     font-weight: 700;
     background: #F3F4F4;
-    color: #1D546D;
+    color: #0070C0;
     display: inline-flex;
     align-items: center;
     gap: 7px;
@@ -1361,7 +1371,7 @@ footer {
 
   .fixture-time {
     font-size: 13px;
-    color: #1D546D;
+    color: #0070C0;
     font-weight: 600;
   }
 
@@ -1402,7 +1412,7 @@ footer {
   .fixture-vs {
     font-size: 28px;
     font-weight: 700;
-    color: #061E29;
+    color: #001224;
   }
 
   .fixture-link {
@@ -1515,7 +1525,7 @@ footer {
 
   .score-date {
     font-size: 13px;
-    color: #1D546D;
+    color: #0070C0;
     font-weight: 600;
   }
 
@@ -1600,14 +1610,14 @@ footer {
     font-size: 12px;
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    color: #1D546D;
+    color: #0070C0;
     font-weight: 700;
   }
 
   .stat-value {
     font-size: 17px;
     font-weight: 700;
-    color: #061E29;
+    color: #001224;
   }
 
   .stat-value.right {
@@ -1775,12 +1785,12 @@ footer {
 
 .stats-nav-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 14px 30px rgba(6, 30, 41, 0.12);
+  box-shadow: 0 14px 30px rgba(0, 18, 36, 0.12);
 }
 
 .stats-nav-card.active {
   border-color: var(--secondary-color);
-  background: linear-gradient(120deg, rgba(95, 149, 152, 0.16), rgba(29, 84, 109, 0.06));
+  background: linear-gradient(120deg, rgba(224, 16, 32, 0.16), rgba(0, 112, 192, 0.06));
 }
 
 .stats-nav-card .label {
@@ -1818,23 +1828,23 @@ footer {
   display: grid;
   gap: 8px;
   align-content: space-between;
-  box-shadow: 0 12px 30px rgba(6, 30, 41, 0.16);
+  box-shadow: 0 12px 30px rgba(0, 18, 36, 0.16);
 }
 
 .stats-kpi.primary {
-  background: linear-gradient(120deg, var(--primary-color), #1D546D);
+  background: linear-gradient(120deg, var(--primary-color), #0070C0);
 }
 
 .stats-kpi.blue {
-  background: linear-gradient(120deg, #1D546D, #5F9598);
+  background: linear-gradient(120deg, #0070C0, #E01020);
 }
 
 .stats-kpi.teal {
-  background: linear-gradient(120deg, #5F9598, #1D546D);
+  background: linear-gradient(120deg, #E01020, #0070C0);
 }
 
 .stats-kpi.steel {
-  background: linear-gradient(120deg, #3f6f82, #5F9598);
+  background: linear-gradient(120deg, #005A9A, #E01020);
 }
 
 .stats-kpi .label {
@@ -1888,7 +1898,7 @@ footer {
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.04em;
-  background: rgba(95, 149, 152, 0.18);
+  background: rgba(224, 16, 32, 0.18);
   color: var(--primary-color);
 }
 
@@ -2023,7 +2033,7 @@ footer {
 }
 
 .home-hero {
-  background: linear-gradient(125deg, #061E29, #1D546D 60%, #5F9598);
+  background: linear-gradient(125deg, #001224, #0070C0 60%, #E01020);
   color: #fff;
   border-radius: 22px;
   padding: 26px;
@@ -2075,7 +2085,7 @@ footer {
 .home-btn.primary {
   background: #fff;
   border-color: #fff;
-  color: #061E29;
+  color: #001224;
 }
 
 .home-btn:hover {
@@ -2137,7 +2147,7 @@ footer {
 
 .home-nav-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 14px 30px rgba(6, 30, 41, 0.12);
+  box-shadow: 0 14px 30px rgba(0, 18, 36, 0.12);
 }
 
 .home-nav-card .label {
@@ -2177,3 +2187,4 @@ footer {
     grid-template-columns: 1fr;
   }
 }
+

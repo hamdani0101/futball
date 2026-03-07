@@ -5,7 +5,7 @@ from django.db import models
 # News model (Indonesian: Model berita)
 class News(models.Model):
     headline=models.CharField(max_length=155)
-    slug = models.SlugField(max_length=155, unique=True)
+    slug = models.SlugField(max_length=155, unique=True, null=True)
     shortdesc=models.CharField(max_length=155)
     content=models.TextField()
     thumbnail = models.ImageField(upload_to="news/thumbnail/")

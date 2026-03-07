@@ -23,7 +23,9 @@
   <!-- NAVBAR -->
   <nav>
     <div class="nav-wrapper bg-primary">
-      <a href="{% url 'home' %}" class="brand-logo">⚽ FutBall</a>
+      <a href="{% url 'home' %}" class="brand-logo">
+        <img src="{% static "futball/img/futball.png" %}" alt="Futball">
+      </a>
       <ul id="nav-mobile" class="right hide-on-med-and-down">
         <li class="{% if request.path == '/futball/' %}active{% endif %}"><a href="{% url 'home' %}">Home</a></li>
         <li class="{% if '/futball/fixtures/' in request.path %}active{% endif %}"><a href="{% url 'fixture-list' %}">Fixtures</a></li>
@@ -49,8 +51,6 @@
     <div class="row">
       <div class="col s12 l9">
         <div class="content">
-          <h2>{% block c_title %}{% endblock %}</h2>
-          
           {% block content %}{% endblock %}
         </div>    
       </div>
