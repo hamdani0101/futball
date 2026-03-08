@@ -14,7 +14,7 @@ urlpatterns = [
     path("stats/", dashboard_view, name="stats-dashboard"),
     path("xg-pitch/", xg_pitch_map_view, name="xg-pitch-map"),
     path("fixtures/", fixture_and_results, name="fixture-list"),
-    path("fixtures/<str:match_id>/", match_detail, name="match-detail"),
+    path("fixtures/<path:match_id>/", match_detail, name="match-detail"),
     path("news/", news_list, name="news_list"),
     path("news/<slug:slug>/", news_detail, name="news_detail"),
 ]

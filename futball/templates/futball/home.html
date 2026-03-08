@@ -6,14 +6,58 @@
 
 {% block content %}
 <div class="home-page">
-  <section class="home-hero">
-    <p class="home-eyebrow">FutBall Control Center</p>
-    <h1>Football insights, fixtures, standings, and stats in one place.</h1>
-    <p class="home-copy">Pilih modul yang ingin kamu buka: dashboard analitik, klasemen, pertandingan, atau berita terbaru.</p>
-    <div class="home-actions">
-      <a class="home-btn primary" href="{% url 'stats-dashboard' %}">Open Dashboard</a>
-      <a class="home-btn" href="{% url 'fixture-list' %}">Open Fixtures</a>
-    </div>
+  <section class="home-hero-grid">
+    <article class="home-hero">
+      <p class="home-eyebrow">Live Match Center</p>
+      <h1>Livescore, jadwal, dan analisis performa dalam satu dashboard.</h1>
+      <p class="home-copy">Pantau pertandingan hari ini, cek hasil terbaru, lalu lanjutkan ke modul xG dan klasemen untuk breakdown taktis.</p>
+      <div class="home-actions">
+        <a class="home-btn primary" href="{% url 'fixture-list' %}">Buka Live Fixtures</a>
+        <a class="home-btn" href="{% url 'stats-dashboard' %}">Buka Analisis</a>
+      </div>
+    </article>
+
+    <article class="home-spotlight">
+      <div class="home-spotlight-head">
+        <span>Spotlight Match</span>
+        <a href="{% url 'fixture-list' %}">All Fixtures</a>
+      </div>
+      {% if spotlight %}
+        <div class="home-spotlight-league">
+          {% if spotlight.match.season.competition.logo %}
+            <img src="{{ spotlight.match.season.competition.logo.url }}" alt="{{ spotlight.match.season.competition.name }}">
+          {% endif %}
+          <strong>{{ spotlight.match.season.competition.name }}</strong>
+        </div>
+        <div class="home-spotlight-main">
+          <div class="team">
+            {% if spotlight.match.home_team.logo %}<img src="{{ spotlight.match.home_team.logo.url }}" alt="{{ spotlight.match.home_team.name }}">{% endif %}
+            <span>{{ spotlight.match.home_team.name }}</span>
+          </div>
+          <div class="score">
+            {% if spotlight.home_goals != None and spotlight.away_goals != None %}
+              {{ spotlight.home_goals }} - {{ spotlight.away_goals }}
+            {% else %}
+              VS
+            {% endif %}
+          </div>
+          <div class="team away">
+            <span>{{ spotlight.match.away_team.name }}</span>
+            {% if spotlight.match.away_team.logo %}<img src="{{ spotlight.match.away_team.logo.url }}" alt="{{ spotlight.match.away_team.name }}">{% endif %}
+          </div>
+        </div>
+        {% if spotlight_mode == "result" %}
+          <p class="home-spotlight-time">Final Result • {{ spotlight.match.match_date|date:"D, d M Y H:i" }}</p>
+        {% else %}
+          <p class="home-spotlight-time">Kickoff • {{ spotlight.match.match_date|date:"D, d M Y H:i" }}</p>
+        {% endif %}
+        <a class="home-spotlight-link" href="{% url 'match-detail' spotlight.match.match_id %}">
+          {% if spotlight_mode == "result" %}View Result{% else %}Match Detail{% endif %}
+        </a>
+      {% else %}
+        <p class="home-empty">Belum ada data pertandingan.</p>
+      {% endif %}
+    </article>
   </section>
 
   <section class="home-kpi-grid">
@@ -30,36 +74,124 @@
       <span class="value">{{ total_teams }}</span>
     </article>
     <article class="home-kpi">
-      <span class="label">Upcoming Matches</span>
+      <span class="label">Scheduled</span>
       <span class="value">{{ upcoming_matches }}</span>
+    </article>
+  </section>
+
+  <section class="home-live-board">
+    <div class="home-section-head">
+      <h3>{{ tracker_title }}</h3>
+      <a href="{% url 'fixture-list' %}">View all</a>
+    </div>
+    <p class="home-live-subtitle">{{ tracker_subtitle }}</p>
+    {% if today_matches %}
+      <div class="home-live-list">
+        {% for item in today_matches %}
+          <article class="home-live-item">
+            <div class="home-live-top">
+              <span class="league">{{ item.match.season.competition.name }}</span>
+              <span class="status">{{ item.status_badge }}</span>
+            </div>
+            <div class="home-live-main">
+              <div class="team">
+                {% if item.match.home_team.logo %}<img src="{{ item.match.home_team.logo.url }}" alt="{{ item.match.home_team.name }}">{% endif %}
+                <span>{{ item.match.home_team.name }}</span>
+              </div>
+              <div class="score">
+                {% if item.home_goals != None and item.away_goals != None %}
+                  {{ item.home_goals }} - {{ item.away_goals }}
+                {% else %}
+                  VS
+                {% endif %}
+              </div>
+              <div class="team away">
+                <span>{{ item.match.away_team.name }}</span>
+                {% if item.match.away_team.logo %}<img src="{{ item.match.away_team.logo.url }}" alt="{{ item.match.away_team.name }}">{% endif %}
+              </div>
+            </div>
+            <div class="home-live-time">{{ item.match.match_date|date:"d M H:i" }}</div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="home-empty">Belum ada pertandingan untuk tracker ini.</p>
+    {% endif %}
+  </section>
+
+  <section class="home-feed-grid">
+    <article class="home-feed-card">
+      <div class="home-section-head">
+        <h3>Recent Results</h3>
+      </div>
+      {% if recent_results %}
+        <div class="home-result-list">
+          {% for item in recent_results %}
+            <a class="home-result-item" href="{% url 'match-detail' item.match.match_id %}">
+              <div class="home-result-top">
+                <span class="league">{{ item.match.season.competition.name }}</span>
+                <span class="badge">FT</span>
+              </div>
+              <div class="home-result-main">
+                <div class="team">
+                  {% if item.match.home_team.logo %}<img src="{{ item.match.home_team.logo.url }}" alt="{{ item.match.home_team.name }}">{% endif %}
+                  <span>{{ item.match.home_team.name }}</span>
+                </div>
+                <div class="score">{{ item.home_goals|default:"0" }} - {{ item.away_goals|default:"0" }}</div>
+                <div class="team away">
+                  <span>{{ item.match.away_team.name }}</span>
+                  {% if item.match.away_team.logo %}<img src="{{ item.match.away_team.logo.url }}" alt="{{ item.match.away_team.name }}">{% endif %}
+                </div>
+              </div>
+              <small>{{ item.match.match_date|date:"D, d M Y H:i" }}</small>
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="home-empty">Belum ada hasil pertandingan.</p>
+      {% endif %}
+    </article>
+
+    <article class="home-feed-card">
+      <div class="home-section-head">
+        <h3>Next Fixtures</h3>
+      </div>
+      {% if next_fixtures %}
+        <div class="home-mini-list">
+          {% for item in next_fixtures %}
+            <a class="home-mini-item" href="{% url 'match-detail' item.match.match_id %}">
+              <span class="league">{{ item.match.season.competition.name }}</span>
+              <strong>{{ item.match.home_team.name }} vs {{ item.match.away_team.name }}</strong>
+              <small>{{ item.match.match_date|date:"D, d M Y H:i" }}</small>
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="home-empty">Belum ada jadwal berikutnya.</p>
+      {% endif %}
     </article>
   </section>
 
   <section class="home-nav-grid">
     <a class="home-nav-card" href="{% url 'stats-dashboard' %}">
-      <span class="label">Analytics</span>
+      <span class="label">Analysis</span>
       <strong>Stats Dashboard</strong>
-      <small>xG scatter and team ranking.</small>
+      <small>Peringkat, xG, dan metrik performa tim.</small>
     </a>
     <a class="home-nav-card" href="{% url 'xg-pitch-map' %}">
-      <span class="label">Visualization</span>
+      <span class="label">Analysis</span>
       <strong>xG Pitch Map</strong>
-      <small>Shot map and heatmap.</small>
+      <small>Lokasi tembakan, kualitas peluang, dan pola serangan.</small>
     </a>
     <a class="home-nav-card" href="{% url 'league-table' %}">
-      <span class="label">Standings</span>
-      <strong>Klasemen</strong>
-      <small>League table and qualification zones.</small>
-    </a>
-    <a class="home-nav-card" href="{% url 'fixture-list' %}">
-      <span class="label">Matches</span>
-      <strong>Fixtures</strong>
-      <small>Upcoming matches and detail pages.</small>
+      <span class="label">Competition</span>
+      <strong>Klasemen Liga</strong>
+      <small>Posisi tim, poin, dan zona kompetisi.</small>
     </a>
     <a class="home-nav-card" href="{% url 'news_list' %}">
-      <span class="label">Update</span>
+      <span class="label">Editorial</span>
       <strong>News Hub</strong>
-      <small>Latest articles and reports.</small>
+      <small>Update terkini seputar tim dan pertandingan.</small>
     </a>
   </section>
 </div>
