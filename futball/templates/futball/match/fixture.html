@@ -9,11 +9,11 @@
   <section class="fixture-head">
     <article class="fixture-kpi main">
       <span class="label">Upcoming Matches</span>
-      <span class="value">{{ matches|length }}</span>
+      <span class="value">{{ upcoming_matches|length }}</span>
     </article>
     <article class="fixture-kpi blue">
-      <span class="label">Live Status</span>
-      <span class="value">Scheduled</span>
+      <span class="label">Latest Results</span>
+      <span class="value">{{ recent_results|length }}</span>
     </article>
     <article class="fixture-kpi orange">
       <span class="label">Navigation</span>
@@ -27,9 +27,9 @@
       <span class="fixture-badge">UPCOMING</span>
     </div>
 
-    {% if matches %}
+    {% if upcoming_matches %}
       <div class="fixture-list">
-        {% for match in matches %}
+        {% for match in upcoming_matches %}
           <article class="fixture-item">
             <div class="fixture-meta">
               <span class="fixture-chip">
@@ -55,6 +55,43 @@
       </div>
     {% else %}
       <div class="fixture-empty">No scheduled fixtures available.</div>
+    {% endif %}
+  </section>
+
+  <section class="fixture-panel">
+    <div class="fixture-panel-head">
+      <h4>Latest Results</h4>
+      <span class="fixture-badge">FINISHED</span>
+    </div>
+
+    {% if recent_results %}
+      <div class="fixture-list">
+        {% for item in recent_results %}
+          <article class="fixture-item">
+            <div class="fixture-meta">
+              <span class="fixture-chip">
+                {% if item.match.season.competition.logo %}<img src="{{ item.match.season.competition.logo.url }}" alt="{{ item.match.season.competition.name }}">{% endif %}
+                {{ item.match.season.competition.name }}
+              </span>
+              <span class="fixture-time">{{ item.match.match_date|date:"D, d M Y • H:i" }}</span>
+            </div>
+            <div class="fixture-main">
+              <div class="team-side">
+                {% if item.match.home_team.logo %}<img src="{{ item.match.home_team.logo.url }}" alt="{{ item.match.home_team.name }}">{% endif %}
+                <span class="team-name">{{ item.match.home_team.name }}</span>
+              </div>
+              <span class="fixture-vs">{{ item.home_goals }} - {{ item.away_goals }}</span>
+              <div class="team-side away">
+                <span class="team-name">{{ item.match.away_team.name }}</span>
+                {% if item.match.away_team.logo %}<img src="{{ item.match.away_team.logo.url }}" alt="{{ item.match.away_team.name }}">{% endif %}
+              </div>
+              <a class="fixture-link" href="{% url 'match-detail' item.match.match_id %}">Match Detail</a>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="fixture-empty">No finished results available.</div>
     {% endif %}
   </section>
 </div>
