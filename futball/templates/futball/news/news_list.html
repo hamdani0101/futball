@@ -6,6 +6,16 @@
 
 {% block content %}
 <div class="news-hub">
+  <section class="page-burst news-burst">
+    <p class="burst-kicker">Editorial Wire</p>
+    <h2>Headline terbaru, ringkasan cepat, dan akses detail berita pertandingan.</h2>
+    <div class="burst-chips">
+      <span class="burst-chip">Articles {{ news|length }}</span>
+      <span class="burst-chip">Preview {{ news|slice:":3"|length }}</span>
+      <span class="burst-chip">Feed Active</span>
+    </div>
+  </section>
+
   <section class="news-stat-grid">
     <article class="news-stat primary">
       <span class="label">Total</span>

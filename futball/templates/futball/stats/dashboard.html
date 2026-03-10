@@ -7,34 +7,55 @@
 
 {% block content %}
 <div class="dash-page">
-  <div class="competition-search dash-filter">
-    <form method="get" class="search-form">
-      <div class="input-field field">
-        <select name="competition" id="competition">
-          {% for c in competitions %}
-            <option value="{{ c.id }}" {% if selected_competition and c.id == selected_competition.id %}selected{% endif %}>
-              {{ c.name }}
-            </option>
-          {% endfor %}
-        </select>
-        <label>Competition:</label>
+  <section class="page-burst stats-burst">
+    <p class="burst-kicker">Performance Lab</p>
+    <h2>Snapshot cepat statistik musim sebelum masuk detail xG dan ranking tim.</h2>
+    <div class="burst-chips">
+      <span class="burst-chip">Matches {{ total_matches }}</span>
+      <span class="burst-chip">Goals {{ total_goals }}</span>
+      <span class="burst-chip">Teams {{ xg_teams|length }}</span>
+    </div>
+  </section>
+
+  <section class="selector-tabs dash-filter-tabs">
+    <div class="selector-group">
+      <span class="selector-label">Competition</span>
+      <div class="selector-row">
+        {% for c in competitions %}
+          <a
+            class="selector-tab selector-tab-logo {% if selected_competition and c.id == selected_competition.id %}active{% endif %}"
+            href="{% url 'stats-dashboard' %}?competition={{ c.id }}{% if selected_season and selected_season.competition_id == c.id %}&season={{ selected_season.id }}{% endif %}"
+            title="{{ c.name }}"
+            aria-label="{{ c.name }}"
+          >
+            {% if c.logo %}
+              <img src="{{ c.logo.url }}" alt="{{ c.name }}">
+            {% else %}
+              <span>{{ c.name|slice:":1"|upper }}</span>
+            {% endif %}
+          </a>
+        {% endfor %}
       </div>
-      <div class="input-field field">
-        <select name="season" id="season">
+    </div>
+
+    <div class="selector-group">
+      <span class="selector-label">Season</span>
+      <div class="selector-row">
+        {% if seasons %}
           {% for s in seasons %}
-            <option value="{{ s.id }}" {% if selected_season and s.id == selected_season.id %}selected{% endif %}>
+            <a
+              class="selector-tab {% if selected_season and s.id == selected_season.id %}active{% endif %}"
+              href="{% url 'stats-dashboard' %}?competition={% if selected_competition %}{{ selected_competition.id }}{% endif %}&season={{ s.id }}"
+            >
               {{ s.name }}
-            </option>
+            </a>
           {% endfor %}
-        </select>
-        <label>Season:</label>
+        {% else %}
+          <span class="selector-empty">No season available.</span>
+        {% endif %}
       </div>
-      <button class="btn waves-effect waves-light" type="submit">
-        Search
-        <i class="material-icons right">search</i>
-      </button>
-    </form>
-  </div>
+    </div>
+  </section>
 
   <section class="dash-stat-grid">
     <article class="dash-stat primary">

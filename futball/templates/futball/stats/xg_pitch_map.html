@@ -7,28 +7,50 @@
 
 {% block content %}
 <div class="stats-page">
-  <div class="competition-search stats-filter">
-    <form method="get" class="search-form stats-search-3">
-      <div class="input-field field">
-        <select name="competition" id="competition">
-          {% for c in competitions %}
-            <option value="{{ c.id }}" {% if selected_competition and c.id == selected_competition.id %}selected{% endif %}>
-              {{ c.name }}
-            </option>
-          {% endfor %}
-        </select>
-        <label>Competition:</label>
+  <section class="selector-tabs stats-filter-tabs">
+    <div class="selector-group">
+      <span class="selector-label">Competition</span>
+      <div class="selector-row">
+        {% for c in competitions %}
+          <a
+            class="selector-tab selector-tab-logo {% if selected_competition and c.id == selected_competition.id %}active{% endif %}"
+            href="{% url 'xg-pitch-map' %}?competition={{ c.id }}"
+            title="{{ c.name }}"
+            aria-label="{{ c.name }}"
+          >
+            {% if c.logo %}
+              <img src="{{ c.logo.url }}" alt="{{ c.name }}">
+            {% else %}
+              <span>{{ c.name|slice:":1"|upper }}</span>
+            {% endif %}
+          </a>
+        {% endfor %}
       </div>
-      <div class="input-field field">
-        <select name="season" id="season">
+    </div>
+
+    <div class="selector-group">
+      <span class="selector-label">Season</span>
+      <div class="selector-row">
+        {% if seasons %}
           {% for s in seasons %}
-            <option value="{{ s.id }}" {% if selected_season and s.id == selected_season.id %}selected{% endif %}>
+            <a
+              class="selector-tab {% if selected_season and s.id == selected_season.id %}active{% endif %}"
+              href="{% url 'xg-pitch-map' %}?competition={% if selected_competition %}{{ selected_competition.id }}{% endif %}&season={{ s.id }}"
+            >
               {{ s.name }}
-            </option>
+            </a>
           {% endfor %}
-        </select>
-        <label>Season:</label>
+        {% else %}
+          <span class="selector-empty">No season available.</span>
+        {% endif %}
       </div>
+    </div>
+  </section>
+
+  <div class="competition-search stats-filter">
+    <form method="get" class="search-form">
+      <input type="hidden" name="competition" value="{% if selected_competition %}{{ selected_competition.id }}{% endif %}">
+      <input type="hidden" name="season" value="{% if selected_season %}{{ selected_season.id }}{% endif %}">
       <div class="input-field field">
         <select name="team" id="team">
           <option value="" {% if not selected_team %}selected{% endif %}>All Teams</option>
@@ -39,7 +61,7 @@
         <label>Team:</label>
       </div>
       <button class="btn waves-effect waves-light" type="submit">
-        Search
+        Apply Team
         <i class="material-icons right">search</i>
       </button>
     </form>
@@ -118,12 +140,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-window.teamsBySeason = JSON.parse('{{ teams_by_season|default:"{}"|escapejs }}')
-if (typeof window.updateTeamsForSeason === "function") {
-  window.updateTeamsForSeason()
-}
-</script>
 <script>
 const shots = JSON.parse('{{ shots_json|default:"[]"|escapejs }}')
 
