@@ -2,6 +2,8 @@
 
 from django.shortcuts import get_object_or_404, render
 from futball.models.match import Match, MatchTeamStats
+from futball.models.player import PlayerMatch
+from futball.models.shots import Shot
 
 
 VALID_FIXTURE_TABS = {"all", "live", "postponed", "finished"}
@@ -163,8 +165,79 @@ def match_detail(request, match_id):
     match = get_object_or_404(Match, match_id=match_id)
     home_stats = MatchTeamStats.objects.filter(match=match, team=match.home_team).first()
     away_stats = MatchTeamStats.objects.filter(match=match, team=match.away_team).first()
+
+    lineup_rows = (
+        PlayerMatch.objects.filter(match=match)
+        .select_related("player", "team")
+        .order_by("team_id", "-is_starter", "player__name")
+    )
+    home_lineup = [row for row in lineup_rows if row.team_id == match.home_team_id]
+    away_lineup = [row for row in lineup_rows if row.team_id == match.away_team_id]
+
+    home_starters = [row for row in home_lineup if row.is_starter]
+    home_bench = [row for row in home_lineup if not row.is_starter]
+    away_starters = [row for row in away_lineup if row.is_starter]
+    away_bench = [row for row in away_lineup if not row.is_starter]
+
+    shots = Shot.objects.filter(match=match).select_related("player", "team")
+    home_goals = shots.filter(team=match.home_team, outcome="goal").order_by(
+        "minute", "second"
+    )
+    away_goals = shots.filter(team=match.away_team, outcome="goal").order_by(
+        "minute", "second"
+    )
+
+    home_shots = (home_stats.shots if home_stats else 0) or 0
+    away_shots = (away_stats.shots if away_stats else 0) or 0
+    home_sot = (home_stats.shots_on_target if home_stats else 0) or 0
+    away_sot = (away_stats.shots_on_target if away_stats else 0) or 0
+    home_goal_count = (home_stats.goals if home_stats else 0) or 0
+    away_goal_count = (away_stats.goals if away_stats else 0) or 0
+    home_xg = (home_stats.xg if home_stats else 0) or 0
+    away_xg = (away_stats.xg if away_stats else 0) or 0
+
+    def _pct(part, total):
+        """Return a percentage rounded for display, guarding against division by zero."""
+        if not total:
+            return 0
+        return round((part / total) * 100, 1)
+
+    more_stats = [
+        {
+            "label": "Shot Accuracy",
+            "home": f"{_pct(home_sot, home_shots)}%",
+            "away": f"{_pct(away_sot, away_shots)}%",
+        },
+        {
+            "label": "Goal Conversion",
+            "home": f"{_pct(home_goal_count, home_shots)}%",
+            "away": f"{_pct(away_goal_count, away_shots)}%",
+        },
+        {
+            "label": "xG per Shot",
+            "home": round(home_xg / home_shots, 2) if home_shots else 0,
+            "away": round(away_xg / away_shots, 2) if away_shots else 0,
+        },
+        {
+            "label": "Lineup Depth",
+            "home": len(home_starters) + len(home_bench),
+            "away": len(away_starters) + len(away_bench),
+        },
+    ]
+
     return render(
         request,
         "futball/match/match_detail.html",
-        {"match": match, "home_stats": home_stats, "away_stats": away_stats},
+        {
+            "match": match,
+            "home_stats": home_stats,
+            "away_stats": away_stats,
+            "home_starters": home_starters,
+            "away_starters": away_starters,
+            "home_bench": home_bench,
+            "away_bench": away_bench,
+            "home_goals": home_goals,
+            "away_goals": away_goals,
+            "more_stats": more_stats,
+        },
     )

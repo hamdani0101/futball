@@ -37,6 +37,7 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "http")
 # Application definition
 
 INSTALLED_APPS = [
+    "jazzmin",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -86,7 +87,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.mysql",
         "NAME": "futball",
         "USER": "root",
-        "PASSWORD": "root123",
+        "PASSWORD": "root",
         "HOST": "localhost",
         "PORT": "3306",
     }
