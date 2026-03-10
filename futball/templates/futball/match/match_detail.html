@@ -90,5 +90,114 @@
       </div>
     </article>
   </section>
+
+  <section class="lineup-grid">
+    <article class="lineup-card">
+      <h4>{{ match.home_team.name }} Lineup</h4>
+      <div class="lineup-block">
+        <h5>Starters ({{ home_starters|length }})</h5>
+        {% if home_starters %}
+          <div class="lineup-list">
+            {% for item in home_starters %}
+              <div class="lineup-item">
+                <span class="name">{{ item.player.name }}</span>
+                <span class="meta">{{ item.player.position|default:"-" }} • {{ item.minute_on }}' - {{ item.minute_off }}'</span>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="lineup-empty">No lineup data available.</p>
+        {% endif %}
+      </div>
+      <div class="lineup-block">
+        <h5>Bench ({{ home_bench|length }})</h5>
+        {% if home_bench %}
+          <div class="lineup-list compact">
+            {% for item in home_bench %}
+              <div class="lineup-item">
+                <span class="name">{{ item.player.name }}</span>
+                <span class="meta">On {{ item.minute_on }}'</span>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="lineup-empty">No bench data available.</p>
+        {% endif %}
+      </div>
+    </article>
+
+    <article class="lineup-card">
+      <h4>{{ match.away_team.name }} Lineup</h4>
+      <div class="lineup-block">
+        <h5>Starters ({{ away_starters|length }})</h5>
+        {% if away_starters %}
+          <div class="lineup-list">
+            {% for item in away_starters %}
+              <div class="lineup-item">
+                <span class="name">{{ item.player.name }}</span>
+                <span class="meta">{{ item.player.position|default:"-" }} • {{ item.minute_on }}' - {{ item.minute_off }}'</span>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="lineup-empty">No lineup data available.</p>
+        {% endif %}
+      </div>
+      <div class="lineup-block">
+        <h5>Bench ({{ away_bench|length }})</h5>
+        {% if away_bench %}
+          <div class="lineup-list compact">
+            {% for item in away_bench %}
+              <div class="lineup-item">
+                <span class="name">{{ item.player.name }}</span>
+                <span class="meta">On {{ item.minute_on }}'</span>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="lineup-empty">No bench data available.</p>
+        {% endif %}
+      </div>
+    </article>
+  </section>
+
+  <section class="stat-grid">
+    <article class="stat-card">
+      <h4>Goal Scorers</h4>
+      <div class="goal-list">
+        <div>
+          <h5>{{ match.home_team.name }}</h5>
+          {% if home_goals %}
+            {% for g in home_goals %}
+              <div class="goal-item">{{ g.player.name|default:"Unknown" }} <span>{{ g.minute }}'</span></div>
+            {% endfor %}
+          {% else %}
+            <p class="lineup-empty">No goals.</p>
+          {% endif %}
+        </div>
+        <div>
+          <h5>{{ match.away_team.name }}</h5>
+          {% if away_goals %}
+            {% for g in away_goals %}
+              <div class="goal-item">{{ g.player.name|default:"Unknown" }} <span>{{ g.minute }}'</span></div>
+            {% endfor %}
+          {% else %}
+            <p class="lineup-empty">No goals.</p>
+          {% endif %}
+        </div>
+      </div>
+    </article>
+
+    <article class="stat-card">
+      <h4>More Stats</h4>
+      {% for row in more_stats %}
+        <div class="stat-row">
+          <span class="stat-value left">{{ row.home }}</span>
+          <span class="stat-label">{{ row.label }}</span>
+          <span class="stat-value right">{{ row.away }}</span>
+        </div>
+      {% endfor %}
+    </article>
+  </section>
 </div>
 {% endblock %}

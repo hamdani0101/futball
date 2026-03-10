@@ -1945,6 +1945,103 @@ footer {
     font-size: 22px;
   }
 
+  .lineup-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .lineup-card {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    box-shadow: var(--shadow-sm);
+    padding: 18px;
+    display: grid;
+    gap: 14px;
+  }
+
+  .lineup-card h4 {
+    margin: 0;
+    font-size: 22px;
+  }
+
+  .lineup-block {
+    display: grid;
+    gap: 8px;
+  }
+
+  .lineup-block h5,
+  .goal-list h5 {
+    margin: 0;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #0070C0;
+  }
+
+  .lineup-list {
+    display: grid;
+    gap: 8px;
+  }
+
+  .lineup-item {
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 9px 10px;
+    display: grid;
+    gap: 2px;
+    background: #fff;
+  }
+
+  .lineup-item .name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #001224;
+  }
+
+  .lineup-item .meta {
+    font-size: 12px;
+    color: #64748b;
+  }
+
+  .lineup-list.compact .lineup-item .name {
+    font-size: 13px;
+  }
+
+  .lineup-empty {
+    margin: 0;
+    font-size: 13px;
+    color: #64748b;
+  }
+
+  .goal-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .goal-item {
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 8px 10px;
+    margin-top: 8px;
+    font-size: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    color: #001224;
+    font-weight: 600;
+  }
+
+  .goal-item span {
+    color: #0070C0;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
   .stat-row {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
@@ -1990,6 +2087,10 @@ footer {
     .stat-grid {
       grid-template-columns: 1fr;
     }
+
+    .lineup-grid {
+      grid-template-columns: 1fr;
+    }
   }
 
   @media (max-width: 760px) {
@@ -2008,6 +2109,10 @@ footer {
 
     .score-team-name {
       font-size: 23px;
+    }
+
+    .goal-list {
+      grid-template-columns: 1fr;
     }
   }
 /* ===== XG PITCH PAGE ===== */
@@ -2322,6 +2427,20 @@ footer {
 
 .stats-table td {
   font-size: 14px;
+}
+
+.stats-table td.stats-team-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stats-table td.stats-team-cell img {
+  flex-shrink: 0;
+}
+
+.stats-team-name {
+  line-height: 1.2;
 }
 
 .stats-table td:last-child {

@@ -1,4 +1,8 @@
-"""Landing page view for the futball app."""
+"""Views used to render the futball landing page.
+
+The home page combines summary counts, recent news, live-or-recent match
+trackers, and upcoming fixtures into a single template context.
+"""
 
 from django.shortcuts import render
 from django.utils import timezone
@@ -11,6 +15,7 @@ from futball.models.team import Team
 
 
 def _status_badge(status):
+    """Map an internal match status to the compact badge shown in the UI."""
     return {
         "finished": "FT",
         "scheduled": "SCH",
@@ -19,6 +24,11 @@ def _status_badge(status):
 
 
 def _build_match_cards(matches):
+    """Convert matches into card dictionaries expected by the home template.
+
+    Each card includes the match object, the cached goal totals for both teams,
+    and a short status badge so templates do not need to repeat lookup logic.
+    """
     matches = list(matches)
     if not matches:
         return []
@@ -42,6 +52,21 @@ def _build_match_cards(matches):
 
 
 def home_view(request):
+    """Render the futball home page.
+
+    The view assembles:
+    - headline news items
+    - a match tracker for today's fixtures, or recent results as a fallback
+    - a spotlight match that prefers the next scheduled fixture
+    - recent results and upcoming fixtures
+    - aggregate counts used by home page summary panels
+
+    Args:
+        request: The active Django ``HttpRequest``.
+
+    Returns:
+        HttpResponse: The rendered ``futball/home.html`` response.
+    """
     latest_news = News.objects.all().order_by("-created_at")[:4]
     today = timezone.localdate()
 

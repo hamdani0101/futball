@@ -236,9 +236,9 @@
             {% for row in xg_team_rows %}
               <tr>
                 <td>{{ forloop.counter }}</td>
-                <td>
+                <td class="stats-team-cell">
                   {% if row.logo %}<img src="{{ row.logo.url }}" alt="{{ row.team }}" class="team-logo-small">{% endif %}
-                  {{ row.team }}
+                  <span class="stats-team-name">{{ row.team }}</span>
                 </td>
                 <td>{{ row.xgf_per_match }}</td>
                 <td>{{ row.xga_per_match }}</td>

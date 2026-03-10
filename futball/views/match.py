@@ -1,3 +1,5 @@
+"""Views for fixture listings and match detail pages."""
+
 from django.shortcuts import get_object_or_404, render
 from futball.models.match import Match, MatchTeamStats
 
@@ -6,6 +8,11 @@ VALID_FIXTURE_TABS = {"all", "live", "postponed", "finished"}
 
 
 def _build_match_item(match):
+    """Build the fixture/result payload consumed by listing templates.
+
+    The helper extracts goal totals from prefetched team statistics and exposes
+    a ``has_score`` flag so templates know whether to render the scoreline.
+    """
     home_goals = 0
     away_goals = 0
     for stat in match.team_stats.all():
@@ -23,6 +30,13 @@ def _build_match_item(match):
 
 
 def fixture_and_results(request):
+    """Render the fixture and results page with status-based filtering.
+
+    The page combines upcoming fixtures, recently finished matches, and any
+    additional statuses such as live or postponed. A ``tab`` query parameter is
+    normalized against ``VALID_FIXTURE_TABS`` to control which sections are
+    visible without changing the underlying data preparation.
+    """
     active_tab = request.GET.get("tab", "all").lower()
     if active_tab not in VALID_FIXTURE_TABS:
         active_tab = "all"
@@ -133,6 +147,19 @@ def fixture_and_results(request):
 
 
 def match_detail(request, match_id):
+    """Render a single match detail page.
+
+    The response includes team summary stats, separated starting and bench
+    lineups, ordered goal events, and a few derived comparison metrics for the
+    two sides.
+
+    Args:
+        request: The active Django ``HttpRequest``.
+        match_id: Public match identifier used in the URL.
+
+    Returns:
+        HttpResponse: The rendered ``futball/match/match_detail.html`` page.
+    """
     match = get_object_or_404(Match, match_id=match_id)
     home_stats = MatchTeamStats.objects.filter(match=match, team=match.home_team).first()
     away_stats = MatchTeamStats.objects.filter(match=match, team=match.away_team).first()
