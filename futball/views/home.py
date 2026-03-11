@@ -6,7 +6,6 @@ trackers, and upcoming fixtures into a single template context.
 
 from django.shortcuts import render
 from django.utils import timezone
-from django.http import HttpResponse
 from futball.models.competition import Competition
 from futball.models.match import Match, MatchTeamStats
 from futball.models.news import News

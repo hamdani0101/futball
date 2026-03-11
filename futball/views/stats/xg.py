@@ -1,39 +1,27 @@
 """Views for expected-goals maps and shot visualization pages."""
 
 import json
-from django.shortcuts import render
-from django.db.models import Count
+
 from django.core import serializers
-from futball.services.xg import build_xg_table
-from futball.models.season import Season
-from futball.models.match import  Match
-from futball.models.competition import Competition
-from futball.models.team import Team
+from django.db.models import Count
+from django.shortcuts import render
+
+from futball.models.match import Match
 from futball.models.shots import Shot
+from futball.models.team import Team
+from futball.services.xg import build_xg_table
+from futball.views.selection import get_competition_season_selection
+
 
 def xg_map_view(request):
-    competitions = Competition.objects.all().order_by("name")
-    seasons_all = Season.objects.all().order_by("-name")
-
-    competition_id = request.GET.get("competition")
-    season_id = request.GET.get("season")
-
-    competition = (
-        competitions.filter(id=competition_id).first()
-        if competition_id
-        else competitions.first()
-    )
-    seasons = seasons_all.filter(competition=competition) if competition else Season.objects.none()
-    season = (
-        seasons.filter(id=season_id).first()
-        if season_id
-        else seasons.first()
-    )
+    selection = get_competition_season_selection(request)
+    competition = selection["selected_competition"]
+    season = selection["selected_season"]
 
     xg_table = build_xg_table(season) if season else {}
 
     team_rows = []
-    for team, stats in xg_table.items():
+    for stats in xg_table.values():
         matches = stats.get("matches", 0) or 0
         if matches <= 0:
             continue
@@ -59,15 +47,13 @@ def xg_map_view(request):
     best_defence = min(team_rows, key=lambda r: r["xga_per_match"], default=None)
     sorted_rows = sorted(team_rows, key=lambda r: r["xg_diff"], reverse=True)
 
-    season_json_data = serializers.serialize("json", seasons_all.all())
-
     return render(
         request,
         "futball/stats/xg_map.html",
         {
-            "competitions": competitions,
-            "seasons": seasons,
-            "season_json_data": season_json_data,
+            "competitions": selection["competitions"],
+            "seasons": selection["seasons"],
+            "season_json_data": selection["season_json_data"],
             "selected_competition": competition,
             "selected_season": season,
             "teams": teams,
@@ -80,26 +66,15 @@ def xg_map_view(request):
             "best_defence": best_defence,
         },
     )
-    
+
+
 def xg_pitch_map_view(request):
-    competitions = Competition.objects.all().order_by("name")
-    seasons_all = Season.objects.all().order_by("-name")
-
-    competition_id = request.GET.get("competition")
-    season_id = request.GET.get("season")
+    selection = get_competition_season_selection(request)
+    seasons_all = selection["seasons_all"]
+    seasons = selection["seasons"]
     team_id = request.GET.get("team")
-
-    season_json_data = serializers.serialize("json", seasons_all.all())
-
-    selected_competition = (
-        competitions.filter(id=competition_id).first() if competition_id else competitions.first()
-    )
-
-    seasons = (
-        seasons_all.filter(competition=selected_competition)
-        if selected_competition
-        else seasons_all.none()
-    )
+    selected_competition = selection["selected_competition"]
+    season_id = request.GET.get("season")
 
     if season_id:
         season = seasons.filter(id=season_id).first()
@@ -138,17 +113,17 @@ def xg_pitch_map_view(request):
     shots_json = serializers.serialize(
         "json",
         shots,
-        fields=("x", "y", "xg", "outcome")
+        fields=("x", "y", "xg", "outcome"),
     )
 
     return render(
         request,
         "futball/stats/xg_pitch_map.html",
         {
-            "competitions": competitions,
+            "competitions": selection["competitions"],
             "seasons": seasons,
             "teams": teams_for_season,
-            "season_json_data": season_json_data,
+            "season_json_data": selection["season_json_data"],
             "teams_by_season": json.dumps(teams_by_season),
             "selected_competition": selected_competition,
             "selected_season": season,

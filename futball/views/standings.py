@@ -1,11 +1,11 @@
 """Views for league-table and standings pages."""
 
 import re
+
 from django.shortcuts import render
-from django.core import serializers
+
 from futball.services.standings import build_league_table
-from futball.models.season import Season
-from futball.models.competition import Competition
+from futball.views.selection import get_competition_season_selection
 
 
 def normalize_competition_name(name: str) -> str:
@@ -38,6 +38,22 @@ UEFA_RULES = {
     "ligue1": dict(cl=3, el=1, ecl=1, relegation=3),
 }
 
+COMPETITION_ALIAS = {
+    "premier league": "epl",
+    "english premier league": "epl",
+    "epl": "epl",
+    "la liga": "laliga",
+    "liga bbva": "laliga",
+    "spanish la liga": "laliga",
+    "bundesliga": "bundesliga",
+    "german bundesliga": "bundesliga",
+    "serie a": "seriea",
+    "italian serie a": "seriea",
+    "ligue 1": "ligue1",
+    "french ligue 1": "ligue1",
+    "french ligue": "ligue1",
+}
+
 
 def get_quota_rules(alias: str | None, season_name: str | None) -> dict:
     rules = UEFA_RULES.get(alias, dict(cl=0, el=0, ecl=0, relegation=3)).copy()
@@ -49,54 +65,14 @@ def get_quota_rules(alias: str | None, season_name: str | None) -> dict:
 
     return rules
 
+
 def league_table_view(request):
-    competitions = Competition.objects.all().order_by("name")
-    seasons_all = Season.objects.all().order_by("-name")
-
-    # ambil season dari query param
-    competition_id = request.GET.get("competition")
-    season_id = request.GET.get("season")
-    
-
-    competition = (
-        competitions.filter(id=competition_id).first()
-        if competition_id
-        else competitions.first()
-    )
-    seasons = seasons_all.filter(competition=competition) if competition else Season.objects.none()
-
-    COMPETITION_ALIAS = {
-        "premier league": "epl",
-        "english premier league": "epl",
-        "epl": "epl",
-
-        "la liga": "laliga",
-        "liga bbva": "laliga",
-        "spanish la liga": "laliga",
-
-        "bundesliga": "bundesliga",
-        "german bundesliga": "bundesliga",
-
-        "serie a": "seriea",
-        "italian serie a": "seriea",
-
-        "ligue 1": "ligue1",
-        "french ligue 1": "ligue1",
-        "french ligue": "ligue1",
-    }
-
-    
+    selection = get_competition_season_selection(request)
+    competition = selection["selected_competition"]
+    season = selection["selected_season"]
     alias = None
     if competition:
-        key = normalize_competition_name(competition.name)
-        alias = COMPETITION_ALIAS.get(key)
-
-
-    season = (
-        seasons.filter(id=season_id).first()
-        if season_id
-        else seasons.first()
-    )
+        alias = COMPETITION_ALIAS.get(normalize_competition_name(competition.name))
 
     rules = get_quota_rules(alias, season.name if season else None)
     champions_league_places = rules["cl"]
@@ -104,17 +80,14 @@ def league_table_view(request):
     conference_league_places = rules["ecl"]
     relegation_places = rules["relegation"]
 
-    table = build_league_table(season) if season else []
-
-    ranked_table = []
-    for idx, (team, stats) in enumerate(table, start=1):
-        ranked_table.append({
+    ranked_table = [
+        {
             "rank": idx,
             "team": team,
             **stats,
-        })
-
-    season_json_data = serializers.serialize("json", seasons_all.all())
+        }
+        for idx, (team, stats) in enumerate(build_league_table(season), start=1)
+    ]
 
     if ranked_table:
         relegation_cutoff = len(ranked_table) - relegation_places
@@ -128,14 +101,14 @@ def league_table_view(request):
         champions_league_cutoff = 0
         europa_league_cutoff = 0
         conference_league_cutoff = 0
-    
+
     return render(
         request,
         "futball/league_table.html",
         {
-            "competitions": competitions,
-            "seasons": seasons,
-            "season_json_data": season_json_data,
+            "competitions": selection["competitions"],
+            "seasons": selection["seasons"],
+            "season_json_data": selection["season_json_data"],
             "selected_competition": competition,
             "selected_season": season,
             "table": ranked_table,
