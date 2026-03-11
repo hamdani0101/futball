@@ -194,3 +194,5 @@ JAZZMIN_SETTINGS = {
         "futball.player": "collapsible",
     }
 }
+
+STATSBOMB_DATA_DIR = "/run/media/dani/HDD/statsbomb-open-data/data"
