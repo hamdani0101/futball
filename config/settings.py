@@ -195,4 +195,4 @@ JAZZMIN_SETTINGS = {
     }
 }
 
-STATSBOMB_DATA_DIR = "/run/media/dani/HDD/statsbomb-open-data/data"
+STATSBOMB_DATA_DIR = BASE_DIR / "data" / "statsbomb"

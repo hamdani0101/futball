@@ -1,11 +1,14 @@
 """Management command to import shots."""
 
-import csv
 import json
 from pathlib import Path
+
+from django.conf import settings
 from django.core.management.base import BaseCommand
-from futball.models.shots import Shot
+
 from futball.models.match import Match
+from futball.models.player import Player
+from futball.models.shots import Shot
 
 
 OUTCOME_MAP = {
@@ -38,22 +41,18 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
             "path",
+            nargs="?",
             type=str,
-            help="File or directory containing StatsBomb event JSON files",
+            default="",
+            help=(
+                "File or directory containing StatsBomb event JSON files. "
+                "Defaults to STATSBOMB_DATA_DIR/shots/events."
+            ),
         )
         parser.add_argument(
             "--replace",
             action="store_true",
             help="Delete existing shots for a match before importing",
-        )
-        parser.add_argument(
-            "--match-map",
-            type=str,
-            default="",
-            help=(
-                "CSV map for match ids with headers "
-                "`statsbomb_match_id,match_id`"
-            ),
         )
         parser.add_argument(
             "--dry-run",
@@ -62,10 +61,9 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        input_path = Path(options["path"])
+        input_path = Path(options["path"] or settings.STATSBOMB_DATA_DIR / "shots" / "events")
         replace = options["replace"]
         dry_run = options["dry_run"]
-        match_map = self.load_match_map(options["match_map"])
 
         if not input_path.exists():
             self.stderr.write(
@@ -87,7 +85,6 @@ class Command(BaseCommand):
                 file_path=file_path,
                 replace=replace,
                 dry_run=dry_run,
-                match_map=match_map,
             )
             total_created += created
             total_skipped += skipped
@@ -126,36 +123,16 @@ class Command(BaseCommand):
             if f.name not in {"matches.json", "competitions.json"}
         ]
 
-    @staticmethod
-    def load_match_map(path):
-        if not path:
-            return {}
-
-        match_map = {}
-        with open(path, newline="", encoding="utf-8") as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                sb_id = str(row.get("statsbomb_match_id", "")).strip()
-                match_id = str(row.get("match_id", "")).strip()
-                if sb_id and match_id:
-                    match_map[sb_id] = match_id
-        return match_map
-
-    def import_file(self, file_path, replace, dry_run, match_map):
+    def import_file(self, file_path, replace, dry_run):
         statsbomb_id = file_path.stem
-        match_id = match_map.get(statsbomb_id, statsbomb_id)
-
-        match = Match.objects.filter(match_id=match_id).first()
+        match = Match.objects.filter(match_id=statsbomb_id).first()
         if not match:
             self.stdout.write(
                 self.style.WARNING(
-                    f"Skip {file_path.name}: no Match with match_id={match_id}"
+                    f"Skip {file_path.name}: no Match with match_id={statsbomb_id}"
                 )
             )
             return 0, 0, 0
-
-        if replace and not dry_run:
-            Shot.objects.filter(match=match).delete()
 
         with open(file_path, encoding="utf-8") as f:
             events = json.load(f)
@@ -168,7 +145,7 @@ class Command(BaseCommand):
             )
             return 0, 0, 0
 
-        to_create = []
+        shot_records = []
         skipped = 0
 
         for event in events:
@@ -190,8 +167,36 @@ class Command(BaseCommand):
             team_name = (event.get("team") or {}).get("name", "")
             team = self.resolve_team(match, team_name)
             if not team:
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"Skip shot {event.get('id', 'unknown')} in {file_path.name}: "
+                        f"team mismatch '{team_name}'"
+                    )
+                )
                 skipped += 1
                 continue
+
+            player_payload = event.get("player") or {}
+            player = None
+            player_id = player_payload.get("id")
+            player_name = player_payload.get("name")
+            if player_id is not None:
+                player, created = Player.objects.get_or_create(
+                    external_id=player_id,
+                    defaults={
+                        "name": player_name or "Unknown",
+                        "team_now": team,
+                    },
+                )
+                updates = []
+                if not created and player_name and player.name != player_name:
+                    player.name = player_name
+                    updates.append("name")
+                if player.team_now_id != team.id:
+                    player.team_now = team
+                    updates.append("team_now")
+                if updates:
+                    player.save(update_fields=updates)
 
             outcome_name = (shot_payload.get("outcome") or {}).get("name", "")
             outcome = OUTCOME_MAP.get(outcome_name, "off_target")
@@ -208,42 +213,71 @@ class Command(BaseCommand):
             except (TypeError, ValueError):
                 xg = 0.0
 
-            to_create.append(
-                Shot(
-                    match=match,
-                    team=team,
-                    minute=int(event.get("minute") or 0),
-                    second=int(event.get("second") or 0),
-                    x=x,
-                    y=y,
-                    xg=float(xg),
-                    outcome=outcome,
-                    is_goal=(outcome_name == "Goal"),
-                    body_part=body_part,
-                    shot_type=shot_type,
-                )
+            event_id = str(event.get("id") or "").strip()
+            if not event_id:
+                skipped += 1
+                continue
+
+            shot_records.append(
+                {
+                    "external_event_id": event_id,
+                    "match": match,
+                    "team": team,
+                    "minute": int(event.get("minute") or 0),
+                    "second": int(event.get("second") or 0),
+                    "x": x,
+                    "y": y,
+                    "xg": float(xg),
+                    "outcome": outcome,
+                    "is_goal": outcome_name == "Goal",
+                    "body_part": body_part,
+                    "shot_type": shot_type,
+                    "player": player,
+                }
             )
 
         if dry_run:
-            return len(to_create), skipped, len(to_create) + skipped
+            return len(shot_records), skipped, len(shot_records) + skipped
 
-        Shot.objects.bulk_create(to_create)
+        shot_event_ids = [record["external_event_id"] for record in shot_records]
+
+        if replace:
+            Shot.objects.filter(match=match).delete()
+        else:
+            Shot.objects.filter(match=match, external_event_id__isnull=True).delete()
+            if shot_event_ids:
+                Shot.objects.filter(match=match).exclude(
+                    external_event_id__in=shot_event_ids
+                ).delete()
+
+        created_or_updated = 0
+        for record in shot_records:
+            event_id = record.pop("external_event_id")
+            Shot.objects.update_or_create(
+                external_event_id=event_id,
+                defaults=record,
+            )
+            created_or_updated += 1
 
         self.stdout.write(
             self.style.SUCCESS(
-                f"{file_path.name}: {len(to_create)} created, {skipped} skipped"
+                f"{file_path.name}: {created_or_updated} imported, {skipped} skipped"
             )
         )
-        return len(to_create), skipped, len(to_create) + skipped
+        return created_or_updated, skipped, len(shot_records) + skipped
 
     @staticmethod
     def resolve_team(match, team_name):
         if not team_name:
             return match.home_team
 
-        if match.home_team.name.lower() == team_name.lower():
+        team_name = team_name.lower()
+        home = match.home_team.name.lower()
+        away = match.away_team.name.lower()
+
+        if team_name in home or home in team_name:
             return match.home_team
-        if match.away_team.name.lower() == team_name.lower():
+        if team_name in away or away in team_name:
             return match.away_team
 
         return None
