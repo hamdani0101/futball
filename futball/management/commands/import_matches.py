@@ -10,7 +10,8 @@ from django.core.management.base import BaseCommand
 
 from futball.models.competition import Competition
 from futball.models.season import Season
-from futball.models.match import Match, MatchTeamStats
+from futball.models.match import Match
+from futball.models.match_team_stat import MatchTeamStats
 from futball.models.team import Team
 
 COUNTRY_MAP = {
@@ -52,25 +53,24 @@ class Command(BaseCommand):
         )
 
     def get_datasets(self, dataset_arg):
-        data_root = os.path.join(settings.BASE_DIR, "data", "match")
+        data_root = settings.STATSBOMB_DATA_DIR / "match"
 
         if dataset_arg == "all":
             datasets = []
-            for d in os.listdir(data_root):
-                dataset_dir = os.path.join(data_root, d)
-                if not os.path.isdir(dataset_dir):
+            for dataset_dir in data_root.iterdir():
+                if not dataset_dir.is_dir():
                     continue
                 if (
-                    os.path.exists(os.path.join(dataset_dir, "datapackage.yaml"))
-                    or os.path.exists(os.path.join(dataset_dir, "datapackage.json"))
+                    (dataset_dir / "datapackage.yaml").exists()
+                    or (dataset_dir / "datapackage.json").exists()
                 ):
-                    datasets.append(d)
+                    datasets.append(dataset_dir.name)
             return sorted(datasets)
 
         return [dataset_arg]
     
     def import_dataset(self, dataset, statsbomb_index):
-        dataset_path = os.path.join(settings.BASE_DIR, "data", "match", dataset)
+        dataset_path = settings.STATSBOMB_DATA_DIR / "match" / dataset
 
         datapackage = self.load_datapackage(dataset_path)
 
@@ -88,7 +88,7 @@ class Command(BaseCommand):
             competition.save(update_fields=["country"])
 
         for resource in datapackage["resources"]:
-            csv_path = os.path.join(dataset_path, resource["path"])
+            csv_path = dataset_path / resource["path"]
             encoding = resource.get("encoding", "utf-8")
 
             schema = resource["schema"]
@@ -116,10 +116,10 @@ class Command(BaseCommand):
 
         
     def load_datapackage(self, dataset_path):
-        yaml_path = os.path.join(dataset_path, "datapackage.yaml")
-        json_path = os.path.join(dataset_path, "datapackage.json")
+        yaml_path = dataset_path / "datapackage.yaml"
+        json_path = dataset_path / "datapackage.json"
 
-        if os.path.exists(yaml_path):
+        if yaml_path.exists():
             try:
                 import yaml
             except ModuleNotFoundError as exc:
@@ -127,11 +127,11 @@ class Command(BaseCommand):
                     "PyYAML is required to read datapackage.yaml"
                 ) from exc
 
-            with open(yaml_path, encoding="utf-8") as f:
+            with yaml_path.open(encoding="utf-8") as f:
                 return yaml.safe_load(f)
 
-        if os.path.exists(json_path):
-            with open(json_path, encoding="utf-8") as f:
+        if json_path.exists():
+            with json_path.open(encoding="utf-8") as f:
                 return json.load(f)
 
         raise FileNotFoundError(
@@ -158,8 +158,8 @@ class Command(BaseCommand):
 
 
     def load_schema(self, dataset_path):
-        schema_path = os.path.join(dataset_path, "schema.json")
-        with open(schema_path, encoding="utf-8") as f:
+        schema_path = dataset_path / "schema.json"
+        with schema_path.open(encoding="utf-8") as f:
             return json.load(f)
 
     # --------------------

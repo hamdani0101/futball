@@ -6,6 +6,7 @@ import re
 from datetime import datetime
 from pathlib import Path
 
+from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from futball.models.competition import Competition
@@ -64,12 +65,12 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
             "--matches-json",
-            default="data/shots/matches.json",
+            default="",
             help="Path to StatsBomb matches.json",
         )
         parser.add_argument(
             "--team-map",
-            default="data/shots/team_map.csv",
+            default="",
             help="CSV map with headers `statsbomb_name,csv_name`",
         )
         parser.add_argument(
@@ -79,8 +80,11 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        team_map = load_team_map(options["team_map"])
-        sb_matches, error = load_matches(options["matches_json"])
+        team_map_path = options["team_map"] or settings.STATSBOMB_DATA_DIR / "shots" / "team_map.csv"
+        matches_path = options["matches_json"] or settings.STATSBOMB_DATA_DIR / "shots" / "matches.json"
+
+        team_map = load_team_map(team_map_path)
+        sb_matches, error = load_matches(matches_path)
         if error:
             self.stderr.write(self.style.ERROR(error))
             return

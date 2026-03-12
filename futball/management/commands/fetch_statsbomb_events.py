@@ -1,35 +1,30 @@
 """Management command to fetch statsbomb events."""
 
-import json
 import shutil
 from pathlib import Path
 
+from django.conf import settings
 from django.core.management.base import BaseCommand
+
+from futball.models.match import Match
 
 
 class Command(BaseCommand):
-    help = "Copy StatsBomb event JSON files into data/shots so import_shots can run"
+    help = "Copy StatsBomb event JSON files into data/shots/events"
 
     def add_arguments(self, parser):
         parser.add_argument(
             "--open-data-root",
-            required=True,
-            help="Path to the StatsBomb open-data repository root",
-        )
-        parser.add_argument(
-            "--matches-json",
-            default="data/shots/matches.json",
-            help="Path to merged matches.json (default: data/shots/matches.json)",
+            default="",
+            help=(
+                "Path to the StatsBomb open-data repository root or its data "
+                "directory. Defaults to STATSBOMB_DATA_DIR."
+            ),
         )
         parser.add_argument(
             "--out-dir",
-            default="data/shots/events",
+            default="",
             help="Destination directory for event JSON files",
-        )
-        parser.add_argument(
-            "--skip-existing",
-            action="store_true",
-            help="Skip copying if event file already exists",
         )
         parser.add_argument(
             "--limit",
@@ -44,10 +39,8 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        open_data_root = Path(options["open_data_root"])
-        matches_json = Path(options["matches_json"])
-        out_dir = Path(options["out_dir"])
-        skip_existing = options["skip_existing"]
+        open_data_root = Path(options["open_data_root"] or settings.STATSBOMB_DATA_DIR)
+        out_dir = Path(options["out_dir"] or settings.STATSBOMB_DATA_DIR / "shots" / "events")
         limit = options["limit"]
         dry_run = options["dry_run"]
 
@@ -57,43 +50,16 @@ class Command(BaseCommand):
             )
             return
 
-        if not matches_json.exists():
-            self.stderr.write(
-                self.style.ERROR(f"matches.json not found: {matches_json}")
-            )
-            return
-        if matches_json.stat().st_size == 0:
-            self.stderr.write(
-                self.style.ERROR(f"matches.json is empty: {matches_json}")
-            )
-            return
-
-        events_root = open_data_root / "data" / "events"
+        events_root = self.resolve_events_root(open_data_root)
         if not events_root.exists():
             self.stderr.write(
                 self.style.ERROR(f"events directory not found: {events_root}")
             )
             return
 
-        try:
-            with open(matches_json, encoding="utf-8") as f:
-                matches = json.load(f)
-        except json.JSONDecodeError:
-            self.stderr.write(
-                self.style.ERROR(f"matches.json is not valid JSON: {matches_json}")
-            )
-            return
-        if not isinstance(matches, list):
-            self.stderr.write(
-                self.style.ERROR(f"matches.json does not contain a list: {matches_json}")
-            )
-            return
-
-        match_ids = []
-        for m in matches:
-            mid = m.get("match_id")
-            if mid is not None:
-                match_ids.append(str(mid))
+        match_ids = list(
+            Match.objects.order_by("match_id").values_list("match_id", flat=True)
+        )
 
         if limit and limit > 0:
             match_ids = match_ids[:limit]
@@ -111,9 +77,19 @@ class Command(BaseCommand):
 
             if not src.exists():
                 missing += 1
+                self.stdout.write(
+                    self.style.WARNING(f"Missing event file for match {match_id}: {src}")
+                )
                 continue
 
-            if skip_existing and dst.exists():
+            if dst.exists():
+                skipped += 1
+                self.stdout.write(
+                    self.style.WARNING(f"Skip existing event file for match {match_id}: {dst}")
+                )
+                continue
+
+            if src.resolve() == dst.resolve():
                 skipped += 1
                 continue
 
@@ -130,3 +106,14 @@ class Command(BaseCommand):
                 f"{prefix}Copied {copied}, skipped {skipped}, missing {missing}"
             )
         )
+
+    @staticmethod
+    def resolve_events_root(open_data_root: Path):
+        direct_events = open_data_root / "events"
+        if direct_events.exists():
+            return direct_events
+
+        if open_data_root.name == "data":
+            return open_data_root / "events"
+
+        return open_data_root / "data" / "events"

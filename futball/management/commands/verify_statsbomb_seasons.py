@@ -3,6 +3,7 @@
 import json
 from pathlib import Path
 
+from django.conf import settings
 from django.core.management.base import BaseCommand
 
 
@@ -26,23 +27,25 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             "--data-match-dir",
-            default="data/match",
-            help="Local datasets root (default: data/match)",
+            default="",
+            help=(
+                "Local datasets root. "
+                "Defaults to STATSBOMB_DATA_DIR/match."
+            ),
         )
         parser.add_argument(
             "--leagues",
             default="",
             help=(
                 "Comma-separated league slugs to include "
-                "(default: all folders in data/match)"
+                "(default: all folders in STATSBOMB_DATA_DIR/match)"
             ),
         )
 
     def handle(self, *args, **options):
         open_data_root = Path(options["open_data_root"])
-        data_match_dir = Path(options["data_match_dir"])
-        competitions_path = open_data_root / "data" / "competitions.json"
-        matches_root = open_data_root / "data" / "matches"
+        data_match_dir = Path(options["data_match_dir"] or settings.STATSBOMB_DATA_DIR / "match")
+        competitions_path, matches_root = self.resolve_open_data_paths(open_data_root)
 
         if not competitions_path.exists():
             self.stderr.write(
@@ -133,3 +136,12 @@ class Command(BaseCommand):
         return sorted(
             d.name for d in data_match_dir.iterdir() if d.is_dir()
         )
+
+    @staticmethod
+    def resolve_open_data_paths(open_data_root: Path):
+        direct_competitions = open_data_root / "competitions.json"
+        direct_matches = open_data_root / "matches"
+        if direct_competitions.exists() and direct_matches.exists():
+            return direct_competitions, direct_matches
+
+        return open_data_root / "data" / "competitions.json", open_data_root / "data" / "matches"

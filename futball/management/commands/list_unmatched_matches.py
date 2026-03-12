@@ -5,6 +5,7 @@ import json
 import os
 from datetime import datetime
 
+from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from futball.models.match import Match
@@ -21,12 +22,12 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
             "--matches-json",
-            default="data/shots/matches.json",
+            default="",
             help="Path to StatsBomb matches.json",
         )
         parser.add_argument(
             "--team-map",
-            default="data/shots/team_map.csv",
+            default="",
             help="CSV map with headers `statsbomb_name,csv_name`",
         )
         parser.add_argument(
@@ -37,8 +38,8 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        matches_path = options["matches_json"]
-        team_map_path = options["team_map"]
+        matches_path = options["matches_json"] or settings.STATSBOMB_DATA_DIR / "shots" / "matches.json"
+        team_map_path = options["team_map"] or settings.STATSBOMB_DATA_DIR / "shots" / "team_map.csv"
         limit = options["limit"]
 
         if not os.path.exists(matches_path):

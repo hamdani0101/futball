@@ -3,6 +3,7 @@
 import csv
 import os
 
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
@@ -18,8 +19,11 @@ class Command(BaseCommand):
         parser.add_argument(
             "team_map_csv",
             nargs="?",
-            default="data/shots/team_map.csv",
-            help="Path to team_map.csv (default: data/shots/team_map.csv)",
+            default="",
+            help=(
+                "Path to team_map.csv. "
+                "Defaults to STATSBOMB_DATA_DIR/shots/team_map.csv."
+            ),
         )
         parser.add_argument(
             "--dry-run",
@@ -28,7 +32,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        path = options["team_map_csv"]
+        path = options["team_map_csv"] or settings.STATSBOMB_DATA_DIR / "shots" / "team_map.csv"
         dry_run = options["dry_run"]
 
         if not os.path.exists(path):

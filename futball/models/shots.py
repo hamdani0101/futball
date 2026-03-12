@@ -8,6 +8,7 @@ from futball.models.player import Player
 
 # Shot model (Indonesian: Model tembakan)
 class Shot(models.Model):    
+    external_event_id = models.CharField(max_length=64, unique=True, null=True, blank=True)
     match = models.ForeignKey(
         Match,
         on_delete=models.CASCADE,

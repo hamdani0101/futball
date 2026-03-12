@@ -1,8 +1,9 @@
 """Views for fixture listings and match detail pages."""
 
 from django.shortcuts import get_object_or_404, render
-from futball.models.match import Match, MatchTeamStats
-from futball.models.player import PlayerMatch
+from futball.models.match import Match
+from futball.models.match_team_stat import MatchTeamStats
+from futball.models.player_match import PlayerMatch
 from futball.models.shots import Shot
 
 
@@ -166,18 +167,23 @@ def match_detail(request, match_id):
     home_stats = MatchTeamStats.objects.filter(match=match, team=match.home_team).first()
     away_stats = MatchTeamStats.objects.filter(match=match, team=match.away_team).first()
 
-    lineup_rows = (
-        PlayerMatch.objects.filter(match=match)
-        .select_related("player", "team")
-        .order_by("team_id", "-is_starter", "player__name")
+    lineup_rows = PlayerMatch.objects.filter(match=match).select_related("player", "team")
+    home_starters = (
+        lineup_rows.filter(team=match.home_team, is_starter=True)
+        .order_by("minute_on", "player__name")
     )
-    home_lineup = [row for row in lineup_rows if row.team_id == match.home_team_id]
-    away_lineup = [row for row in lineup_rows if row.team_id == match.away_team_id]
-
-    home_starters = [row for row in home_lineup if row.is_starter]
-    home_bench = [row for row in home_lineup if not row.is_starter]
-    away_starters = [row for row in away_lineup if row.is_starter]
-    away_bench = [row for row in away_lineup if not row.is_starter]
+    away_starters = (
+        lineup_rows.filter(team=match.away_team, is_starter=True)
+        .order_by("minute_on", "player__name")
+    )
+    home_bench = (
+        lineup_rows.filter(team=match.home_team, is_starter=False)
+        .order_by("minute_on", "player__name")
+    )
+    away_bench = (
+        lineup_rows.filter(team=match.away_team, is_starter=False)
+        .order_by("minute_on", "player__name")
+    )
 
     shots = Shot.objects.filter(match=match).select_related("player", "team")
     home_goals = shots.filter(team=match.home_team, outcome="goal").order_by(

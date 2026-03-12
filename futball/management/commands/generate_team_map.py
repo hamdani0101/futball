@@ -5,6 +5,7 @@ import json
 import os
 from difflib import SequenceMatcher, get_close_matches
 
+from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from futball.models.team import Team
@@ -37,8 +38,11 @@ class Command(BaseCommand):
         parser.add_argument(
             "--out",
             type=str,
-            default="data/shots/team_map.csv",
-            help="Output CSV path (default: data/shots/team_map.csv)",
+            default="",
+            help=(
+                "Output CSV path. "
+                "Defaults to STATSBOMB_DATA_DIR/shots/team_map.csv."
+            ),
         )
         parser.add_argument(
             "--threshold",
@@ -49,7 +53,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         matches_path = options["matches_json"]
-        out_path = options["out"]
+        out_path = options["out"] or settings.STATSBOMB_DATA_DIR / "shots" / "team_map.csv"
         threshold = options["threshold"]
 
         if not os.path.exists(matches_path):

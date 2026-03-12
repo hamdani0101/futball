@@ -4,6 +4,7 @@ import csv
 import json
 import os
 
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
@@ -20,7 +21,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
             "--matches-json",
-            default="data/shots/matches.json",
+            default="",
             help="Path to StatsBomb matches.json",
         )
         parser.add_argument(
@@ -35,7 +36,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        matches_path = options["matches_json"]
+        matches_path = options["matches_json"] or settings.STATSBOMB_DATA_DIR / "shots" / "matches.json"
         team_map_path = options["team_map"]
         dry_run = options["dry_run"]
 
