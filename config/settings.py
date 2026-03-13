@@ -87,7 +87,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.mysql",
         "NAME": "futball",
         "USER": "root",
-        "PASSWORD": "root",
+        "PASSWORD": "root123",
         "HOST": "localhost",
         "PORT": "3306",
     }
@@ -148,7 +148,7 @@ JAZZMIN_SETTINGS = {
     "site_title": "Futball Admin",
     "site_header": "Futball Control Room",
     "site_brand": "Futball Admin",
-    "site_logo": "futball/img/futball-simple.png",
+    "site_logo": "futball/img/futball_300x300.png",
     "site_logo_classes": "img-circle elevation-3",
     "welcome_sign": "Manage competitions, matches, stats, and editorial content.",
     "copyright": "Futball",

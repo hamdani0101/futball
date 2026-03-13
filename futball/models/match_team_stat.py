@@ -22,14 +22,13 @@ class MatchTeamStats(models.Model):
     
     # Validasi team harus home atau away team dalam match ini (Indonesian: Validasi tim harus home atau away team dalam match ini)
     def clean(self):
-        if self.team not in [self.match.home_team, self.match.away_team]:
+        if self.team_id not in [self.match.home_team_id, self.match.away_team_id]:
             raise ValidationError("Team must be home or away team in this match")
-
-    # Mengoverride method save untuk validasi (Indonesian: Mengoverride method save untuk validasi)
-    def save(self, *args, **kwargs):
-        self.clean()
-        super().save(*args, **kwargs)
 
     # Unique together match dan team (Indonesian: Unik bersama match dan team)
     class Meta:
         unique_together = ("match", "team")
+        indexes = [
+            models.Index(fields=["match"]),
+            models.Index(fields=["team"]),
+        ]

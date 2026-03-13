@@ -17,6 +17,9 @@ env/
 .env
 .env.*
 
+# Django user uploads
+media/
+
 # OS/editor noise
 .DS_Store
 Thumbs.db
