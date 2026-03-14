@@ -1,0 +1,45 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h4>{{ title }}</h4>
+    </div>
+</div>
+
+<div class="panel-card">
+    {% if form.non_field_errors %}
+        <div class="form-errors">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="input-field" style="margin-bottom: 24px;">
+                {% if field.widget_type == "checkbox" %}
+                    <label>
+                        {{ field }}
+                        <span>{{ field.label }}</span>
+                    </label>
+                {% else %}
+                    <label class="active" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                {% endif %}
+                {% if field.help_text %}
+                    <span class="helper-text">{{ field.help_text }}</span>
+                {% endif %}
+                {% for error in field.errors %}
+                    <div class="red-text">{{ error }}</div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+        <div style="display: flex; gap: 12px;">
+            <button type="submit" class="btn waves-effect waves-light">{{ submit_label }}</button>
+            <a href="javascript:history.back()" class="btn-flat">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

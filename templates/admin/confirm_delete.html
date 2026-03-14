@@ -1,0 +1,20 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h4>{{ title }}</h4>
+    </div>
+</div>
+
+<div class="panel-card">
+    <p>Are you sure you want to delete <strong>{{ object }}</strong>?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn red waves-effect waves-light">Delete</button>
+        <a href="{% url cancel_url %}" class="btn-flat">Cancel</a>
+    </form>
+</div>
+{% endblock %}

@@ -3,8 +3,8 @@ from django.conf.urls.static import static
 from django.urls import include, path
 
 urlpatterns = [
-    path("", include("futball.urls")),
     path("admin/", include("admin.urls")),
+    path("", include("futball.urls")),
 ]
 
 if settings.DEBUG:
