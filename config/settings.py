@@ -37,8 +37,6 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "http")
 # Application definition
 
 INSTALLED_APPS = [
-    "jazzmin",
-    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -87,7 +85,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.mysql",
         "NAME": "futball",
         "USER": "root",
-        "PASSWORD": "root123",
+        "PASSWORD": "root",
         "HOST": "localhost",
         "PORT": "3306",
     }
@@ -144,55 +142,8 @@ CSRF_TRUSTED_ORIGINS = [
     "http://django.local",
 ]
 
-JAZZMIN_SETTINGS = {
-    "site_title": "Futball Admin",
-    "site_header": "Futball Control Room",
-    "site_brand": "Futball Admin",
-    "site_logo": "futball/img/futball_300x300.png",
-    "site_logo_classes": "img-circle elevation-3",
-    "welcome_sign": "Manage competitions, matches, stats, and editorial content.",
-    "copyright": "Futball",
-    "show_sidebar": True,
-    "navigation_expanded": True,
-    "hide_apps": [],
-    "hide_models": [],
-    "order_with_respect_to": [
-        "futball",
-        "futball.Competition",
-        "futball.Season",
-        "futball.Team",
-        "futball.Match",
-        "futball.Player",
-        "futball.News",
-    ],
-    "topmenu_links": [
-        {"name": "Website", "url": "home", "permissions": ["auth.view_user"]},
-    ],
-    "icons": {
-        "auth": "fas fa-users-cog",
-        "auth.user": "fas fa-user",
-        "auth.Group": "fas fa-users",
-        "futball.Competition": "fas fa-trophy",
-        "futball.CompetitionFormat": "fas fa-shapes",
-        "futball.Season": "fas fa-layer-group",
-        "futball.Team": "fas fa-shield-alt",
-        "futball.Match": "fas fa-futbol",
-        "futball.MatchTeamStats": "fas fa-chart-bar",
-        "futball.Player": "fas fa-running",
-        "futball.PlayerMatch": "fas fa-clipboard-list",
-        "futball.Shot": "fas fa-bullseye",
-        "futball.News": "fas fa-newspaper",
-        "futball.NewsContentImage": "fas fa-image",
-    },
-    "default_icon_parents": "fas fa-folder",
-    "default_icon_children": "fas fa-circle",
-    "related_modal_active": True,
-    "changeform_format": "horizontal_tabs",
-    "changeform_format_overrides": {
-        "futball.match": "single",
-        "futball.news": "horizontal_tabs",
-        "futball.player": "collapsible",
-    }
-}
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "dashboard"
+LOGOUT_REDIRECT_URL = "login"
 
 STATSBOMB_DATA_DIR = BASE_DIR / "data" / "statsbomb"

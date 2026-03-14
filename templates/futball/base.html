@@ -29,11 +29,11 @@
         <img src="{% static "futball/img/futball.png" %}" alt="Futball">
       </a>
       <ul id="nav-mobile" class="right hide-on-med-and-down">
-        <li class="{% if request.path == '/futball/' %}active{% endif %}"><a href="{% url 'home' %}">Home</a></li>
-        <li class="{% if '/futball/fixtures/' in request.path %}active{% endif %}"><a href="{% url 'fixture-list' %}">Fixtures</a></li>
-        <li class="{% if '/futball/klasemen/' in request.path %}active{% endif %}"><a href="{% url 'league-table' %}">Klasemen</a></li>
-        <li class="{% if '/futball/stats/' in request.path or '/futball/xg' in request.path %}active{% endif %}"><a href="{% url 'stats-dashboard' %}">Stats</a></li>
-        <li class="{% if '/futball/news/' in request.path %}active{% endif %}"><a href="{% url 'news_list' %}">News</a></li>
+        <li class="{% if request.path == '/' %}active{% endif %}"><a href="{% url 'home' %}">Home</a></li>
+        <li class="{% if '/fixtures/' in request.path %}active{% endif %}"><a href="{% url 'fixture-list' %}">Fixtures</a></li>
+        <li class="{% if '/klasemen/' in request.path %}active{% endif %}"><a href="{% url 'league-table' %}">Klasemen</a></li>
+        <li class="{% if '/stats/' in request.path or '/xg' in request.path %}active{% endif %}"><a href="{% url 'stats-dashboard' %}">Stats</a></li>
+        <li class="{% if '/news/' in request.path %}active{% endif %}"><a href="{% url 'news_list' %}">News</a></li>
       </ul>
     </div>
     <a href="#" data-target="mobile-nav" class="sidenav-trigger">
