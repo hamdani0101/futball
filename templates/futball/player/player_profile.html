@@ -1,0 +1,232 @@
+{% extends "futball/base.html" %}
+
+{% block title %}{{ player.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .profile-shell {
+    display: grid;
+    gap: 22px;
+    margin-top: 28px;
+  }
+
+  .profile-hero {
+    display: grid;
+    grid-template-columns: 120px 1fr auto;
+    gap: 22px;
+    align-items: center;
+    background: linear-gradient(135deg, #0f2741 0%, #1d496f 100%);
+    color: #fff;
+    border-radius: 28px;
+    padding: 26px;
+  }
+
+  .profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 24px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.4rem;
+    font-weight: 800;
+  }
+
+  .profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .profile-meta h1 {
+    margin: 0 0 8px;
+    font-family: "Sora", sans-serif;
+  }
+
+  .profile-meta p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .bio-grid,
+  .profile-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+  }
+
+  .profile-links {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .profile-links .btn,
+  .profile-links .btn-flat {
+    border-radius: 999px;
+  }
+
+  .stat-card,
+  .recent-card {
+    background: #fff;
+    border-radius: 22px;
+    padding: 20px;
+    box-shadow: 0 16px 40px rgba(12, 35, 64, 0.08);
+  }
+
+  .stat-card .label {
+    display: block;
+    color: #607086;
+    font-size: 0.86rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .stat-card .value {
+    display: block;
+    margin-top: 8px;
+    font-size: 2rem;
+    font-weight: 800;
+    color: #0f2741;
+  }
+
+  .stat-card .sub {
+    display: block;
+    margin-top: 6px;
+    color: #607086;
+    font-size: 0.9rem;
+  }
+
+  .recent-table {
+    width: 100%;
+  }
+
+  @media (max-width: 768px) {
+    .profile-hero {
+      grid-template-columns: 1fr;
+    }
+
+    .profile-links {
+      justify-content: flex-start;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="profile-shell">
+  <div class="profile-hero">
+    <div class="profile-avatar">
+      {% if player.photo %}
+        <img src="{{ player.photo.url }}" alt="{{ player.name }}">
+      {% else %}
+        {{ player.name|slice:":1"|upper }}
+      {% endif %}
+    </div>
+    <div class="profile-meta">
+      <h1>{{ player.name }}</h1>
+      <p>{{ player.team_now.name }}{% if player.position %} | {{ player.position }}{% endif %}</p>
+      <p>{{ player.country|default:"Unknown country" }}</p>
+      <p>
+        {% if player.birth_date %}
+          Born {{ player.birth_date|date:"d M Y" }}
+          {% if player.age %}| {{ player.age }} years old{% endif %}
+        {% else %}
+          Birthday unavailable
+        {% endif %}
+      </p>
+    </div>
+    <div class="profile-links">
+      <a href="{% url 'player-stats' player.id %}" class="btn">Full Stats</a>
+      <a href="{% url 'player-list' %}" class="btn-flat white-text">All Players</a>
+    </div>
+  </div>
+
+  <div class="bio-grid">
+    <article class="stat-card">
+      <span class="label">Country</span>
+      <span class="value" style="font-size:1.35rem;">{{ player.country|default:"-" }}</span>
+    </article>
+    <article class="stat-card">
+      <span class="label">Position</span>
+      <span class="value" style="font-size:1.35rem;">{{ player.position|default:"-" }}</span>
+    </article>
+    <article class="stat-card">
+      <span class="label">Birthday</span>
+      <span class="value" style="font-size:1.35rem;">{% if player.birth_date %}{{ player.birth_date|date:"d M Y" }}{% else %}-{% endif %}</span>
+      <span class="sub">{% if player.age %}Age {{ player.age }}{% else %}Age unavailable{% endif %}</span>
+    </article>
+    <article class="stat-card">
+      <span class="label">Current Team</span>
+      <span class="value" style="font-size:1.35rem;">{{ player.team_now.name }}</span>
+    </article>
+  </div>
+
+  <div class="profile-cards">
+    <article class="stat-card">
+      <span class="label">Matches</span>
+      <span class="value">{{ profile_stats.matches }}</span>
+    </article>
+    <article class="stat-card">
+      <span class="label">Minutes</span>
+      <span class="value">{{ profile_stats.minutes_played }}</span>
+    </article>
+    <article class="stat-card">
+      <span class="label">Goals</span>
+      <span class="value">{{ profile_stats.goals }}</span>
+    </article>
+    <article class="stat-card">
+      <span class="label">Shots</span>
+      <span class="value">{{ profile_stats.shots }}</span>
+    </article>
+    <article class="stat-card">
+      <span class="label">xG</span>
+      <span class="value">{{ profile_stats.xg }}</span>
+    </article>
+    <article class="stat-card">
+      <span class="label">xG / Shot</span>
+      <span class="value">{{ profile_stats.xg_per_shot }}</span>
+    </article>
+  </div>
+
+  <article class="recent-card">
+    <div style="display:flex; justify-content:space-between; gap:12px; align-items:center; flex-wrap:wrap;">
+      <div>
+        <h2 style="margin:0;">Recent Matches</h2>
+        <p style="margin:6px 0 0; color:#607086;">Ringkasan performa 5 laga terakhir.</p>
+      </div>
+      <a href="{% url 'player-stats' player.id %}" class="btn-flat">Lihat semua statistik</a>
+    </div>
+
+    <table class="highlight responsive-table recent-table">
+      <thead>
+        <tr>
+          <th>Match</th>
+          <th>Minutes</th>
+          <th>Shots</th>
+          <th>Goals</th>
+          <th>xG</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in recent_matches %}
+          <tr>
+            <td>{{ item.match.home_team.name }} vs {{ item.match.away_team.name }}</td>
+            <td>{{ item.minutes_played }}</td>
+            <td>{{ item.shots }}</td>
+            <td>{{ item.goals }}</td>
+            <td>{{ item.xg }}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="5">Belum ada data pertandingan untuk pemain ini.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </article>
+</section>
+{% endblock %}

@@ -1,10 +1,15 @@
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib.auth import views as auth_views
 from django.urls import include, path
+from admin.views.auth import RoleAwareLoginView, register_view
 
 urlpatterns = [
+    path("login/", RoleAwareLoginView.as_view(), name="login"),
+    path("register/", register_view, name="register"),
+    path("logout/", auth_views.LogoutView.as_view(), name="logout"),
     path("admin/", include("admin.urls")),
-    path("", include("futball.urls")),
+    path("", include("core.urls")),
 ]
 
 if settings.DEBUG:

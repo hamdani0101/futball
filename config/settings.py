@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'futball',
+    'core',
     'admin',
     'rest_framework',
 ]
@@ -69,7 +69,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'futball.context_processors.global_base_data',
+                'core.context_processors.global_base_data',
             ],
         },
     },
@@ -86,7 +86,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.mysql",
         "NAME": "futball",
         "USER": "root",
-        "PASSWORD": "root",
+        "PASSWORD": "root123",
         "HOST": "localhost",
         "PORT": "3306",
     }

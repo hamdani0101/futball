@@ -1,6 +1,6 @@
 from django import forms
 
-from futball.models import Match, Player, Season, Team
+from core.models import Competition, Match, Player, Season, Stadium, Team
 
 
 class MaterializeFormMixin:
@@ -59,3 +59,25 @@ class MatchForm(MaterializeFormMixin, forms.ModelForm):
         if home_team and away_team and home_team == away_team:
             raise forms.ValidationError("Home team and away team must be different.")
         return cleaned_data
+
+
+class StadiumForm(MaterializeFormMixin, forms.ModelForm):
+    class Meta:
+        model = Stadium
+        fields = ["name", "city", "country", "capacity"]
+
+
+class CompetitionForm(MaterializeFormMixin, forms.ModelForm):
+    class Meta:
+        model = Competition
+        fields = ["name", "code", "logo", "is_league", "format", "country"]
+
+
+class SeasonForm(MaterializeFormMixin, forms.ModelForm):
+    class Meta:
+        model = Season
+        fields = ["competition", "name", "slug", "is_league"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["competition"].queryset = Competition.objects.order_by("name")

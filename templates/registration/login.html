@@ -1,0 +1,440 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Futball</title>
+    <link rel="icon" type="image/x-icon" href="{% static 'futball/img/favicon.ico' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #08131f;
+            --surface: rgba(8, 19, 31, 0.8);
+            --surface-soft: rgba(255, 255, 255, 0.08);
+            --surface-card: rgba(255, 255, 255, 0.96);
+            --text: #f4f7fb;
+            --text-dark: #10243b;
+            --muted: #9eb0c3;
+            --line: rgba(255, 255, 255, 0.12);
+            --accent: #ff8a00;
+            --accent-dark: #e87000;
+            --success: #1f9d68;
+            --danger-bg: #fff1f1;
+            --danger-text: #a61b1b;
+            --shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Manrope", sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(255, 138, 0, 0.24), transparent 28%),
+                radial-gradient(circle at bottom right, rgba(26, 115, 232, 0.24), transparent 30%),
+                linear-gradient(135deg, #07111c 0%, #0b1b2d 50%, #10243b 100%);
+            color: var(--text);
+        }
+
+        .shell {
+            width: min(1180px, calc(100% - 32px));
+            margin: 32px auto;
+            border: 1px solid var(--line);
+            border-radius: 28px;
+            overflow: hidden;
+            background: rgba(6, 14, 24, 0.72);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(16px);
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            min-height: 780px;
+        }
+
+        .showcase {
+            position: relative;
+            padding: 48px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)),
+                url("https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1400&q=80") center/cover;
+        }
+
+        .showcase::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(3, 10, 17, 0.3), rgba(3, 10, 17, 0.82));
+        }
+
+        .showcase > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            background: rgba(255, 255, 255, 0.08);
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .hero h1 {
+            margin: 20px 0 16px;
+            max-width: 560px;
+            font-family: "Sora", sans-serif;
+            font-size: clamp(2.4rem, 4vw, 4.5rem);
+            line-height: 1.05;
+        }
+
+        .hero p {
+            max-width: 520px;
+            margin: 0;
+            color: #d7e1ea;
+            font-size: 1.05rem;
+            line-height: 1.7;
+        }
+
+        .role-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .role-card {
+            padding: 20px;
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .role-card strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        .role-card p {
+            margin: 0;
+            color: #d7e1ea;
+            line-height: 1.65;
+            font-size: 0.95rem;
+        }
+
+        .form-panel {
+            padding: 48px;
+            background: rgba(245, 248, 252, 0.98);
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+        }
+
+        .form-card {
+            width: 100%;
+            max-width: 420px;
+            margin: 0 auto;
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            color: var(--text-dark);
+            text-decoration: none;
+        }
+
+        .brand img {
+            width: 44px;
+            height: 44px;
+            object-fit: contain;
+        }
+
+        .brand span {
+            font-family: "Sora", sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .title {
+            margin: 0 0 12px;
+            font-family: "Sora", sans-serif;
+            font-size: 2rem;
+            line-height: 1.15;
+        }
+
+        .subtitle {
+            margin: 0 0 28px;
+            color: #5f7285;
+            line-height: 1.7;
+        }
+
+        .alert {
+            margin-bottom: 18px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .alert.error {
+            background: var(--danger-bg);
+            color: var(--danger-text);
+        }
+
+        .alert.info {
+            background: #eaf4ff;
+            color: #104880;
+        }
+
+        .field {
+            margin-bottom: 18px;
+        }
+
+        .field label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: #31465c;
+        }
+
+        .field input {
+            width: 100%;
+            padding: 15px 16px;
+            border: 1px solid #d4dde7;
+            border-radius: 16px;
+            background: #fff;
+            color: var(--text-dark);
+            font: inherit;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .field input:focus {
+            outline: none;
+            border-color: rgba(255, 138, 0, 0.88);
+            box-shadow: 0 0 0 4px rgba(255, 138, 0, 0.16);
+        }
+
+        .helper-grid {
+            display: grid;
+            gap: 14px;
+            margin: 24px 0 28px;
+        }
+
+        .helper-item {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            padding: 16px 18px;
+            border-radius: 18px;
+            background: #fff;
+            border: 1px solid #e4ebf3;
+        }
+
+        .helper-badge {
+            min-width: 42px;
+            height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            background: #eef4fb;
+            font-weight: 800;
+            color: #17355a;
+        }
+
+        .helper-item strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .helper-item p {
+            margin: 0;
+            color: #64768b;
+            line-height: 1.6;
+            font-size: 0.94rem;
+        }
+
+        .actions {
+            display: grid;
+            gap: 14px;
+        }
+
+        .btn-primary,
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 54px;
+            border-radius: 16px;
+            font-weight: 800;
+            text-decoration: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+
+        .btn-primary {
+            border: none;
+            background: linear-gradient(135deg, var(--accent), #ffab2f);
+            color: #fff;
+            cursor: pointer;
+            box-shadow: 0 16px 30px rgba(255, 138, 0, 0.24);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            background: linear-gradient(135deg, var(--accent-dark), #ff9800);
+        }
+
+        .btn-secondary {
+            border: 1px solid #d4dde7;
+            background: transparent;
+            color: #23405f;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(16, 36, 59, 0.08);
+        }
+
+        .microcopy {
+            margin-top: 18px;
+            color: #708297;
+            font-size: 0.92rem;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 980px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .showcase,
+            .form-panel {
+                padding: 32px 24px;
+            }
+
+            .role-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="shell">
+        <div class="layout">
+            <section class="showcase">
+                <div class="hero">
+                    <div class="eyebrow">Dual Access Experience</div>
+                    <h1>Satu halaman login untuk data entry dan user.</h1>
+                    <p>
+                        Data Entry masuk ke dashboard pengelolaan data pertandingan, pemain, tim dll.
+                        User masuk ke experience frontend untuk menikmati fixtures, klasemen,
+                        stats, dan news.
+                    </p>
+                </div>
+
+                <div class="role-grid">
+                    <div class="role-card">
+                        <strong>Data Entry Area</strong>
+                        <p>Untuk data Entry yang mengelola konten, data pertandingan, dan operasional dashboard.</p>
+                    </div>
+                    <div class="role-card">
+                        <strong>User Area</strong>
+                        <p>Untuk user biasa yang ingin masuk lalu kembali ke halaman utama Futball dengan tampilan publik.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="form-panel">
+                <div class="form-card">
+                    <a href="{% url 'home' %}" class="brand">
+                        <img src="{% static 'futball/img/futball-simple.png' %}" alt="Futball">
+                        <span>Futball Access</span>
+                    </a>
+
+                    <h2 class="title">Sign in ke Futball</h2>
+                    <p class="subtitle">
+                        Login dengan akun Anda. User data entry akan diarahkan ke dashboard, sedangkan
+                        user Futball akan diarahkan ke halaman frontend.
+                    </p>
+
+                    {% if form.errors %}
+                        <div class="alert error">
+                            Username atau password tidak cocok. Coba periksa kembali akun yang Anda pakai.
+                        </div>
+                    {% endif %}
+
+                    {% if next and user.is_authenticated %}
+                        <div class="alert info">
+                            Akun Anda sudah login, tetapi belum punya akses ke halaman yang diminta.
+                        </div>
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="field">
+                            <label for="id_username">Username</label>
+                            <input type="text" name="username" id="id_username" value="{{ form.username.value|default:'' }}" autofocus required>
+                        </div>
+
+                        <div class="field">
+                            <label for="id_password">Password</label>
+                            <input type="password" name="password" id="id_password" required>
+                        </div>
+
+                        {% if next %}
+                            <input type="hidden" name="next" value="{{ next }}">
+                        {% endif %}
+
+                        <div class="helper-grid">
+                            <div class="helper-item">
+                                <span class="helper-badge">D</span>
+                                <div>
+                                    <strong>Untuk Data Entry</strong>
+                                    <p>Masuk untuk mengakses dashboard pengelolaan Futball.</p>
+                                </div>
+                            </div>
+                            <div class="helper-item">
+                                <span class="helper-badge">F</span>
+                                <div>
+                                    <strong>Untuk User Futball</strong>
+                                    <p>Masuk lalu lanjut ke frontend Futball untuk melihat konten publik dengan akun Anda.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="actions">
+                            <button type="submit" class="btn-primary">Masuk Sekarang</button>
+                            <a href="{% url 'register' %}" class="btn-secondary">Buat Akun Futball</a>
+                            <a href="{% url 'home' %}" class="btn-secondary">Masuk ke Halaman User Tanpa Login</a>
+                        </div>
+                    </form>
+
+                    <p class="microcopy">
+                        Akses data entry hanya tersedia untuk akun dengan izin staf. User biasa tetap bisa login
+                        dan akan diarahkan ke halaman utama Futball.
+                    </p>
+                </div>
+            </section>
+        </div>
+    </div>
+</body>
+</html>

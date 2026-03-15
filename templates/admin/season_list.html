@@ -1,0 +1,48 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Seasons{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h4>Seasons</h4>
+        <p class="grey-text text-darken-1">Manage seasons for each competition.</p>
+    </div>
+    <a href="{% url 'season-create' %}" class="btn waves-effect waves-light">
+        <i class="ri-add-line left"></i>
+        Add Season
+    </a>
+</div>
+
+<div class="panel-card">
+    <table class="highlight responsive-table">
+        <thead>
+            <tr>
+                <th>Competition</th>
+                <th>Name</th>
+                <th>Slug</th>
+                <th>League</th>
+                <th class="right-align">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for season in seasons %}
+                <tr>
+                    <td>{{ season.competition }}</td>
+                    <td>{{ season.name }}</td>
+                    <td>{{ season.slug|default:"-" }}</td>
+                    <td>{% if season.is_league %}Yes{% else %}No{% endif %}</td>
+                    <td class="right-align">
+                        <a href="{% url 'season-update' season.pk %}" class="btn-small waves-effect waves-light">Edit</a>
+                        <a href="{% url 'season-delete' season.pk %}" class="btn-flat danger-text">Delete</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5" class="center-align">No seasons available.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -126,6 +126,98 @@
             padding: 24px;
         }
 
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            height: 64px;
+        }
+
+        .nav-actions a,
+        .nav-actions span,
+        .nav-actions form {
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .nav-user {
+            font-weight: 600;
+            color: #486581;
+            padding: 0;
+        }
+
+        .nav-logout {
+            border: none;
+            border-radius: 999px;
+            background: rgba(239, 108, 0, 0.12);
+            color: var(--accent);
+            cursor: pointer;
+            padding: 0 14px;
+            min-height: 36px;
+            font: inherit;
+            font-weight: 700;
+        }
+
+        .nav-logout:hover {
+            background: rgba(239, 108, 0, 0.2);
+        }
+
+        .nav-link-pill {
+            border-radius: 999px;
+            padding: 0 14px;
+            min-height: 36px;
+            font-weight: 700;
+            background: rgba(16, 42, 67, 0.05);
+        }
+
+        .nav-link-pill:hover {
+            background: rgba(16, 42, 67, 0.1);
+        }
+
+        .nav-auth-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-left: 14px;
+            border-left: 1px solid rgba(16, 42, 67, 0.12);
+        }
+
+        .nav-primary-links {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-secondary-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 36px;
+            padding: 0 6px;
+            color: #486581;
+            font-weight: 700;
+        }
+
+        .nav-secondary-link:hover {
+            color: var(--text-strong);
+        }
+
+        @media (max-width: 992px) {
+            .nav-actions {
+                gap: 8px;
+                flex-wrap: wrap;
+                justify-content: flex-end;
+                height: auto;
+                padding: 10px 0;
+            }
+
+            .nav-primary-links,
+            .nav-auth-group {
+                flex-wrap: wrap;
+                justify-content: flex-end;
+            }
+        }
+
         .form-errors {
             color: #c62828;
             margin-bottom: 16px;
@@ -156,7 +248,7 @@
 <body>
     <div class="layout">
         <aside class="sidebar">
-            <div class="brand">Futball Admin</div>
+            <div class="brand">Futball Data Entry</div>
             <ul>
                 <li>
                     <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' or request.resolver_match.url_name == 'dashboard-home' %}active{% endif %}">
@@ -171,9 +263,27 @@
                     </a>
                 </li>
                 <li>
+                    <a href="{% url 'stadium-list' %}" class="{% if request.resolver_match.url_name == 'stadium-list' or request.resolver_match.url_name == 'stadium-create' or request.resolver_match.url_name == 'stadium-update' or request.resolver_match.url_name == 'stadium-delete' %}active{% endif %}">
+                        <i class="ri-building-line"></i>
+                        Stadiums
+                    </a>
+                </li>
+                <li>
                     <a href="{% url 'player-list' %}" class="{% if request.resolver_match.url_name == 'player-list' or request.resolver_match.url_name == 'player-create' or request.resolver_match.url_name == 'player-update' or request.resolver_match.url_name == 'player-delete' %}active{% endif %}">
                         <i class="ri-user-star-line"></i>
                         Players
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'competition-list' %}" class="{% if request.resolver_match.url_name == 'competition-list' or request.resolver_match.url_name == 'competition-create' or request.resolver_match.url_name == 'competition-update' or request.resolver_match.url_name == 'competition-delete' %}active{% endif %}">
+                        <i class="ri-trophy-line"></i>
+                        Competitions
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'season-list' %}" class="{% if request.resolver_match.url_name == 'season-list' or request.resolver_match.url_name == 'season-create' or request.resolver_match.url_name == 'season-update' or request.resolver_match.url_name == 'season-delete' %}active{% endif %}">
+                        <i class="ri-calendar-line"></i>
+                        Seasons
                     </a>
                 </li>
                 <li>
@@ -189,14 +299,36 @@
                 <div class="nav-wrapper white">
                     <a href="{% url 'dashboard' %}" class="brand-logo" style="padding-left: 24px;">Custom Dashboard</a>
                     <ul class="right" style="padding-right: 24px;">
-                        <li><a href="{% url 'dashboard' %}">Overview</a></li>
+                        <li class="nav-actions">
+                            {% if user.is_authenticated %}
+                                <div class="nav-primary-links">
+                                    <a href="{% url 'dashboard' %}" class="nav-link-pill">Overview</a>
+                                    <a href="{% url 'home' %}" class="nav-secondary-link">Frontend</a>
+                                </div>
+                                <div class="nav-auth-group">
+                                    <span class="nav-user">{{ user.username }}</span>
+                                    <form method="post" action="{% url 'logout' %}" style="margin: 0;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="nav-logout">Logout</button>
+                                    </form>
+                                </div>
+                            {% else %}
+                                <div class="nav-primary-links">
+                                    <a href="{% url 'home' %}" class="nav-secondary-link">Frontend</a>
+                                </div>
+                                <div class="nav-auth-group">
+                                    <a href="{% url 'login' %}" class="nav-secondary-link">Login</a>
+                                    <a href="{% url 'register' %}" class="nav-logout" style="text-decoration: none;">Register</a>
+                                </div>
+                            {% endif %}
+                        </li>
                     </ul>
                 </div>
             </nav>
             <main>
                 {% if messages %}
                     {% for message in messages %}
-                        <div class="card-panel {% if message.tags == 'success' %}green lighten-4 green-text text-darken-4{% else %}blue lighten-5 blue-text text-darken-4{% endif %}">
+                        <div class="card-panel {% if message.tags == 'success' %}green lighten-4 green-text text-darken-4{% elif message.tags == 'error' %}red lighten-5 red-text text-darken-3{% else %}blue lighten-5 blue-text text-darken-4{% endif %}">
                             {{ message }}
                         </div>
                     {% endfor %}
