@@ -20,6 +20,9 @@ env/
 # Django user uploads
 media/
 
+# Adminer database tool
+adminer
+
 # OS/editor noise
 .DS_Store
 Thumbs.db

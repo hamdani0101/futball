@@ -1,3 +1,4 @@
+from django.core.paginator import Paginator
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from admin.views.auth import admin_required
@@ -8,8 +9,14 @@ from admin.forms import MatchForm
 
 @admin_required
 def match_list(request):
+    page = request.GET.get("page", 1)
+    per_page = 20
+    matches = Match.objects.select_related("home_team", "away_team").order_by("-match_date")
+    paginator = Paginator(matches, per_page)
+    page_obj = paginator.get_page(page)
+    
     context = {
-        "matches": Match.objects.select_related("home_team", "away_team").order_by("-match_date"),
+        "matches": page_obj,
     }
     return render(request, "admin/match_list.html", context)
 
@@ -20,7 +27,7 @@ def match_create(request):
     if request.method == "POST" and form.is_valid():
         form.save()
         messages.success(request, "Match created successfully.")
-        return redirect("match-list")
+        return redirect("admin-match-list")
     return render(
         request,
         "admin/form.html",
@@ -35,7 +42,7 @@ def match_update(request, pk):
     if request.method == "POST" and form.is_valid():
         form.save()
         messages.success(request, "Match updated successfully.")
-        return redirect("match-list")
+        return redirect("admin-match-list")
     return render(
         request,
         "admin/form.html",
@@ -49,9 +56,9 @@ def match_delete(request, pk):
     if request.method == "POST":
         match.delete()
         messages.success(request, "Match deleted successfully.")
-        return redirect("match-list")
+        return redirect("admin-match-list")
     return render(
         request,
         "admin/confirm_delete.html",
-        {"object": match, "title": "Delete Match", "cancel_url": "match-list"},
+        {"object": match, "title": "Delete Match", "cancel_url": "admin-match-list"},
     )

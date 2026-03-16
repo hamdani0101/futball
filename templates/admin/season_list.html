@@ -8,7 +8,7 @@
         <h4>Seasons</h4>
         <p class="grey-text text-darken-1">Manage seasons for each competition.</p>
     </div>
-    <a href="{% url 'season-create' %}" class="btn waves-effect waves-light">
+    <a href="{% url 'admin-season-create' %}" class="btn waves-effect waves-light">
         <i class="ri-add-line left"></i>
         Add Season
     </a>
@@ -33,8 +33,8 @@
                     <td>{{ season.slug|default:"-" }}</td>
                     <td>{% if season.is_league %}Yes{% else %}No{% endif %}</td>
                     <td class="right-align">
-                        <a href="{% url 'season-update' season.pk %}" class="btn-small waves-effect waves-light">Edit</a>
-                        <a href="{% url 'season-delete' season.pk %}" class="btn-flat danger-text">Delete</a>
+                        <a href="{% url 'admin-season-update' season.pk %}" class="btn-small waves-effect waves-light">Edit</a>
+                        <a href="{% url 'admin-season-delete' season.pk %}" class="btn-flat danger-text">Delete</a>
                     </td>
                 </tr>
             {% empty %}
@@ -44,5 +44,42 @@
             {% endfor %}
         </tbody>
     </table>
+    <ul class="pagination center-align">
+        <!-- Previous -->
+        {% if seasons.has_previous %}
+            <li class="waves-effect">
+                <a href="?page={{ seasons.previous_page_number }}">
+                    <i class="ri-arrow-left-s-line"></i>
+                </a>
+            </li>
+        {% endif %}
+
+        {% for num in seasons.paginator.page_range %}
+
+            {% if num == 1 or num == seasons.paginator.num_pages or num >= seasons.number|add:'-2' and num <= seasons.number|add:'2' %}
+
+                {% if seasons.number == num %}
+                    <li class="active blue">
+                        <a href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                {% else %}
+                    <li class="waves-effect">
+                        <a href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                {% endif %}
+
+            {% endif %}
+
+        {% endfor %}
+
+        <!-- Next -->
+        {% if seasons.has_next %}
+            <li class="waves-effect">
+                <a href="?page={{ seasons.next_page_number }}">
+                    <i class="ri-arrow-right-s-line"></i>
+                </a>
+            </li>
+        {% endif %}
+    </ul>
 </div>
 {% endblock %}

@@ -1,3 +1,4 @@
+from django.core.paginator import Paginator
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from admin.views.auth import admin_required
@@ -8,8 +9,14 @@ from admin.forms import StadiumForm
 
 @admin_required
 def stadium_list(request):
+    page = request.GET.get("page", 1)
+    per_page = 20
+    stadiums = Stadium.objects.order_by("name")
+    paginator = Paginator(stadiums, per_page)
+    page_obj = paginator.get_page(page)
+    
     context = {
-        "stadiums": Stadium.objects.order_by("name"),
+        "stadiums": page_obj,
     }
     return render(request, "admin/stadium_list.html", context)
 
@@ -20,7 +27,7 @@ def stadium_create(request):
     if request.method == "POST" and form.is_valid():
         form.save()
         messages.success(request, "Stadium created successfully.")
-        return redirect("stadium-list")
+        return redirect("admin-stadium-list")
     return render(
         request,
         "admin/form.html",
@@ -35,7 +42,7 @@ def stadium_update(request, pk):
     if request.method == "POST" and form.is_valid():
         form.save()
         messages.success(request, "Stadium updated successfully.")
-        return redirect("stadium-list")
+        return redirect("admin-stadium-list")
     return render(
         request,
         "admin/form.html",
@@ -49,9 +56,9 @@ def stadium_delete(request, pk):
     if request.method == "POST":
         stadium.delete()
         messages.success(request, "Stadium deleted successfully.")
-        return redirect("stadium-list")
+        return redirect("admin-stadium-list")
     return render(
         request,
         "admin/confirm_delete.html",
-        {"object": stadium, "title": "Delete Stadium", "cancel_url": "stadium-list"},
+        {"object": stadium, "title": "Delete Stadium", "cancel_url": "admin-stadium-list"},
     )

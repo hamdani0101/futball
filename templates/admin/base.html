@@ -251,45 +251,57 @@
             <div class="brand">Futball Data Entry</div>
             <ul>
                 <li>
-                    <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' or request.resolver_match.url_name == 'dashboard-home' %}active{% endif %}">
+                    <a href="{% url 'admin-dashboard' %}" class="{% if request.resolver_match.url_name == 'admin-dashboard' %}active{% endif %}">
                         <i class="ri-dashboard-line"></i>
                         Dashboard
                     </a>
                 </li>
                 <li>
-                    <a href="{% url 'team-list' %}" class="{% if request.resolver_match.url_name == 'team-list' or request.resolver_match.url_name == 'team-create' or request.resolver_match.url_name == 'team-update' or request.resolver_match.url_name == 'team-delete' %}active{% endif %}">
+                    <a href="{% url 'admin-team-list' %}" class="{% if request.resolver_match.url_name == 'admin-team-list' or request.resolver_match.url_name == 'admin-team-create' or request.resolver_match.url_name == 'admin-team-update' or request.resolver_match.url_name == 'admin-team-delete' %}active{% endif %}">
                         <i class="ri-team-line"></i>
                         Teams
                     </a>
                 </li>
                 <li>
-                    <a href="{% url 'stadium-list' %}" class="{% if request.resolver_match.url_name == 'stadium-list' or request.resolver_match.url_name == 'stadium-create' or request.resolver_match.url_name == 'stadium-update' or request.resolver_match.url_name == 'stadium-delete' %}active{% endif %}">
+                    <a href="{% url 'admin-stadium-list' %}" class="{% if request.resolver_match.url_name == 'admin-stadium-list' or request.resolver_match.url_name == 'admin-stadium-create' or request.resolver_match.url_name == 'admin-stadium-update' or request.resolver_match.url_name == 'admin-stadium-delete' %}active{% endif %}">
                         <i class="ri-building-line"></i>
                         Stadiums
                     </a>
                 </li>
                 <li>
-                    <a href="{% url 'player-list' %}" class="{% if request.resolver_match.url_name == 'player-list' or request.resolver_match.url_name == 'player-create' or request.resolver_match.url_name == 'player-update' or request.resolver_match.url_name == 'player-delete' %}active{% endif %}">
+                    <a href="{% url 'admin-player-list' %}" class="{% if request.resolver_match.url_name == 'admin-player-list' or request.resolver_match.url_name == 'admin-player-create' or request.resolver_match.url_name == 'admin-player-update' or request.resolver_match.url_name == 'admin-player-delete' %}active{% endif %}">
                         <i class="ri-user-star-line"></i>
                         Players
                     </a>
                 </li>
                 <li>
-                    <a href="{% url 'competition-list' %}" class="{% if request.resolver_match.url_name == 'competition-list' or request.resolver_match.url_name == 'competition-create' or request.resolver_match.url_name == 'competition-update' or request.resolver_match.url_name == 'competition-delete' %}active{% endif %}">
+                    <a href="{% url 'admin-competition-list' %}" class="{% if request.resolver_match.url_name == 'admin-competition-list' or request.resolver_match.url_name == 'admin-competition-create' or request.resolver_match.url_name == 'admin-competition-update' or request.resolver_match.url_name == 'admin-competition-delete' %}active{% endif %}">
                         <i class="ri-trophy-line"></i>
                         Competitions
                     </a>
                 </li>
                 <li>
-                    <a href="{% url 'season-list' %}" class="{% if request.resolver_match.url_name == 'season-list' or request.resolver_match.url_name == 'season-create' or request.resolver_match.url_name == 'season-update' or request.resolver_match.url_name == 'season-delete' %}active{% endif %}">
+                    <a href="{% url 'admin-season-list' %}" class="{% if request.resolver_match.url_name == 'admin-season-list' or request.resolver_match.url_name == 'admin-season-create' or request.resolver_match.url_name == 'admin-season-update' or request.resolver_match.url_name == 'admin-season-delete' %}active{% endif %}">
                         <i class="ri-calendar-line"></i>
                         Seasons
                     </a>
                 </li>
                 <li>
-                    <a href="{% url 'match-list' %}" class="{% if request.resolver_match.url_name == 'match-list' or request.resolver_match.url_name == 'match-create' or request.resolver_match.url_name == 'match-update' or request.resolver_match.url_name == 'match-delete' %}active{% endif %}">
+                    <a href="{% url 'admin-match-list' %}" class="{% if request.resolver_match.url_name == 'admin-match-list' or request.resolver_match.url_name == 'admin-match-create' or request.resolver_match.url_name == 'admin-match-update' or request.resolver_match.url_name == 'admin-match-delete' %}active{% endif %}">
                         <i class="ri-football-line"></i>
                         Matches
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'admin-match-stat-list' %}" class="{% if request.resolver_match.url_name == 'admin-match-stat-list' or request.resolver_match.url_name == 'admin-match-stat-create' or request.resolver_match.url_name == 'admin-match-stat-update' or request.resolver_match.url_name == 'admin-match-stat-delete' %}active{% endif %}">
+                        <i class="ri-bar-chart-box-line"></i>
+                        Match Stats
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'admin-shot-list' %}" class="{% if request.resolver_match.url_name == 'admin-shot-list' or request.resolver_match.url_name == 'admin-shot-create' or request.resolver_match.url_name == 'admin-shot-update' or request.resolver_match.url_name == 'admin-shot-delete' %}active{% endif %}">
+                        <i class="ri-focus-2-line"></i>
+                        Shots
                     </a>
                 </li>
             </ul>
@@ -297,12 +309,12 @@
         <div class="content-shell">
             <nav>
                 <div class="nav-wrapper white">
-                    <a href="{% url 'dashboard' %}" class="brand-logo" style="padding-left: 24px;">Custom Dashboard</a>
+                    <a href="{% url 'admin-dashboard' %}" class="brand-logo" style="padding-left: 24px;">Custom Dashboard</a>
                     <ul class="right" style="padding-right: 24px;">
                         <li class="nav-actions">
                             {% if user.is_authenticated %}
                                 <div class="nav-primary-links">
-                                    <a href="{% url 'dashboard' %}" class="nav-link-pill">Overview</a>
+                                    <a href="{% url 'admin-dashboard' %}" class="nav-link-pill">Overview</a>
                                     <a href="{% url 'home' %}" class="nav-secondary-link">Frontend</a>
                                 </div>
                                 <div class="nav-auth-group">

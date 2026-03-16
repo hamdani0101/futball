@@ -4,11 +4,23 @@ from importlib import import_module
 
 from .competition import Competition
 from .match import Match
+from .match_team_stat import MatchTeamStats
 from .player import Player
 from .season import Season
+from .shots import Shot
 from .stadium import Stadium
 from .team import Team
 
 Pass = import_module("core.models.pass").Pass
 
-__all__ = ["Team", "Player", "Match", "Season", "Stadium", "Competition", "Pass"]
+__all__ = [
+    "Team",
+    "Player",
+    "Match",
+    "MatchTeamStats",
+    "Season",
+    "Shot",
+    "Stadium",
+    "Competition",
+    "Pass",
+]

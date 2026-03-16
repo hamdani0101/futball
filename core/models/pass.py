@@ -1,4 +1,4 @@
-"""Pass event model for StatsBomb-derived passing analytics."""
+"""Pass event model for passing analytics."""
 
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -9,7 +9,7 @@ from core.models.team import Team
 
 
 class Pass(models.Model):
-    """Store a StatsBomb pass event with spatial and contextual attributes."""
+    """Store a pass event with spatial and contextual attributes."""
 
     class Outcome(models.TextChoices):
         COMPLETE = "complete", "Complete"
@@ -50,7 +50,12 @@ class Pass(models.Model):
         RECOVERY = "recovery", "Recovery"
         UNKNOWN = "unknown", "Unknown"
 
-    external_event_id = models.CharField(max_length=64, unique=True)
+    external_event_id = models.CharField(
+        max_length=64,
+        unique=True,
+        null=True,
+        blank=True,
+    )
     event_index = models.PositiveIntegerField(default=0)
     period = models.PositiveIntegerField(default=1)
     possession = models.PositiveIntegerField(default=0)

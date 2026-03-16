@@ -237,7 +237,7 @@
           {% if user.is_authenticated %}
             <li><span class="auth-chip">{{ user.username }}</span></li>
             {% if user.is_staff %}
-            <li><a class="auth-link-button auth-muted" href="{% url 'dashboard' %}">Data Entry</a></li>
+            <li><a class="auth-link-button auth-muted" href="{% url 'admin-dashboard' %}">Data Entry</a></li>
             {% endif %}
             <li>
               <form method="post" action="{% url 'logout' %}" class="auth-form-inline">
@@ -268,7 +268,7 @@
         {% if user.is_authenticated %}
           <div class="center-align"><strong>{{ user.username }}</strong></div>
           {% if user.is_staff %}
-          <a href="{% url 'dashboard' %}">Dashboard Data Entry</a>
+          <a href="{% url 'admin-dashboard' %}">Dashboard Data Entry</a>
           {% endif %}
           <form method="post" action="{% url 'logout' %}">
             {% csrf_token %}

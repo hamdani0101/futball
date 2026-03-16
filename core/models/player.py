@@ -1,13 +1,14 @@
 """Player and player-match relationship models."""
 
 from django.db import models
+from django.db.models import options
 from django.utils import timezone
 
 from core.models.team import Team
 
 # Player model (Indonesian: Model pemain)
 class Player(models.Model):
-    external_id = models.IntegerField(unique=True)
+    external_id = models.IntegerField(unique=True, null=True, blank=True)
     name = models.CharField(max_length=100)
     photo = models.ImageField(upload_to='player/photos', blank=True, null=True)
     country = models.CharField(max_length=100, blank=True)

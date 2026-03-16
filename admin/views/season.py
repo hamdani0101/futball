@@ -1,3 +1,4 @@
+from django.core.paginator import Paginator
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from admin.views.auth import admin_required
@@ -9,8 +10,14 @@ from admin.forms import SeasonForm
 
 @admin_required
 def season_list(request):
+    page = request.GET.get("page", 1)
+    per_page = 20
+    seasons = Season.objects.select_related("competition").order_by("competition__name", "name")
+    paginator = Paginator(seasons, per_page)
+    page_obj = paginator.get_page(page)
+    
     context = {
-        "seasons": Season.objects.select_related("competition").order_by("competition__name", "name"),
+        "seasons": page_obj,
     }
     return render(request, "admin/season_list.html", context)
 
@@ -21,7 +28,7 @@ def season_create(request):
     if request.method == "POST" and form.is_valid():
         form.save()
         messages.success(request, "Season created successfully.")
-        return redirect("season-list")
+        return redirect("admin-season-list")
     return render(
         request,
         "admin/form.html",
@@ -36,7 +43,7 @@ def season_update(request, pk):
     if request.method == "POST" and form.is_valid():
         form.save()
         messages.success(request, "Season updated successfully.")
-        return redirect("season-list")
+        return redirect("admin-season-list")
     return render(
         request,
         "admin/form.html",
@@ -50,9 +57,9 @@ def season_delete(request, pk):
     if request.method == "POST":
         season.delete()
         messages.success(request, "Season deleted successfully.")
-        return redirect("season-list")
+        return redirect("admin-season-list")
     return render(
         request,
         "admin/confirm_delete.html",
-        {"object": season, "title": "Delete Season", "cancel_url": "season-list"},
+        {"object": season, "title": "Delete Season", "cancel_url": "admin-season-list"},
     )

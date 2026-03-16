@@ -6,12 +6,12 @@
 <div class="page-header">
     <div>
         <h4>Dashboard</h4>
-        <p class="grey-text text-darken-1">Overview of teams, players, and matches.</p>
+        <p class="grey-text text-darken-1">Overview of teams, players, matches, and manually entered data.</p>
     </div>
 </div>
 
 <div class="row">
-    <div class="col s12 m4">
+    <div class="col s12 m6 l3">
         <div class="card stat-card">
             <div class="card-content">
                 <span class="card-title">Total Teams</span>
@@ -19,7 +19,7 @@
             </div>
         </div>
     </div>
-    <div class="col s12 m4">
+    <div class="col s12 m6 l3">
         <div class="card stat-card">
             <div class="card-content">
                 <span class="card-title">Total Players</span>
@@ -27,11 +27,30 @@
             </div>
         </div>
     </div>
-    <div class="col s12 m4">
+    <div class="col s12 m6 l3">
         <div class="card stat-card">
             <div class="card-content">
                 <span class="card-title">Total Matches</span>
                 <p class="stat-value">{{ total_matches }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col s12 m6 l3">
+        <div class="card stat-card">
+            <div class="card-content">
+                <span class="card-title">Match Stat Rows</span>
+                <p class="stat-value">{{ total_match_stats }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col s12 m6 l3">
+        <div class="card stat-card">
+            <div class="card-content">
+                <span class="card-title">Shots Logged</span>
+                <p class="stat-value">{{ total_shots }}</p>
             </div>
         </div>
     </div>

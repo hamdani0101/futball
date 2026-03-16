@@ -18,14 +18,14 @@ class RoleAwareLoginView(LoginView):
         if next_url:
             return next_url
         if self.request.user.is_staff:
-            return reverse("dashboard")
+            return reverse("admin-dashboard")
         return reverse("home")
 
 
 def register_view(request):
     if request.user.is_authenticated:
         if request.user.is_staff:
-            return redirect("dashboard")
+            return redirect("admin-dashboard")
         return redirect("home")
 
     form = UserCreationForm(request.POST or None)

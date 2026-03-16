@@ -1,0 +1,87 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Shots{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h4>Shots</h4>
+        <p class="grey-text text-darken-1">Manage manually entered shot events for goals and xG views.</p>
+    </div>
+    <a href="{% url 'admin-shot-create' %}" class="btn waves-effect waves-light">
+        <i class="ri-add-line left"></i>
+        Add Shot
+    </a>
+</div>
+
+<div class="panel-card">
+    <table class="highlight responsive-table">
+        <thead>
+            <tr>
+                <th>Match</th>
+                <th>Team</th>
+                <th>Player</th>
+                <th>Time</th>
+                <th>xG</th>
+                <th>Outcome</th>
+                <th class="right-align">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for shot in shots %}
+                <tr>
+                    <td>{{ shot.match.home_team }} vs {{ shot.match.away_team }}</td>
+                    <td>{{ shot.team }}</td>
+                    <td>{{ shot.player|default:"-" }}</td>
+                    <td>{{ shot.minute }}:{{ shot.second|stringformat:"02d" }}</td>
+                    <td>{{ shot.xg }}</td>
+                    <td>{{ shot.get_outcome_display }}</td>
+                    <td class="right-align">
+                        <a href="{% url 'admin-shot-update' shot.pk %}" class="btn-small waves-effect waves-light">
+                            Edit
+                        </a>
+                        <a href="{% url 'admin-shot-delete' shot.pk %}" class="btn-flat danger-text">
+                            Delete
+                        </a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="7" class="center-align">No shots available.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <ul class="pagination center-align">
+        {% if shots.has_previous %}
+            <li class="waves-effect">
+                <a href="?page={{ shots.previous_page_number }}">
+                    <i class="ri-arrow-left-s-line"></i>
+                </a>
+            </li>
+        {% endif %}
+
+        {% for num in shots.paginator.page_range %}
+            {% if num == 1 or num == shots.paginator.num_pages or num >= shots.number|add:'-2' and num <= shots.number|add:'2' %}
+                {% if shots.number == num %}
+                    <li class="active blue">
+                        <a href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                {% else %}
+                    <li class="waves-effect">
+                        <a href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+
+        {% if shots.has_next %}
+            <li class="waves-effect">
+                <a href="?page={{ shots.next_page_number }}">
+                    <i class="ri-arrow-right-s-line"></i>
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+</div>
+{% endblock %}

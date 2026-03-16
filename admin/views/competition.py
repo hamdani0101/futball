@@ -1,3 +1,4 @@
+from django.core.paginator import Paginator
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from admin.views.auth import admin_required 
@@ -8,8 +9,14 @@ from admin.forms import CompetitionForm
 
 @admin_required
 def competition_list(request):
+    page = request.GET.get("page", 1)
+    per_page = 20
+    competitions = Competition.objects.select_related("format").order_by("name")
+    paginator = Paginator(competitions, per_page)
+    page_obj = paginator.get_page(page)
+    
     context = {
-        "competitions": Competition.objects.select_related("format").order_by("name"),
+        "competitions": page_obj,
     }
     return render(request, "admin/competition_list.html", context)
 
@@ -20,7 +27,7 @@ def competition_create(request):
     if request.method == "POST" and form.is_valid():
         form.save()
         messages.success(request, "Competition created successfully.")
-        return redirect("competition-list")
+        return redirect("admin-competition-list")
     return render(
         request,
         "admin/form.html",
@@ -35,7 +42,7 @@ def competition_update(request, pk):
     if request.method == "POST" and form.is_valid():
         form.save()
         messages.success(request, "Competition updated successfully.")
-        return redirect("competition-list")
+        return redirect("admin-competition-list")
     return render(
         request,
         "admin/form.html",
@@ -49,9 +56,9 @@ def competition_delete(request, pk):
     if request.method == "POST":
         competition.delete()
         messages.success(request, "Competition deleted successfully.")
-        return redirect("competition-list")
+        return redirect("admin-competition-list")
     return render(
         request,
         "admin/confirm_delete.html",
-        {"object": competition, "title": "Delete Competition", "cancel_url": "competition-list"},
+        {"object": competition, "title": "Delete Competition", "cancel_url": "admin-competition-list"},
     )
