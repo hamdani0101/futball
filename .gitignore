@@ -22,6 +22,7 @@ media/
 
 # Django Data
 data/
+data/statsbomb/competitions.json
 
 # Adminer database tool
 adminer
