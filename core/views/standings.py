@@ -4,7 +4,7 @@ import re
 
 from django.shortcuts import render
 
-from core.services.standings import build_league_table
+from analytics.services.standings import build_league_table
 from core.views.selection import get_competition_season_selection
 
 

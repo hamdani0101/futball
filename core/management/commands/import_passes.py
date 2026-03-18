@@ -4,10 +4,11 @@ import json
 from pathlib import Path
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand
 
-from core.models import Pass, Player
-from core.models.match import Match
+from core.models import Pass, Player, Match
+
 
 
 OUTCOME_MAP = {
@@ -131,8 +132,23 @@ class Command(BaseCommand):
             )
             return 0, 0, 0
 
-        with open(file_path, encoding="utf-8") as handle:
-            events = json.load(handle)
+        try:
+            with open(file_path, encoding="utf-8") as handle:
+                content = handle.read().strip()
+
+                if not content:
+                    self.stdout.write(
+                        self.style.WARNING(f"Skip {file_path.name}: empty file")
+                    )
+                    return 0, 0, 0
+
+                events = json.loads(content)
+
+        except json.JSONDecodeError:
+            self.stdout.write(
+                self.style.WARNING(f"Skip {file_path.name}: invalid JSON")
+            )
+            return 0, 0, 0
 
         if not isinstance(events, list):
             self.stdout.write(
@@ -185,10 +201,10 @@ class Command(BaseCommand):
                     "recipient": recipient,
                     "minute": int(event.get("minute") or 0),
                     "second": int(event.get("second") or 0),
-                    "x": float(location[0]),
-                    "y": float(location[1]),
-                    "end_x": float(end_location[0]),
-                    "end_y": float(end_location[1]),
+                    "x": self.clamp(location[0], 0, 120),
+                    "y": self.clamp(location[1], 0, 80),
+                    "end_x": self.clamp(end_location[0], 0, 120),
+                    "end_y": self.clamp(end_location[1], 0, 80),
                     "length": self.to_float(pass_payload.get("length")),
                     "angle": self.to_float(pass_payload.get("angle")),
                     "outcome": self.map_outcome(pass_payload),
@@ -223,12 +239,15 @@ class Command(BaseCommand):
         imported = 0
         for record in pass_records:
             event_id = record.pop("external_event_id")
-            Pass.objects.update_or_create(
-                external_event_id=event_id,
-                defaults=record,
-            )
-            imported += 1
-
+            try:
+                Pass.objects.update_or_create(
+                    external_event_id=event_id,
+                    defaults=record,
+                )
+                imported += 1
+            except ValidationError:
+                skipped += 1
+    
         self.stdout.write(
             self.style.SUCCESS(
                 f"{file_path.name}: {imported} imported, {skipped} skipped"
@@ -313,3 +332,11 @@ class Command(BaseCommand):
         if not pass_type_name:
             return Pass.PassType.OPEN_PLAY
         return PASS_TYPE_MAP.get(pass_type_name, Pass.PassType.UNKNOWN)
+
+    @staticmethod
+    def clamp(value, low, high):
+        try:
+            value = float(value)
+        except (TypeError, ValueError):
+            return None
+        return max(low, min(high, value))

@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404, render
 
 from core.models.player import Player
 from core.models.player_match import PlayerMatch
-from core.services.player_metrics import (
+from analytics.services.player_metrics import (
     get_player_match_stats,
     get_player_profile_stats,
 )

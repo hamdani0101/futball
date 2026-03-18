@@ -20,6 +20,9 @@ env/
 # Django user uploads
 media/
 
+# Django Data
+data/
+
 # Adminer database tool
 adminer
 

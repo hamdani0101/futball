@@ -9,7 +9,7 @@ from django.shortcuts import render
 from core.models.match import Match
 from core.models.shots import Shot
 from core.models.team import Team
-from core.services.xg import build_xg_table
+from analytics.services.xg.xg import build_xg_table
 from core.views.selection import get_competition_season_selection
 
 

@@ -26,7 +26,7 @@ class Command(BaseCommand):
         )
 
     def resolve_team(self, match, team_data):
-        team_name = team_data["team"]["name"].lower()
+        team_name = team_data["team_name"].lower()
         home = match.home_team.name.lower()
         away = match.away_team.name.lower()
 
@@ -38,18 +38,18 @@ class Command(BaseCommand):
         self.stdout.write(
             self.style.WARNING(
                 f"Team name mismatch for match {match.match_id}: "
-                f"StatsBomb='{team_data['team']['name']}', "
+                f"StatsBomb='{team_data['team_name']}', "
                 f"home='{match.home_team.name}', away='{match.away_team.name}'"
             )
         )
         return None
 
-    def upsert_player_match(self, player, match, team, is_starter):
+    def upsert_player_match(self, player, match, team, is_starter, minute_on = 0, minute_off = 90):
         defaults = {
             "team": team,
             "is_starter": is_starter,
-            "minute_on": 0,
-            "minute_off": 90,
+            "minute_on": minute_on,
+            "minute_off": minute_off,
         }
 
         try:

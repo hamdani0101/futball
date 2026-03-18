@@ -2,8 +2,8 @@
 
 from django.shortcuts import render
 
-from core.services.season_summary import get_season_summary
-from core.services.xg import build_xg_table
+from analytics.services.season_summary import get_season_summary
+from analytics.services.xg.xg import build_xg_table
 from core.views.selection import get_competition_season_selection
 
 

@@ -2,8 +2,8 @@
 from typing import Dict, Any
 from core.models.match import Match
 from core.models.shots import Shot
-from core.services.standings import build_league_table
-from core.services.xg import build_xg_table
+from analytics.services.standings import build_league_table
+from analytics.services.xg.xg import build_xg_table
 
 
 EMPTY_TEAM = {"team_name": "-", "logo": "-"}
