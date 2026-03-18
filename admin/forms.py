@@ -154,7 +154,7 @@ class CompetitionForm(MaterializeFormMixin, forms.ModelForm):
 class SeasonForm(MaterializeFormMixin, forms.ModelForm):
     class Meta:
         model = Season
-        fields = ["competition", "name", "slug", "is_league"]
+        fields = ["competition", "name", "slug"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

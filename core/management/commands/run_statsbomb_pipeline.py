@@ -10,9 +10,7 @@ class Command(BaseCommand):
 
     pipeline_steps = (
         "import_matches",
-        "import_players",
         "import_lineups",
-        "fetch_statsbomb_events",
         "import_shots",
         "import_passes",
     )

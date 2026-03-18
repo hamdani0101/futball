@@ -1,373 +1,265 @@
-"""Management command to import matches."""
-
-import csv
 import json
-import os
+from pathlib import Path
 from datetime import datetime
+from typing import Dict, Any
 
-from django.conf import settings
 from django.core.management.base import BaseCommand
+from django.db import transaction
 
 from core.models.competition import Competition
 from core.models.season import Season
 from core.models.match import Match
 from core.models.match_team_stat import MatchTeamStats
 from core.models.team import Team
-
-COUNTRY_MAP = {
-    "bundesliga": "Germany",
-    "german bundesliga": "Germany",
-    "english premier league": "England",
-    "spanish la liga": "Spain",
-    "italian serie a": "Italy",
-    "french ligue 1": "France",
-}
+from core.models.stadium import Stadium
 
 
 class Command(BaseCommand):
-    help = "Import match dataset using schema.json"
+    help = "Import matches from StatsBomb directory (data/matches)"
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "dataset",
+            "--base-dir",
             type=str,
-            help="Dataset name (e.g. bundesliga) or 'all'",
-        )
-        parser.add_argument(
-            "--statsbomb-matches",
-            type=str,
-            default="",
-            help=(
-                "Path to StatsBomb matches.json to align match_id with "
-                "StatsBomb match ids"
-            ),
-        )
-        parser.add_argument(
-            "--team-map",
-            type=str,
-            default="",
-            help=(
-                "Optional CSV map with headers "
-                "`statsbomb_name,csv_name` to normalize team names"
-            ),
+            required=True,
+            help="Path to data/matches directory",
         )
 
-    def get_datasets(self, dataset_arg):
-        data_root = settings.STATSBOMB_DATA_DIR / "match"
-
-        if dataset_arg == "all":
-            datasets = []
-            for dataset_dir in data_root.iterdir():
-                if not dataset_dir.is_dir():
-                    continue
-                if (
-                    (dataset_dir / "datapackage.yaml").exists()
-                    or (dataset_dir / "datapackage.json").exists()
-                ):
-                    datasets.append(dataset_dir.name)
-            return sorted(datasets)
-
-        return [dataset_arg]
-    
-    def import_dataset(self, dataset, statsbomb_index):
-        dataset_path = settings.STATSBOMB_DATA_DIR / "match" / dataset
-
-        datapackage = self.load_datapackage(dataset_path)
-
-        competition_name = datapackage.get("title", dataset)
-        key = datapackage.get("name", "").replace("-", " ").lower()
-        country = COUNTRY_MAP.get(key)
-
-        competition, created = Competition.objects.get_or_create(
-            name=competition_name,
-            defaults={"country": country},
-        )
-
-        if not created and country and not competition.country:
-            competition.country = country
-            competition.save(update_fields=["country"])
-
-        for resource in datapackage["resources"]:
-            csv_path = dataset_path / resource["path"]
-            encoding = resource.get("encoding", "utf-8")
-
-            schema = resource["schema"]
-            date_format = next(
-                f["format"]
-                for f in schema["fields"]
-                if f["name"] == "Date"
-            )
-
-            season_name = self.parse_season_from_resource(resource["name"])
-
-            season, _ = Season.objects.get_or_create(
-                competition=competition,
-                name=season_name,
-            )
-
-            self.import_csv(
-                csv_path=csv_path,
-                season=season,
-                date_format=date_format,
-                encoding=encoding,
-                statsbomb_index=statsbomb_index,
-            )
-
-
-        
-    def load_datapackage(self, dataset_path):
-        yaml_path = dataset_path / "datapackage.yaml"
-        json_path = dataset_path / "datapackage.json"
-
-        if yaml_path.exists():
-            try:
-                import yaml
-            except ModuleNotFoundError as exc:
-                raise ModuleNotFoundError(
-                    "PyYAML is required to read datapackage.yaml"
-                ) from exc
-
-            with yaml_path.open(encoding="utf-8") as f:
-                return yaml.safe_load(f)
-
-        if json_path.exists():
-            with json_path.open(encoding="utf-8") as f:
-                return json.load(f)
-
-        raise FileNotFoundError(
-            f"No datapackage.yaml or datapackage.json in {dataset_path}"
-        )
-
-
-    # --------------------
-    # Helpers
-    # --------------------
-
-    @staticmethod
-    def parse_season_from_resource(name):
-        # season-9900 → 1999/2000
-        code = name.replace("season-", "")
-
-        start_year = int(code[:2])
-        end_year = int(code[2:])
-
-        start = 1900 + start_year if start_year >= 90 else 2000 + start_year
-        end = 1900 + end_year if end_year >= 90 else 2000 + end_year
-
-        return f"{start}/{end}"
-
-
-    def load_schema(self, dataset_path):
-        schema_path = dataset_path / "schema.json"
-        with schema_path.open(encoding="utf-8") as f:
-            return json.load(f)
-
-    # --------------------
-    # Main
-    # --------------------
+    # =====================
+    # ENTRY
+    # =====================
 
     def handle(self, *args, **options):
-        datasets = self.get_datasets(options["dataset"])
-        statsbomb_index = self.load_statsbomb_index(
-            options.get("statsbomb_matches") or "",
-            options.get("team_map") or "",
-        )
+        base_dir = Path(options["base_dir"])
 
-        if not datasets:
-            self.stderr.write(
-                self.style.ERROR("No datasets found")
-            )
-            return
+        total_created = total_updated = total_skipped = 0
 
-        for dataset in datasets:
-            self.stdout.write(
-                self.style.WARNING(f"\n=== Importing dataset: {dataset} ===")
-            )
-            self.import_dataset(dataset, statsbomb_index)
-
-        self.stdout.write(
-            self.style.SUCCESS("\nAll dataset imports completed 🎉")
-        )
-
-
-    def import_csv(self, csv_path, season, date_format, encoding, statsbomb_index):
-        created = updated = skipped = 0
-
-        with open(csv_path, newline="", encoding=encoding) as f:
-            reader = csv.DictReader(f)
-
-            for row in reader:
-                match_date_raw = row.get("Date")
-                home_name = row.get("HomeTeam")
-                away_name = row.get("AwayTeam")
-                if not (match_date_raw and home_name and away_name):
-                    skipped += 1
-                    continue
-
-                try:
-                    match_date = datetime.strptime(match_date_raw, date_format)
-                except ValueError:
-                    skipped += 1
-                    continue
-
-                match_id = self.resolve_match_id(
-                    statsbomb_index=statsbomb_index,
-                    match_date=match_date,
-                    home_team=home_name,
-                    away_team=away_name,
-                    fallback_date=match_date_raw,
-                )
-
-                home_team, _ = Team.objects.get_or_create(name=home_name)
-                away_team, _ = Team.objects.get_or_create(name=away_name)
-
-                home_goals = int(row.get("FTHG") or row.get("HG") or 0)
-                away_goals = int(row.get("FTAG") or row.get("AG") or 0)
-
-                match = Match.objects.filter(match_id=match_id).first()
-                if match:
-                    match.season = season
-                    match.home_team = home_team
-                    match.away_team = away_team
-                    match.match_date = match_date
-                    match.status = "finished"
-                    match.save(
-                        update_fields=[
-                            "season",
-                            "home_team",
-                            "away_team",
-                            "match_date",
-                            "status",
-                        ]
-                    )
-                    updated += 1
-                else:
-                    match = Match.objects.create(
-                        match_id=match_id,
-                        season=season,
-                        home_team=home_team,
-                        away_team=away_team,
-                        match_date=match_date,
-                        status="finished",
-                    )
-                    created += 1
-                    
-                # HOME TEAM STATS
-                MatchTeamStats.objects.update_or_create(
-                    match=match,
-                    team=home_team,
-                    defaults={
-                        "goals": home_goals,
-                        "xg": 0.0,
-                        "shots": int(row.get("HS") or 0),
-                        "shots_on_target": int(row.get("HST") or 0),
-                    },
-                )
-
-                # AWAY TEAM STATS
-                MatchTeamStats.objects.update_or_create(
-                    match=match,
-                    team=away_team,
-                    defaults={
-                        "goals": away_goals,
-                        "xg": 0.0,
-                        "shots": int(row.get("AS") or 0),
-                        "shots_on_target": int(row.get("AST") or 0),
-                    },
-                )
-        
-        self.stdout.write(
-            self.style.SUCCESS(
-                f"{os.path.basename(csv_path)}: {created} created, {updated} updated, {skipped} skipped"
-            )
-        )
-
-    # --------------------
-    # StatsBomb helpers
-    # --------------------
-
-    @staticmethod
-    def normalize_team(name):
-        return (name or "").strip().lower()
-
-    def load_statsbomb_index(self, matches_path, team_map_path):
-        if not matches_path:
-            return {}
-
-        if not os.path.exists(matches_path):
-            self.stderr.write(
-                self.style.WARNING(
-                    f"StatsBomb matches file not found: {matches_path}"
-                )
-            )
-            return {}
-        if os.path.getsize(matches_path) == 0:
-            self.stderr.write(
-                self.style.WARNING(
-                    f"StatsBomb matches file is empty: {matches_path}"
-                )
-            )
-            return {}
-
-        team_map = {}
-        if team_map_path and os.path.exists(team_map_path):
-            with open(team_map_path, newline="", encoding="utf-8") as f:
-                reader = csv.DictReader(f)
-                for row in reader:
-                    sb = (row.get("statsbomb_name") or "").strip()
-                    csv_name = (row.get("csv_name") or "").strip()
-                    if sb and csv_name:
-                        team_map[self.normalize_team(sb)] = csv_name
-
-        try:
-            with open(matches_path, encoding="utf-8") as f:
-                data = json.load(f)
-        except json.JSONDecodeError:
-            self.stderr.write(
-                self.style.WARNING(
-                    f"StatsBomb matches file is not valid JSON: {matches_path}"
-                )
-            )
-            return {}
-
-        index = {}
-        for m in data:
-            match_id = str(m.get("match_id") or "").strip()
-            match_date = m.get("match_date")
-            home = (m.get("home_team") or {}).get("home_team_name")
-            away = (m.get("away_team") or {}).get("away_team_name")
-
-            if not (match_id and match_date and home and away):
+        for comp_dir in base_dir.iterdir():
+            if not comp_dir.is_dir():
                 continue
 
-            home = team_map.get(self.normalize_team(home), home)
-            away = team_map.get(self.normalize_team(away), away)
+            for season_file in comp_dir.glob("*.json"):
+                self.stdout.write(f"Processing {season_file}")
 
-            index_key = (
-                match_date,
-                self.normalize_team(home),
-                self.normalize_team(away),
+                created, updated, skipped = self.import_file(season_file)
+
+                total_created += created
+                total_updated += updated
+                total_skipped += skipped
+
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"\nTOTAL → created={total_created}, updated={total_updated}, skipped={total_skipped}"
             )
-            index[index_key] = match_id
+        )
 
-        return index
+    # =====================
+    # IMPORT FILE
+    # =====================
 
-    def resolve_match_id(
-        self,
-        statsbomb_index,
-        match_date,
-        home_team,
-        away_team,
-        fallback_date,
-    ):
-        if statsbomb_index:
-            key = (
-                match_date.strftime("%Y-%m-%d"),
-                self.normalize_team(home_team),
-                self.normalize_team(away_team),
+    @transaction.atomic
+    def import_file(self, path: Path):
+        with open(path, encoding="utf-8") as f:
+            matches = json.load(f)
+
+        team_cache: Dict[str, Team] = {}
+        stadium_cache: Dict[str, Stadium] = {}
+
+        created = updated = skipped = 0
+
+        for m in matches:
+            try:
+                match, is_created = self.process_match(
+                    m, team_cache, stadium_cache
+                )
+
+                if match:
+                    if is_created:
+                        created += 1
+                    else:
+                        updated += 1
+                else:
+                    skipped += 1
+
+            except Exception as e:
+                skipped += 1
+                self.stderr.write(f"Error: {e}")
+
+        return created, updated, skipped
+
+    # =====================
+    # PROCESS MATCH
+    # =====================
+
+    def process_match(self, m: Dict[str, Any], team_cache, stadium_cache):
+        match_id = str(m.get("match_id"))
+
+        home_name = (m.get("home_team") or {}).get("home_team_name")
+        away_name = (m.get("away_team") or {}).get("away_team_name")
+
+        if not (match_id and home_name and away_name):
+            return None, False
+
+        # --------------------
+        # DATETIME
+        # --------------------
+        match_date = self.parse_datetime(
+            m.get("match_date"),
+            m.get("kick_off"),
+        )
+
+        # --------------------
+        # STATUS
+        # --------------------
+        status = self.map_status(m.get("match_status"))
+
+        # --------------------
+        # SEASON + COMPETITION
+        # --------------------
+        competition_name = (m.get("competition") or {}).get("competition_name")
+        season_name = (m.get("season") or {}).get("season_name")
+
+        season = self.get_or_create_season(competition_name, season_name)
+
+        # --------------------
+        # TEAMS
+        # --------------------
+        home_team = self.get_team(home_name, team_cache)
+        away_team = self.get_team(away_name, team_cache)
+
+        # --------------------
+        # STADIUM (NEW)
+        # --------------------
+        stadium = self.get_stadium(
+            m.get("stadium"),
+            m.get("stadium_country"),
+            stadium_cache,
+        )
+
+        # --------------------
+        # MATCH UPSERT
+        # --------------------
+        match, created = Match.objects.get_or_create(
+            match_id=match_id,
+            defaults={
+                "season": season,
+                "home_team": home_team,
+                "away_team": away_team,
+                "match_date": match_date,
+                "status": status,
+                "stadium": stadium,
+            },
+        )
+
+        if not created:
+            match.season = season
+            match.home_team = home_team
+            match.away_team = away_team
+            match.match_date = match_date
+            match.status = status
+            match.stadium = stadium
+            match.save()
+
+        # --------------------
+        # SCORE → STATS
+        # --------------------
+        self.upsert_stats(
+            match,
+            home_team,
+            goals=m.get("home_score") or 0,
+        )
+
+        self.upsert_stats(
+            match,
+            away_team,
+            goals=m.get("away_score") or 0,
+        )
+
+        return match, created
+
+    # =====================
+    # HELPERS
+    # =====================
+
+    def get_team(self, name: str, cache: Dict[str, Team]) -> Team:
+        key = name.strip().lower()
+        if key not in cache:
+            cache[key], _ = Team.objects.get_or_create(name=name.strip())
+        return cache[key]
+
+    def get_stadium(self, stadium_data, country, cache):
+        if not stadium_data:
+            return None
+
+        stadium_id = stadium_data.get("id")
+        name = stadium_data.get("name")
+
+        if not name:
+            return None
+
+        key = stadium_id or name.lower()
+
+        if key not in cache:
+            stadium, _ = Stadium.objects.get_or_create(
+                external_id=stadium_id,
+                defaults={
+                    "name": name,
+                    "country": country,
+                },
             )
-            sb_id = statsbomb_index.get(key)
-            if sb_id:
-                return sb_id
 
-        return f"{fallback_date}-{home_team}-{away_team}"
+            # fallback kalau external_id kosong
+            if stadium_id:
+                stadium, _ = Stadium.objects.get_or_create(
+                    external_id=stadium_id,
+                    defaults={
+                        "name": name,
+                        "country": country,
+                    },
+                )
+            else:
+                stadium, _ = Stadium.objects.get_or_create(
+                    name=name,
+                    defaults={"country": country},
+                )
+
+            cache[key] = stadium
+
+        return cache[key]
+
+    def get_or_create_season(self, competition_name, season_name):
+        competition, _ = Competition.objects.get_or_create(
+            name=competition_name
+        )
+        season, _ = Season.objects.get_or_create(
+            competition=competition,
+            name=season_name,
+        )
+        return season
+
+    def parse_datetime(self, date_str, time_str=None):
+        if time_str:
+            try:
+                return datetime.fromisoformat(f"{date_str}T{time_str}")
+            except Exception:
+                pass
+        return datetime.strptime(date_str, "%Y-%m-%d")
+
+    def map_status(self, status):
+        return {
+            "available": "finished",
+            "scheduled": "scheduled",
+            "deleted": "cancelled",
+        }.get(status, "finished")
+
+    def upsert_stats(self, match, team, goals=0):
+        MatchTeamStats.objects.update_or_create(
+            match=match,
+            team=team,
+            defaults={
+                "goals": goals,
+                "xg": 0.0,
+                "shots": 0,
+                "shots_on_target": 0,
+            },
+        )

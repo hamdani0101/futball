@@ -8,7 +8,6 @@ class Season(models.Model):
     competition = models.ForeignKey(Competition, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
     slug = models.CharField(max_length=255, null=True)
-    is_league = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

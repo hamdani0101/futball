@@ -61,7 +61,7 @@ class Command(BaseCommand):
             default="",
             help=(
                 "File or directory containing StatsBomb event JSON files. "
-                "Defaults to STATSBOMB_DATA_DIR/shots/events."
+                "Defaults to STATSBOMB_DATA_DIR/events."
             ),
         )
         parser.add_argument(
@@ -76,7 +76,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        input_path = Path(options["path"] or settings.STATSBOMB_DATA_DIR / "shots" / "events")
+        input_path = Path(options["path"] or settings.STATSBOMB_DATA_DIR / "events")
         replace = options["replace"]
         dry_run = options["dry_run"]
 

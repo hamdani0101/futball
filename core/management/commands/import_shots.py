@@ -46,7 +46,7 @@ class Command(BaseCommand):
             default="",
             help=(
                 "File or directory containing StatsBomb event JSON files. "
-                "Defaults to STATSBOMB_DATA_DIR/shots/events."
+                "Defaults to STATSBOMB_DATA_DIR/events."
             ),
         )
         parser.add_argument(
@@ -61,7 +61,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        input_path = Path(options["path"] or settings.STATSBOMB_DATA_DIR / "shots" / "events")
+        input_path = Path(options["path"] or settings.STATSBOMB_DATA_DIR / "events")
         replace = options["replace"]
         dry_run = options["dry_run"]
 
@@ -152,6 +152,13 @@ class Command(BaseCommand):
             if (event.get("type") or {}).get("name") != "Shot":
                 continue
 
+            period = event.get("period")
+
+            # ❗ FIX: skip penalty shootout & extra time
+            if period not in [1, 2]:
+                skipped += 1
+                continue
+
             shot_payload = event.get("shot") or {}
             location = event.get("location") or []
             if len(location) < 2:
@@ -229,7 +236,7 @@ class Command(BaseCommand):
                     "y": y,
                     "xg": float(xg),
                     "outcome": outcome,
-                    "is_goal": outcome_name == "Goal",
+                    "is_goal": outcome_name == "Goal" and period in [1, 2],
                     "body_part": body_part,
                     "shot_type": shot_type,
                     "player": player,
