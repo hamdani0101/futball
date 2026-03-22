@@ -9,6 +9,7 @@ class Command(BaseCommand):
     help = "Run the full StatsBomb pipeline in the required order"
 
     pipeline_steps = (
+        "import_competitions",
         "import_matches",
         "import_lineups",
         "import_shots",
@@ -17,19 +18,14 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "--dataset",
-            default="all",
-            help="Dataset argument for import_matches (default: all)",
+            "--path",
+            default="",
+            help="Defaults to STATSBOMB_DATA_DIR/competition.json.",
         )
         parser.add_argument(
-            "--matches-json",
+            "--matches-dir",
             default="",
-            help="Path to StatsBomb matches.json",
-        )
-        parser.add_argument(
-            "--team-map",
-            default="",
-            help="Path to team_map.csv",
+            help="Defaults to STATSBOMB_DATA_DIR/matches.",
         )
         parser.add_argument(
             "--events-dir",
@@ -45,14 +41,6 @@ class Command(BaseCommand):
             ),
         )
         parser.add_argument(
-            "--open-data-root",
-            default="",
-            help=(
-                "Path to the StatsBomb open-data repository root or its data "
-                "directory. Defaults to STATSBOMB_DATA_DIR."
-            ),
-        )
-        parser.add_argument(
             "--replace-shots",
             action="store_true",
             help="Delete existing shots for each match before importing",
@@ -64,32 +52,24 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        matches_json = options["matches_json"] or settings.STATSBOMB_DATA_DIR / "shots" / "matches.json"
-        team_map = options["team_map"] or settings.STATSBOMB_DATA_DIR / "shots" / "team_map.csv"
-        events_dir = options["events_dir"] or settings.STATSBOMB_DATA_DIR / "shots" / "events"
+        path = options["path"] or settings.STATSBOMB_DATA_DIR / "competitions.json"
+        events_dir = options["events_dir"] or settings.STATSBOMB_DATA_DIR / "events"
         lineups_dir = options["lineups_dir"] or settings.STATSBOMB_DATA_DIR / "lineups"
-        open_data_root = options["open_data_root"] or settings.STATSBOMB_DATA_DIR
-        dataset = options["dataset"]
+        base_dir = options["matches_dir"] or settings.STATSBOMB_DATA_DIR / "matches"
 
         self.stdout.write(
             self.style.WARNING(
                 "Pipeline order: " + " -> ".join(self.pipeline_steps)
             )
         )
+        
+        self.run_step("import_competitions", path=path)
 
         self.run_step(
             "import_matches",
-            dataset,
-            statsbomb_matches=matches_json,
-            team_map=team_map,
+            base_dir=base_dir
         )
-        self.run_step("import_players", lineups_dir=lineups_dir)
         self.run_step("import_lineups", lineups_dir=lineups_dir)
-        self.run_step(
-            "fetch_statsbomb_events",
-            out_dir=events_dir,
-            open_data_root=open_data_root,
-        )
 
         shots_kwargs = {"replace": options["replace_shots"]} if options["replace_shots"] else {}
         self.run_step("import_shots", events_dir, **shots_kwargs)

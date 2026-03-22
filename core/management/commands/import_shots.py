@@ -2,11 +2,13 @@
 
 import json
 from pathlib import Path
+from collections import defaultdict
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from core.models.match import Match
+from core.models.match_team_stat import MatchTeamStats
 from core.models.player import Player
 from core.models.shots import Shot
 
@@ -147,17 +149,17 @@ class Command(BaseCommand):
 
         shot_records = []
         skipped = 0
+        stats_by_team = defaultdict(lambda: {
+            "xg": 0.0,
+            "shots": 0,
+            "shots_on_target": 0,
+        })
 
         for event in events:
             if (event.get("type") or {}).get("name") != "Shot":
                 continue
 
             period = event.get("period")
-
-            # ❗ FIX: skip penalty shootout & extra time
-            if period not in [1, 2]:
-                skipped += 1
-                continue
 
             shot_payload = event.get("shot") or {}
             location = event.get("location") or []
@@ -171,13 +173,14 @@ class Command(BaseCommand):
                 skipped += 1
                 continue
 
-            team_name = (event.get("team") or {}).get("name", "")
-            team = self.resolve_team(match, team_name)
+            team_id = (event.get("team") or {}).get("id")
+            team = self.resolve_team(match, team_id)
             if not team:
                 self.stdout.write(
                     self.style.WARNING(
-                        f"Skip shot {event.get('id', 'unknown')} in {file_path.name}: "
-                        f"team mismatch '{team_name}'"
+                        f"DEBUG team mismatch: event_team_id={team_id}, "
+                        f"home={match.home_team.external_id}, "
+                        f"away={match.away_team.external_id}"
                     )
                 )
                 skipped += 1
@@ -236,13 +239,40 @@ class Command(BaseCommand):
                     "y": y,
                     "xg": float(xg),
                     "outcome": outcome,
-                    "is_goal": outcome_name == "Goal" and period in [1, 2],
+                    "is_goal": outcome_name == "Goal",
+                    "period": period,
                     "body_part": body_part,
                     "shot_type": shot_type,
                     "player": player,
                 }
             )
+            
+            stats_by_team[team]["xg"] += float(xg)
+            stats_by_team[team]["shots"] += 1
 
+            if outcome in ["goal", "saved"]:
+                stats_by_team[team]["shots_on_target"] += 1
+        # =====================
+        # SAVE TEAM STATS (CORRECT)
+        # =====================
+
+        for team_obj in [match.home_team, match.away_team]:
+            stats = stats_by_team.get(team_obj, {
+                "xg": 0.0,
+                "shots": 0,
+                "shots_on_target": 0,
+            })
+
+            MatchTeamStats.objects.update_or_create(
+                match=match,
+                team=team_obj,
+                defaults={
+                    "xg": round(stats["xg"], 3),
+                    "shots": stats["shots"],
+                    "shots_on_target": stats["shots_on_target"],
+                },
+            )
+        
         if dry_run:
             return len(shot_records), skipped, len(shot_records) + skipped
 
@@ -274,17 +304,15 @@ class Command(BaseCommand):
         return created_or_updated, skipped, len(shot_records) + skipped
 
     @staticmethod
-    def resolve_team(match, team_name):
-        if not team_name:
+    def resolve_team(match, team_id):
+        if not team_id:
+            return match.home_team  # fallback aman
+
+        if match.home_team.external_id == team_id:
             return match.home_team
 
-        team_name = team_name.lower()
-        home = match.home_team.name.lower()
-        away = match.away_team.name.lower()
-
-        if team_name in home or home in team_name:
-            return match.home_team
-        if team_name in away or away in team_name:
+        if match.away_team.external_id == team_id:
             return match.away_team
 
-        return None
+        # fallback terakhir (optional)
+        return match.home_team

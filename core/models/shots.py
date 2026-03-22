@@ -66,17 +66,12 @@ class Shot(models.Model):
         null=True,
         on_delete=models.SET_NULL
     )
+    period = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.team} shot ({self.xg})"
-    
-    # Set is_goal based on outcome (Indonesian: Set is_goal berdasarkan outcome)
-    def save(self, *args, **kwargs):
-        self.is_goal = self.outcome == "goal"
-        self.clean()
-        super().save(*args, **kwargs)
 
     # Validate coordinates and team (Indonesian: Validasi koordinat dan tim)
     def clean(self):

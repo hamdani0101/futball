@@ -26,7 +26,8 @@ class Competition(models.Model):
     gender = models.CharField(max_length=20, choices=Gender.choices, blank=True)
     is_league = models.BooleanField(default=True)
     format = models.ForeignKey(CompetitionFormat, on_delete=models.CASCADE, related_name='competitions', null=True, blank=True)
-    country = models.CharField(max_length=100, blank=True)
+    country = models.CharField(max_length=100, blank=True, null=True)
+    external_id = models.IntegerField(unique=True, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
