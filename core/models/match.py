@@ -7,21 +7,20 @@ from core.models.stadium import Stadium
 
 # Match model (Indonesian: Model pertandingan)
 class Match(models.Model):
+    class Status(models.TextChoices):
+        SCHEDULED = "scheduled", "Scheduled"
+        FINISHED = "finished", "Finished"
+        POSTPONED = "postponed", "Postponed"
+        CANCELLED = "cancelled", "Cancelled"
+        LIVE = "live", "Live"
+        PAUSED = "paused", "Paused"
+        
     match_id = models.CharField(max_length=100, unique=True)
     season = models.ForeignKey(Season, on_delete=models.CASCADE)
     home_team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="home_matches")
     away_team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="away_matches")
     match_date = models.DateTimeField()
-    status = models.CharField(max_length=20, choices=[
-            ("scheduled", "Scheduled"),
-            ("finished", "Finished"),
-            ("postponed", "Postponed"),
-            ("cancelled", "Cancelled"),
-            ("live", "Live"),
-            ("paused", "Paused"),
-        ],
-        default="scheduled"
-    )
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.SCHEDULED)
     stadium = models.ForeignKey(
         Stadium,
         on_delete=models.SET_NULL,
@@ -36,11 +35,8 @@ class Match(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
-    def __str__(self):
-        return f"{self.home_team} vs {self.away_team} ({self.match_date.date()})"
 
-    # Ordering match by match_date (Indonesian: Pengurutan pertandingan berdasarkan tanggal pertandingan)
+    # Unique constraint to ensure home and away teams are different
     class Meta:
         ordering = ["-match_date"]
         indexes = [
@@ -55,6 +51,9 @@ class Match(models.Model):
         constraints = [
             models.CheckConstraint(
                 condition=~models.Q(home_team=models.F("away_team")),
-                name="home_away_not_same",
-            )
+                name="home_team_not_equal_away_team"
+            ),
         ]
+
+    def __str__(self):
+        return f"{self.home_team} vs {self.away_team} ({self.match_date.date()})"

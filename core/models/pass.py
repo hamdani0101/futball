@@ -7,7 +7,6 @@ from core.models.match import Match
 from core.models.player import Player
 from core.models.team import Team
 
-
 class Pass(models.Model):
     """Store a pass event with spatial and contextual attributes."""
 

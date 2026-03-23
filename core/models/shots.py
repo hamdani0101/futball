@@ -8,6 +8,26 @@ from core.models.player import Player
 
 # Shot model (Indonesian: Model tembakan)
 class Shot(models.Model):    
+    
+    class OUTCOME(models.TextChoices):
+        GOAL = "goal", "Goal"
+        SAVED = "saved", "Saved"
+        SAVED_OFF_TARGET = "saved_off_target", "Saved Off Target"
+        BLOCKED = "blocked", "Blocked"
+        OFF_TARGET = "off_target", "Off Target"
+        WAYWARD = "wayward", "Wayward"
+        POST = "post", "Post"
+
+    class BODY_PART(models.TextChoices):
+        RIGHT_FOOT = "right_foot", "Right Foot"
+        LEFT_FOOT = "left_foot", "Left Foot"
+        HEAD = "head", "Head"
+
+    class SHOT_TYPE(models.TextChoices):
+        OPEN_PLAY = "open_play", "Open Play"
+        PENALTY = "penalty", "Penalty"
+        FREE_KICK = "free_kick", "Free Kick"
+
     external_event_id = models.CharField(max_length=64, unique=True, null=True, blank=True)
     match = models.ForeignKey(
         Match,
@@ -28,37 +48,22 @@ class Shot(models.Model):
     y = models.FloatField()
 
     xg = models.FloatField()
-    SHOT_OUTCOME = [
-        ("goal", "Goal"),
-        ("saved", "Saved"),
-        ("blocked", "Blocked"),
-        ("off_target", "Off Target"),
-    ]
-
     outcome = models.CharField(
         max_length=20,
-        choices=SHOT_OUTCOME
+        choices=OUTCOME.choices
     )
     
     is_goal = models.BooleanField(default=False)
 
     body_part = models.CharField(
         max_length=20,
-        choices=[
-            ("right_foot", "Right Foot"),
-            ("left_foot", "Left Foot"),
-            ("head", "Head"),
-        ],
+        choices=BODY_PART.choices,
         blank=True
     )
 
     shot_type = models.CharField(
         max_length=20,
-        choices=[
-            ("open_play", "Open Play"),
-            ("penalty", "Penalty"),
-            ("free_kick", "Free Kick"),
-        ],
+        choices=SHOT_TYPE.choices,
         blank=True
     )
     player = models.ForeignKey(
@@ -66,7 +71,7 @@ class Shot(models.Model):
         null=True,
         on_delete=models.SET_NULL
     )
-    period = models.IntegerField()
+    period = models.PositiveIntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
