@@ -15,11 +15,12 @@ class Match(models.Model):
         LIVE = "live", "Live"
         PAUSED = "paused", "Paused"
         
-    match_id = models.CharField(max_length=100, unique=True)
     season = models.ForeignKey(Season, on_delete=models.CASCADE)
     home_team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="home_matches")
     away_team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="away_matches")
+    stage = models.CharField(max_length=100, null=True, blank=True)
     match_date = models.DateTimeField()
+    match_week = models.IntegerField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.SCHEDULED)
     stadium = models.ForeignKey(
         Stadium,

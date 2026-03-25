@@ -1,3 +1,4 @@
+from email.policy import default
 import json
 from pathlib import Path
 from datetime import datetime
@@ -96,6 +97,9 @@ class Command(BaseCommand):
 
         home_name = (m.get("home_team") or {}).get("home_team_name")
         away_name = (m.get("away_team") or {}).get("away_team_name")
+        
+        home_id = m.get("home_team", {}).get("home_team_id")
+        away_id = m.get("away_team", {}).get("away_team_id")
 
         if not (match_id and home_name and away_name):
             return None, False
@@ -122,12 +126,6 @@ class Command(BaseCommand):
         season = self.get_or_create_season(competition_name, season_name)
 
         # --------------------
-        # TEAMS
-        # --------------------
-        home_team = self.get_team(home_name, team_cache)
-        away_team = self.get_team(away_name, team_cache)
-
-        # --------------------
         # STADIUM (NEW)
         # --------------------
         stadium = self.get_stadium(
@@ -135,17 +133,26 @@ class Command(BaseCommand):
             m.get("stadium_country"),
             stadium_cache,
         )
+        
+        # --------------------
+        # TEAMS
+        # --------------------
+        home_team = self.get_team(home_name, home_id, None, team_cache)
+        away_team = self.get_team(away_name, away_id, None, team_cache)
+
 
         # --------------------
         # MATCH UPSERT
         # --------------------
-        match, created = Match.objects.get_or_create(
-            match_id=match_id,
+        match, created = Match.objects.update_or_create(
+            external_id=match_id,
             defaults={
                 "season": season,
                 "home_team": home_team,
                 "away_team": away_team,
                 "match_date": match_date,
+                "match_week": m.get("match_week"),
+                "stage": m.get("competition_stage"),
                 "status": status,
                 "stadium": stadium,
             },
@@ -156,6 +163,8 @@ class Command(BaseCommand):
             match.home_team = home_team
             match.away_team = away_team
             match.match_date = match_date
+            match.match_week = m.get("match_week")
+            match.stage = m.get("competition_stage")
             match.status = status
             match.stadium = stadium
             match.save()
@@ -181,10 +190,17 @@ class Command(BaseCommand):
     # HELPERS
     # =====================
 
-    def get_team(self, name: str, cache: Dict[str, Team]) -> Team:
-        key = name.strip().lower()
+    def get_team(self, name: str, external_id: int, stadium: Stadium | None, cache: Dict[str, Team]) -> Team:
+        key = external_id
+
         if key not in cache:
-            cache[key], _ = Team.objects.get_or_create(name=name.strip())
+            cache[key], _ = Team.objects.update_or_create(
+                external_id=external_id,
+                defaults={
+                    "name": name.strip(),
+                    "home_stadium": stadium,
+                },
+            )
         return cache[key]
 
     def get_stadium(self, stadium_data, country, cache):

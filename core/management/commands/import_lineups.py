@@ -77,12 +77,12 @@ class Command(BaseCommand):
         matches = Match.objects.all()
 
         for match in matches:
-            path = lineups_dir / f"{match.match_id}.json"
+            path = lineups_dir / f"{match.external_id}.json"
 
             if not path.exists():
                 self.stdout.write(
                     self.style.WARNING(
-                        f"Lineup file missing for match {match.match_id}: {path}"
+                        f"Lineup file missing for match {match.external_id}: {path}"
                     )
                 )
                 continue
@@ -103,6 +103,7 @@ class Command(BaseCommand):
                         defaults={
                             "name": p["player_name"],
                             "team_now": team,
+                            "country": p.get("country", {}).get("name", ""),
                         },
                     )
 
@@ -113,6 +114,6 @@ class Command(BaseCommand):
                         is_starter=index < 11,
                     )
 
-            self.stdout.write(f"Imported lineup {match.match_id}")
+            self.stdout.write(f"Imported lineup {match.external_id}")
 
         self.stdout.write(self.style.SUCCESS("Lineups imported"))

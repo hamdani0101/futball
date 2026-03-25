@@ -10,6 +10,7 @@ class Season(models.Model):
     slug = models.CharField(max_length=255, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    external_id = models.IntegerField(unique=True, null=True, blank=True)
 
     def __str__(self):
         return f"{self.competition} {self.name}"

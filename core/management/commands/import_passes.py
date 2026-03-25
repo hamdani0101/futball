@@ -123,7 +123,7 @@ class Command(BaseCommand):
 
     def import_file(self, file_path, replace, dry_run):
         statsbomb_id = file_path.stem
-        match = Match.objects.filter(match_id=statsbomb_id).first()
+        match = Match.objects.filter(external_id=statsbomb_id).first()
         if not match:
             self.stdout.write(
                 self.style.WARNING(

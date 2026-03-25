@@ -1,5 +1,6 @@
 """Management command to import shots."""
 
+import math
 import json
 from pathlib import Path
 from collections import defaultdict
@@ -127,7 +128,7 @@ class Command(BaseCommand):
 
     def import_file(self, file_path, replace, dry_run):
         statsbomb_id = file_path.stem
-        match = Match.objects.filter(match_id=statsbomb_id).first()
+        match = Match.objects.filter(external_id=statsbomb_id).first()
         if not match:
             self.stdout.write(
                 self.style.WARNING(
@@ -154,6 +155,8 @@ class Command(BaseCommand):
             "shots": 0,
             "shots_on_target": 0,
         })
+        
+        prev_event = None
 
         for event in events:
             if (event.get("type") or {}).get("name") != "Shot":
@@ -227,6 +230,39 @@ class Command(BaseCommand):
             if not event_id:
                 skipped += 1
                 continue
+            
+            goal_x, goal_y = 120, 40
+
+            dx = goal_x - x
+            dy = goal_y - y
+
+            shot_distance = math.sqrt(dx**2 + dy**2)
+            
+            goal_width = 7.32
+
+            left_post_y = 40 - goal_width / 2
+            right_post_y = 40 + goal_width / 2
+
+            angle = abs(
+                math.atan2(right_post_y - y, goal_x - x) -
+                math.atan2(left_post_y - y, goal_x - x)
+            )
+            
+            angle = angle * (180 / math.pi)  # ke derajat
+            
+            under_pressure = event.get("under_pressure", False)
+            
+            play_pattern = (event.get("play_pattern") or {}).get("name", "")
+            
+            is_big_chance = xg >= 0.3
+            
+            assist_player = None
+            assist_type = None
+
+            if prev_event and (prev_event.get("type") or {}).get("name") == "Pass":
+                assist_player = (prev_event.get("player") or {}).get("name")
+                assist_player = self.get_player_by_name(assist_player)
+                assist_type = (prev_event.get("pass") or {}).get("height", {}).get("name")
 
             shot_records.append(
                 {
@@ -237,21 +273,32 @@ class Command(BaseCommand):
                     "second": int(event.get("second") or 0),
                     "x": x,
                     "y": y,
-                    "xg": float(xg),
+                    "xg": xg,
                     "outcome": outcome,
                     "is_goal": outcome_name == "Goal",
                     "period": period,
                     "body_part": body_part,
                     "shot_type": shot_type,
                     "player": player,
+                    "assist_player": assist_player,
+                    "assist_type": assist_type,
+                    "play_pattern": play_pattern,
+                    "is_big_chance": is_big_chance,
+                    "under_pressure": under_pressure,
+                    "defenders_in_between": 0,
+                    "gk_distance": 0,
+                    "shot_angle": angle,
+                    "shot_distance": shot_distance,
                 }
             )
             
-            stats_by_team[team]["xg"] += float(xg)
+            stats_by_team[team]["xg"] += xg
             stats_by_team[team]["shots"] += 1
 
             if outcome in ["goal", "saved"]:
                 stats_by_team[team]["shots_on_target"] += 1
+                
+            prev_event = event
         # =====================
         # SAVE TEAM STATS (CORRECT)
         # =====================
@@ -287,14 +334,12 @@ class Command(BaseCommand):
                     external_event_id__in=shot_event_ids
                 ).delete()
 
-        created_or_updated = 0
-        for record in shot_records:
-            event_id = record.pop("external_event_id")
-            Shot.objects.update_or_create(
-                external_event_id=event_id,
-                defaults=record,
-            )
-            created_or_updated += 1
+        created_or_updated = len(shot_records)
+        Shot.objects.bulk_create(
+            [Shot(external_event_id=r.pop("external_event_id"), **r) for r in shot_records],
+            batch_size=1000,
+            ignore_conflicts=True,
+        )
 
         self.stdout.write(
             self.style.SUCCESS(
@@ -303,8 +348,7 @@ class Command(BaseCommand):
         )
         return created_or_updated, skipped, len(shot_records) + skipped
 
-    @staticmethod
-    def resolve_team(match, team_id):
+    def resolve_team(self, match, team_id):
         if not team_id:
             return match.home_team  # fallback aman
 
@@ -316,3 +360,6 @@ class Command(BaseCommand):
 
         # fallback terakhir (optional)
         return match.home_team
+
+    def get_player_by_name(self, name):
+        return Player.objects.filter(name=name).first()

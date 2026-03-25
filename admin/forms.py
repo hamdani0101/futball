@@ -46,15 +46,13 @@ class PlayerForm(MaterializeFormMixin, forms.ModelForm):
 class MatchForm(MaterializeFormMixin, forms.ModelForm):
     class Meta:
         model = Match
-        fields = ["match_id", "season", "home_team", "away_team", "match_date", "status"]
+        fields = ["external_id", "season", "home_team", "away_team", "match_date", "status"]
         widgets = {
             "match_date": forms.DateTimeInput(attrs={"type": "datetime-local"}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["match_id"].required = False
-        self.fields["match_id"].help_text = "Optional. Auto-generated when left blank."
         self.fields["season"].queryset = Season.objects.select_related("competition").order_by(
             "competition__name", "name"
         )

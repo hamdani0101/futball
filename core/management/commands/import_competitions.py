@@ -75,9 +75,10 @@ class Command(BaseCommand):
         country = item.get("country_name")
         gender = item.get("competition_gender")
 
-        competition, created = Competition.objects.get_or_create(
-            name=name,
+        competition, created = Competition.objects.update_or_create(
+            external_id=item.get("competition_id"),
             defaults={
+                "name": name,
                 "country": country,
                 "gender": gender,
             },
@@ -98,9 +99,12 @@ class Command(BaseCommand):
     def upsert_season(self, item: Dict, competition: Competition):
         season_name = item.get("season_name")
 
-        season, created = Season.objects.get_or_create(
-            competition=competition,
-            name=season_name,
+        season, created = Season.objects.update_or_create(
+            external_id=item.get("season_id"),
+            defaults={
+                "competition": competition,
+                "name": season_name,
+            },
         )
 
         return season, created

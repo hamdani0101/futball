@@ -27,6 +27,18 @@ class Shot(models.Model):
         OPEN_PLAY = "open_play", "Open Play"
         PENALTY = "penalty", "Penalty"
         FREE_KICK = "free_kick", "Free Kick"
+        
+    class ASSIST_TYPE(models.TextChoices):
+        CROSS = "cross", "Cross"
+        THROUGH_BALL = "through_ball", "Through Ball"
+        CUTBACK = "cutback", "Cutback"
+        OTHER = "other", "Other"
+    
+    class PLAY_PATTERN(models.TextChoices):
+        OPEN_PLAY = "open_play", "Open Play"
+        CORNER = "corner", "Corner"
+        FREE_KICK = "free_kick", "Free Kick"
+        PENALTY = "penalty", "Penalty"
 
     external_event_id = models.CharField(max_length=64, unique=True, null=True, blank=True)
     match = models.ForeignKey(
@@ -71,6 +83,28 @@ class Shot(models.Model):
         null=True,
         on_delete=models.SET_NULL
     )
+    assist_player = models.ForeignKey(
+        Player,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="assisted_shots"
+    )
+    assist_type = models.CharField(
+        max_length=20,
+        choices=ASSIST_TYPE.choices,
+        blank=True
+    )
+    shot_angle = models.FloatField(default=0)
+    shot_distance = models.FloatField(default=0)
+    under_pressure = models.BooleanField(default=False)
+    defenders_in_between = models.IntegerField(default=0)
+    gk_distance = models.FloatField(default=0)
+    play_pattern = models.CharField(
+        max_length=20,
+        choices=PLAY_PATTERN.choices,
+        blank=True
+    )
+    is_big_chance = models.BooleanField(default=False)
     period = models.PositiveIntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
