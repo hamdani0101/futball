@@ -24,7 +24,7 @@ media/
 data/
 
 # Adminer database tool
-adminer
+adminer/
 
 # OS/editor noise
 .DS_Store
