@@ -154,6 +154,7 @@ class Command(BaseCommand):
             "xg": 0.0,
             "shots": 0,
             "shots_on_target": 0,
+            "penalties": 0
         })
         
         prev_event = None
@@ -294,6 +295,8 @@ class Command(BaseCommand):
             
             stats_by_team[team]["xg"] += xg
             stats_by_team[team]["shots"] += 1
+            if outcome == "goal" and period == 5:
+                stats_by_team[team]["penalties"] += 1
 
             if outcome in ["goal", "saved"]:
                 stats_by_team[team]["shots_on_target"] += 1
@@ -308,6 +311,7 @@ class Command(BaseCommand):
                 "xg": 0.0,
                 "shots": 0,
                 "shots_on_target": 0,
+                "penalties": 0
             })
 
             MatchTeamStats.objects.update_or_create(
@@ -317,6 +321,7 @@ class Command(BaseCommand):
                     "xg": round(stats["xg"], 3),
                     "shots": stats["shots"],
                     "shots_on_target": stats["shots_on_target"],
+                    "penalties": stats["penalties"],
                 },
             )
         

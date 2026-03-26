@@ -14,6 +14,7 @@ class Command(BaseCommand):
         "import_lineups",
         "import_shots",
         "import_passes",
+        "import_substitution",
     )
 
     def add_arguments(self, parser):
@@ -70,6 +71,8 @@ class Command(BaseCommand):
             base_dir=base_dir
         )
         self.run_step("import_lineups", lineups_dir=lineups_dir)
+        
+        self.run_step("import_substitution", events_dir=events_dir)
 
         shots_kwargs = {"replace": options["replace_shots"]} if options["replace_shots"] else {}
         self.run_step("import_shots", events_dir, **shots_kwargs)

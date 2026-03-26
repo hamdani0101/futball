@@ -7,9 +7,11 @@ from django.conf import settings
 from django.core.exceptions import MultipleObjectsReturned
 from django.core.management.base import BaseCommand
 
+from core.models.event import Event
 from core.models.match import Match
 from core.models.player import Player
 from core.models.player_match import PlayerMatch
+from core.models.substitution import Substitution
 
 
 class Command(BaseCommand):
@@ -108,6 +110,52 @@ class Command(BaseCommand):
                 setattr(keeper, field, value)
             keeper.save(update_fields=[*defaults.keys(), "updated_at"])
 
+    def _upsert_event(self, match, team, player_off, event):
+        event_index = int(event.get("index") or 0)
+        defaults = {
+            "match": match,
+            "team": team,
+            "player": player_off,
+            "period": int(event.get("period") or 1),
+            "minute": int(event.get("minute") or 0),
+            "second": int(event.get("second") or 0),
+            "event_index": event_index,
+            "possession": int(event.get("possession") or 0),
+            "timestamp": (event.get("timestamp") or None),
+            "type": Event.Type.SUBSTITUTION,
+            "play_pattern": ((event.get("play_pattern") or {}).get("name") or "").strip(),
+        }
+        external_event_id = event.get("id")
+        if external_event_id:
+            obj, _ = Event.objects.update_or_create(
+                external_event_id=str(external_event_id),
+                defaults=defaults,
+            )
+            return obj
+
+        obj, _ = Event.objects.update_or_create(
+            match=match,
+            event_index=event_index,
+            defaults=defaults,
+        )
+        return obj
+
+    def _upsert_substitution(self, event_row, match, team, player_off, player_on, event):
+        defaults = {
+            "match": match,
+            "team": team,
+            "player_out": player_off,
+            "player_in": player_on,
+            "minute": int(event.get("minute") or 0),
+            "second": int(event.get("second") or 0),
+            "period": int(event.get("period") or 1),
+            "reason": ((event.get("substitution") or {}).get("outcome") or {}).get("name", ""),
+        }
+        Substitution.objects.update_or_create(
+            event=event_row,
+            defaults=defaults,
+        )
+
     def _match_end_minute(self, events):
         has_extra_time = any((event.get("period") or 1) in [3, 4, 5] for event in events)
         return 120 if has_extra_time else 90
@@ -142,6 +190,7 @@ class Command(BaseCommand):
             minute = int(event.get("minute") or 0)
             player_off = self._get_or_create_player(player_off_data, team)
             player_on = self._get_or_create_player(replacement_data, team)
+            event_row = self._upsert_event(match, team, player_off, event)
 
             off_row = PlayerMatch.objects.filter(player=player_off, match=match).first()
             off_minute_on = off_row.minute_on if off_row else 0
@@ -164,6 +213,14 @@ class Command(BaseCommand):
                 is_starter=False,
                 minute_on=minute,
                 minute_off=on_minute_off,
+            )
+            self._upsert_substitution(
+                event_row=event_row,
+                match=match,
+                team=team,
+                player_off=player_off,
+                player_on=player_on,
+                event=event,
             )
             imported += 1
 

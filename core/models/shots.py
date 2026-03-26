@@ -2,6 +2,7 @@
 
 from django.db import models
 from django.core.exceptions import ValidationError
+from core.models.event import Event
 from core.models.match import Match
 from core.models.team import Team
 from core.models.player import Player
@@ -22,6 +23,7 @@ class Shot(models.Model):
         RIGHT_FOOT = "right_foot", "Right Foot"
         LEFT_FOOT = "left_foot", "Left Foot"
         HEAD = "head", "Head"
+        OTHER = "other", "Other"
 
     class SHOT_TYPE(models.TextChoices):
         OPEN_PLAY = "open_play", "Open Play"
@@ -40,6 +42,13 @@ class Shot(models.Model):
         FREE_KICK = "free_kick", "Free Kick"
         PENALTY = "penalty", "Penalty"
 
+    event = models.OneToOneField(
+        Event,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="shot_detail",
+    )
     external_event_id = models.CharField(max_length=64, unique=True, null=True, blank=True)
     match = models.ForeignKey(
         Match,
@@ -119,6 +128,12 @@ class Shot(models.Model):
 
         if self.team not in [self.match.home_team, self.match.away_team]:
             raise ValidationError("Shot team must be home or away team")
+
+        if self.event_id and self.event.match_id != self.match_id:
+            raise ValidationError("Shot event must belong to the same match")
+
+        if self.event_id and self.event.type != Event.Type.SHOT:
+            raise ValidationError("Shot event must have type shot")
 
     # Ordering and indexes (Indonesian: Pengurutan dan indeks)
     class Meta:

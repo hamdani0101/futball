@@ -2,11 +2,202 @@
 
 {% block title %}Competitions{% endblock %}
 
+{% block extra_css %}
+<style>
+    .competition-overview {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .competition-kpi {
+        background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(240,246,252,0.98) 100%);
+        border-radius: 20px;
+        box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+        padding: 18px 20px;
+    }
+
+    .competition-kpi .label {
+        display: block;
+        color: #486581;
+        font-size: 0.84rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    .competition-kpi .value {
+        display: block;
+        margin-top: 10px;
+        color: #102a43;
+        font-size: 2rem;
+        font-weight: 800;
+    }
+
+    .competition-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    .competition-toolbar form {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        width: 100%;
+    }
+
+    .competition-toolbar input,
+    .competition-toolbar select {
+        background: #fff;
+        border: 1px solid rgba(16, 42, 67, 0.12);
+        border-radius: 14px;
+        padding: 0 14px;
+        height: 46px;
+        min-width: 180px;
+    }
+
+    .competition-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+    }
+
+    .competition-card {
+        background: rgba(255, 255, 255, 0.97);
+        border-radius: 22px;
+        box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
+        padding: 20px;
+        display: grid;
+        gap: 16px;
+    }
+
+    .competition-card-head {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .competition-logo {
+        width: 56px;
+        height: 56px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, #102a43, #ef6c00);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        font-weight: 800;
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+
+    .competition-logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .competition-card-head h5 {
+        margin: 0;
+        color: #102a43;
+        font-size: 1.2rem;
+    }
+
+    .competition-card-head p {
+        margin: 4px 0 0;
+        color: #486581;
+    }
+
+    .competition-badges {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .competition-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        background: rgba(16, 42, 67, 0.08);
+        color: #102a43;
+    }
+
+    .competition-badge.manual {
+        background: rgba(239, 108, 0, 0.12);
+        color: #b45309;
+    }
+
+    .competition-meta {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .competition-meta-item {
+        background: #f8fbff;
+        border-radius: 14px;
+        padding: 12px 14px;
+    }
+
+    .competition-meta-item .label {
+        display: block;
+        color: #486581;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .competition-meta-item .value {
+        display: block;
+        margin-top: 6px;
+        color: #102a43;
+        font-weight: 700;
+    }
+
+    .competition-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .competition-actions-left {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    @media (max-width: 992px) {
+        .competition-overview {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 640px) {
+        .competition-overview,
+        .competition-meta {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="page-header">
     <div>
         <h4>Competitions</h4>
-        <p class="grey-text text-darken-1">Manage competitions, formats, and country metadata.</p>
+        <p class="grey-text text-darken-1">Build competition records for manual data entry first, external mapping only when you need it.</p>
     </div>
     <a href="{% url 'admin-competition-create' %}" class="btn waves-effect waves-light">
         <i class="ri-add-line left"></i>
@@ -14,70 +205,137 @@
     </a>
 </div>
 
+<section class="competition-overview">
+    <article class="competition-kpi">
+        <span class="label">Total Competitions</span>
+        <span class="value">{{ total_competitions }}</span>
+    </article>
+    <article class="competition-kpi">
+        <span class="label">Leagues</span>
+        <span class="value">{{ league_competitions }}</span>
+    </article>
+    <article class="competition-kpi">
+        <span class="label">Cups / Tournaments</span>
+        <span class="value">{{ cup_competitions }}</span>
+    </article>
+    <article class="competition-kpi">
+        <span class="label">Manual Records</span>
+        <span class="value">{{ manual_competitions }}</span>
+    </article>
+</section>
+
 <div class="panel-card">
-    <table class="highlight responsive-table">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Code</th>
-                <th>Country</th>
-                <th>Format</th>
-                <th>League</th>
-                <th class="right-align">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
+    <div class="competition-toolbar">
+        <form method="get">
+            <input
+                type="text"
+                name="q"
+                value="{{ query }}"
+                placeholder="Search by name, code, country, or format"
+            >
+            <select name="kind" class="browser-default">
+                <option value="all" {% if kind == "all" %}selected{% endif %}>All Types</option>
+                <option value="league" {% if kind == "league" %}selected{% endif %}>Leagues</option>
+                <option value="cup" {% if kind == "cup" %}selected{% endif %}>Cups / Tournaments</option>
+                <option value="manual" {% if kind == "manual" %}selected{% endif %}>Manual Only</option>
+                <option value="linked" {% if kind == "linked" %}selected{% endif %}>Externally Linked</option>
+            </select>
+            <button type="submit" class="btn waves-effect waves-light">Apply</button>
+            <a href="{% url 'admin-competition-list' %}" class="btn-flat">Reset</a>
+        </form>
+    </div>
+
+    {% if competitions %}
+        <div class="competition-grid">
             {% for competition in competitions %}
-                <tr>
-                    <td>{{ competition.name }}</td>
-                    <td>{{ competition.code|default:"-" }}</td>
-                    <td>{{ competition.country|default:"-" }}</td>
-                    <td>{{ competition.format|default:"-" }}</td>
-                    <td>{% if competition.is_league %}Yes{% else %}No{% endif %}</td>
-                    <td class="right-align">
-                        <a href="{% url 'admin-competition-update' competition.pk %}" class="btn-small waves-effect waves-light">Edit</a>
-                        <a href="{% url 'admin-competition-delete' competition.pk %}" class="btn-flat danger-text">Delete</a>
-                    </td>
-                </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="6" class="center-align">No competitions available.</td>
-                </tr>
+                <article class="competition-card">
+                    <div class="competition-card-head">
+                        <div class="competition-logo">
+                            {% if competition.logo %}
+                                <img src="{{ competition.logo.url }}" alt="{{ competition.name }}">
+                            {% else %}
+                                {{ competition.name|slice:":2"|upper }}
+                            {% endif %}
+                        </div>
+                        <div>
+                            <h5>{{ competition.name }}</h5>
+                            <p>{{ competition.country|default:"International competition" }}</p>
+                        </div>
+                    </div>
+
+                    <div class="competition-badges">
+                        <span class="competition-badge">{% if competition.is_league %}League{% else %}Cup / Tournament{% endif %}</span>
+                        {% if competition.external_id %}
+                            <span class="competition-badge">External Linked</span>
+                        {% else %}
+                            <span class="competition-badge manual">Manual Entry</span>
+                        {% endif %}
+                        {% if competition.gender %}
+                            <span class="competition-badge">{{ competition.get_gender_display }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="competition-meta">
+                        <div class="competition-meta-item">
+                            <span class="label">Code</span>
+                            <span class="value">{{ competition.code|default:"-" }}</span>
+                        </div>
+                        <div class="competition-meta-item">
+                            <span class="label">Format</span>
+                            <span class="value">{{ competition.format|default:"Not set" }}</span>
+                        </div>
+                        <div class="competition-meta-item">
+                            <span class="label">Seasons</span>
+                            <span class="value">{{ competition.seasons_count }}</span>
+                        </div>
+                        <div class="competition-meta-item">
+                            <span class="label">External ID</span>
+                            <span class="value">{{ competition.external_id|default:"Manual only" }}</span>
+                        </div>
+                    </div>
+
+                    <div class="competition-actions">
+                        <div class="competition-actions-left">
+                            <a href="{% url 'admin-competition-update' competition.pk %}" class="btn-small waves-effect waves-light">Edit</a>
+                            <a href="{% url 'admin-competition-delete' competition.pk %}" class="btn-flat danger-text">Delete</a>
+                        </div>
+                    </div>
+                </article>
             {% endfor %}
-        </tbody>
-    </table>
+        </div>
+    {% else %}
+        <div class="center-align" style="padding: 32px 12px;">
+            <h5 style="margin-top:0;">No competitions found</h5>
+            <p class="grey-text text-darken-1">Try clearing filters or create the first competition manually.</p>
+        </div>
+    {% endif %}
+
     <ul class="pagination center-align">
-        <!-- Previous -->
         {% if competitions.has_previous %}
             <li class="waves-effect">
-                <a href="?page={{ competitions.previous_page_number }}">
+                <a href="?page={{ competitions.previous_page_number }}{% if query %}&q={{ query|urlencode }}{% endif %}{% if kind %}&kind={{ kind|urlencode }}{% endif %}">
                     <i class="ri-arrow-left-s-line"></i>
                 </a>
             </li>
         {% endif %}
 
         {% for num in competitions.paginator.page_range %}
-
             {% if num == 1 or num == competitions.paginator.num_pages or num >= competitions.number|add:'-2' and num <= competitions.number|add:'2' %}
-
                 {% if competitions.number == num %}
                     <li class="active blue">
-                        <a href="?page={{ num }}">{{ num }}</a>
+                        <a href="?page={{ num }}{% if query %}&q={{ query|urlencode }}{% endif %}{% if kind %}&kind={{ kind|urlencode }}{% endif %}">{{ num }}</a>
                     </li>
                 {% else %}
                     <li class="waves-effect">
-                        <a href="?page={{ num }}">{{ num }}</a>
+                        <a href="?page={{ num }}{% if query %}&q={{ query|urlencode }}{% endif %}{% if kind %}&kind={{ kind|urlencode }}{% endif %}">{{ num }}</a>
                     </li>
                 {% endif %}
-
             {% endif %}
-
         {% endfor %}
 
-        <!-- Next -->
         {% if competitions.has_next %}
             <li class="waves-effect">
-                <a href="?page={{ competitions.next_page_number }}">
+                <a href="?page={{ competitions.next_page_number }}{% if query %}&q={{ query|urlencode }}{% endif %}{% if kind %}&kind={{ kind|urlencode }}{% endif %}">
                     <i class="ri-arrow-right-s-line"></i>
                 </a>
             </li>

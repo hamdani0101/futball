@@ -14,6 +14,7 @@ class MatchTeamStats(models.Model):
     )
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
     goals = models.IntegerField(default=0)
+    penalties = models.IntegerField(default=0)
     xg = models.FloatField(default=0.0)
     shots = models.IntegerField(default=0)
     shots_on_target = models.IntegerField(default=0)

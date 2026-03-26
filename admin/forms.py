@@ -8,7 +8,15 @@ class MaterializeFormMixin:
         for field in self.fields.values():
             widget = field.widget
             existing = widget.attrs.get("class", "")
-            widget.attrs["class"] = f"{existing} browser-default".strip()
+            if isinstance(widget, forms.CheckboxInput):
+                widget.attrs["class"] = f"{existing} admin-checkbox".strip()
+            elif isinstance(widget, (forms.Select, forms.SelectMultiple)):
+                widget.attrs["class"] = f"{existing} admin-select browser-default".strip()
+            elif isinstance(widget, forms.FileInput):
+                widget.attrs["class"] = f"{existing} admin-file-input".strip()
+            else:
+                widget.attrs["class"] = f"{existing} admin-input".strip()
+                widget.attrs.setdefault("placeholder", field.label)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -18,7 +26,7 @@ class MaterializeFormMixin:
 class TeamForm(MaterializeFormMixin, forms.ModelForm):
     class Meta:
         model = Team
-        fields = ["name", "country", "logo", "home_stadium"]
+        fields = ["external_id", "name", "country", "logo", "home_stadium"]
 
 
 class PlayerForm(MaterializeFormMixin, forms.ModelForm):
@@ -146,7 +154,27 @@ class StadiumForm(MaterializeFormMixin, forms.ModelForm):
 class CompetitionForm(MaterializeFormMixin, forms.ModelForm):
     class Meta:
         model = Competition
-        fields = ["name", "code", "logo", "is_league", "format", "country"]
+        fields = [
+            "name",
+            "code",
+            "country",
+            "gender",
+            "is_league",
+            "format",
+            "external_id",
+            "logo",
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["format"].queryset = self.fields["format"].queryset.order_by("name")
+        self.fields["external_id"].required = False
+        self.fields["external_id"].help_text = (
+            "Optional. Leave blank for competitions created directly in this admin."
+        )
+        self.fields["code"].help_text = "Short code such as EPL, UCL, or WC."
+        self.fields["country"].help_text = "Optional for international competitions."
+        self.fields["logo"].help_text = "Square logo works best in the admin cards."
 
 
 class SeasonForm(MaterializeFormMixin, forms.ModelForm):

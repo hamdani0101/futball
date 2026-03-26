@@ -434,8 +434,8 @@ def match_detail(request, match_id):
     shots = Shot.objects.filter(match=match).select_related("player", "assist_player", "team")
     home_team_shots = shots.filter(team=match.home_team).order_by("minute", "second", "id")
     away_team_shots = shots.filter(team=match.away_team).order_by("minute", "second", "id")
-    home_goals = home_team_shots.filter(outcome=Shot.OUTCOME.GOAL)
-    away_goals = away_team_shots.filter(outcome=Shot.OUTCOME.GOAL)
+    home_goals = home_team_shots.filter(outcome=Shot.OUTCOME.GOAL, period__in=[1, 2])
+    away_goals = away_team_shots.filter(outcome=Shot.OUTCOME.GOAL, period__in=[1, 2])
 
     home_shots = (home_stats.shots if home_stats else 0) or 0
     away_shots = (away_stats.shots if away_stats else 0) or 0

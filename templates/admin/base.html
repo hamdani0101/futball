@@ -7,17 +7,24 @@
     <title>{% block title %}Futball Dashboard{% endblock %}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --sidebar-bg: #102a43;
-            --sidebar-hover: #1f4b72;
+            --sidebar-bg: linear-gradient(180deg, #0f2740 0%, #102a43 48%, #0b1d30 100%);
+            --sidebar-hover: rgba(255, 255, 255, 0.12);
             --surface: #f5f7fa;
             --accent: #ef6c00;
             --text-strong: #102a43;
+            --panel-bg: rgba(255, 255, 255, 0.86);
+            --panel-border: rgba(148, 163, 184, 0.18);
         }
 
         body {
-            background: linear-gradient(180deg, #f8fbff 0%, #edf2f7 100%);
+            font-family: "Manrope", sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(255, 214, 153, 0.35), transparent 24%),
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.14), transparent 18%),
+                linear-gradient(180deg, #f7fbff 0%, #edf3f9 100%);
             color: #334e68;
         }
 
@@ -31,18 +38,24 @@
             background: var(--sidebar-bg);
             color: #fff;
             padding: 24px 0;
+            position: sticky;
+            top: 0;
+            min-height: 100vh;
+            box-shadow: 20px 0 50px rgba(8, 15, 29, 0.18);
         }
 
         .brand {
             padding: 0 24px 24px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-            font-size: 1.5rem;
-            font-weight: 700;
-            letter-spacing: 0.04em;
+            font-size: 1.55rem;
+            font-weight: 800;
+            letter-spacing: 0.03em;
+            font-family: "Space Grotesk", sans-serif;
         }
 
         .sidebar ul {
             margin-top: 24px;
+            padding: 0 12px;
         }
 
         .sidebar a {
@@ -50,13 +63,17 @@
             align-items: center;
             gap: 12px;
             color: rgba(255, 255, 255, 0.88);
-            padding: 14px 24px;
-            transition: background-color 0.2s ease;
+            padding: 14px 16px;
+            margin-bottom: 6px;
+            border-radius: 16px;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+            font-weight: 700;
         }
 
         .sidebar a:hover,
         .sidebar a.active {
             background: var(--sidebar-hover);
+            transform: translateX(2px);
         }
 
         .content-shell {
@@ -66,9 +83,11 @@
         }
 
         nav {
-            background: #fff;
+            background: rgba(255, 255, 255, 0.78);
             color: var(--text-strong);
-            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.12);
         }
 
         nav .brand-logo,
@@ -76,8 +95,13 @@
             color: var(--text-strong);
         }
 
+        nav .brand-logo {
+            font-family: "Space Grotesk", sans-serif;
+            font-weight: 700;
+        }
+
         main {
-            padding: 32px;
+            padding: 36px;
         }
 
         .page-header {
@@ -120,10 +144,12 @@
         }
 
         .panel-card {
-            background: rgba(255, 255, 255, 0.92);
-            border-radius: 20px;
-            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
-            padding: 24px;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 24px;
+            box-shadow: 0 20px 46px rgba(15, 23, 42, 0.08);
+            padding: 26px;
+            backdrop-filter: blur(8px);
         }
 
         .nav-actions {
@@ -164,10 +190,10 @@
 
         .nav-link-pill {
             border-radius: 999px;
-            padding: 0 14px;
-            min-height: 36px;
+            padding: 0 16px;
+            min-height: 40px;
             font-weight: 700;
-            background: rgba(16, 42, 67, 0.05);
+            background: rgba(16, 42, 67, 0.06);
         }
 
         .nav-link-pill:hover {
@@ -223,6 +249,76 @@
             margin-bottom: 16px;
         }
 
+        .admin-input,
+        .admin-select,
+        textarea.admin-input {
+            width: 100%;
+            min-height: 54px;
+            border: 1px solid rgba(148, 163, 184, 0.28) !important;
+            border-radius: 16px !important;
+            background: rgba(248, 250, 252, 0.9) !important;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+            padding: 0 16px !important;
+            font-size: 0.97rem !important;
+            color: #102a43 !important;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+
+        textarea.admin-input {
+            min-height: 130px;
+            padding: 14px 16px !important;
+        }
+
+        .admin-input:focus,
+        .admin-select:focus,
+        textarea.admin-input:focus {
+            border-color: rgba(239, 108, 0, 0.55) !important;
+            box-shadow: 0 0 0 4px rgba(239, 108, 0, 0.12) !important;
+            background: #fff !important;
+            outline: none;
+        }
+
+        .admin-file-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px dashed rgba(148, 163, 184, 0.45);
+            border-radius: 16px;
+            background: rgba(248, 250, 252, 0.9);
+        }
+
+        .admin-checkbox {
+            width: 20px !important;
+            height: 20px !important;
+            margin-right: 10px !important;
+            accent-color: var(--accent);
+        }
+
+        .helper-text {
+            display: block;
+            margin-top: 8px;
+            color: #64748b !important;
+            font-size: 0.85rem;
+            line-height: 1.45;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .form-grid .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .field-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #102a43;
+            font-size: 0.92rem;
+            font-weight: 700;
+        }
+
         @media (max-width: 992px) {
             .layout {
                 flex-direction: column;
@@ -231,10 +327,16 @@
             .sidebar {
                 width: 100%;
                 padding: 16px 0;
+                position: static;
+                min-height: auto;
             }
 
             main {
                 padding: 20px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
             }
 
             .page-header {

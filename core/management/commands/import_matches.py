@@ -152,7 +152,8 @@ class Command(BaseCommand):
                 "away_team": away_team,
                 "match_date": match_date,
                 "match_week": m.get("match_week"),
-                "stage": m.get("competition_stage"),
+                "stage_id": (m.get("competition_stage") or {}).get("id"),
+                "stage_name": (m.get("competition_stage") or {}).get("name"),
                 "status": status,
                 "stadium": stadium,
             },
@@ -164,7 +165,8 @@ class Command(BaseCommand):
             match.away_team = away_team
             match.match_date = match_date
             match.match_week = m.get("match_week")
-            match.stage = m.get("competition_stage")
+            match.stage_id = (m.get("competition_stage") or {}).get("id")
+            match.stage_name = (m.get("competition_stage") or {}).get("name")
             match.status = status
             match.stadium = stadium
             match.save()

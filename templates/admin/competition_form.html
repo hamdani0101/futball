@@ -1,0 +1,286 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .competition-form-shell {
+        display: grid;
+        grid-template-columns: minmax(0, 1.85fr) minmax(280px, 0.85fr);
+        gap: 24px;
+        align-items: start;
+    }
+
+    .competition-form-card,
+    .competition-side-card {
+        background: rgba(255, 255, 255, 0.84);
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 28px;
+        box-shadow: 0 26px 60px rgba(15, 23, 42, 0.1);
+        padding: 28px;
+        backdrop-filter: blur(12px);
+    }
+
+    .competition-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px 18px;
+    }
+
+    .competition-form-grid .full {
+        grid-column: 1 / -1;
+    }
+
+    .competition-form-label {
+        display: block;
+        margin-bottom: 8px;
+        color: #102a43;
+        font-weight: 800;
+        font-size: 0.94rem;
+    }
+
+    .competition-form-note {
+        margin: 0;
+        color: #486581;
+        line-height: 1.6;
+    }
+
+    .competition-form-intro {
+        margin-bottom: 24px;
+    }
+
+    .competition-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: rgba(239, 108, 0, 0.1);
+        color: #b45309;
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    .competition-tip-list {
+        display: grid;
+        gap: 12px;
+        margin-top: 18px;
+    }
+
+    .competition-tip {
+        border: 1px solid rgba(16, 42, 67, 0.08);
+        border-radius: 16px;
+        padding: 14px 16px;
+        background: #f8fbff;
+    }
+
+    .competition-tip strong {
+        display: block;
+        margin-bottom: 4px;
+        color: #102a43;
+    }
+
+    .competition-submit-row {
+        display: flex;
+        gap: 12px;
+        margin-top: 28px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .competition-actions-note {
+        color: #64748b;
+        font-size: 0.86rem;
+    }
+
+    .competition-field {
+        display: grid;
+        gap: 8px;
+    }
+
+    .competition-field .helper-text {
+        margin-top: 0;
+    }
+
+    .competition-divider {
+        grid-column: 1 / -1;
+        height: 1px;
+        background: linear-gradient(90deg, rgba(148, 163, 184, 0.18), rgba(148, 163, 184, 0.05));
+        margin: 2px 0;
+    }
+
+    .competition-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 16px 18px;
+        border-radius: 18px;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    }
+
+    .competition-toggle-copy {
+        display: grid;
+        gap: 4px;
+    }
+
+    .competition-toggle-copy strong {
+        color: #102a43;
+        font-size: 0.96rem;
+        font-weight: 800;
+    }
+
+    .competition-toggle-copy span {
+        color: #64748b;
+        font-size: 0.86rem;
+        line-height: 1.5;
+    }
+
+    .competition-toggle input[type="checkbox"] {
+        width: 52px !important;
+        height: 30px !important;
+        margin: 0 !important;
+        appearance: none;
+        -webkit-appearance: none;
+        border-radius: 999px;
+        background: #d9e2ec;
+        position: relative;
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+
+    .competition-toggle input[type="checkbox"]::after {
+        content: "";
+        position: absolute;
+        top: 4px;
+        left: 4px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.18);
+        transition: transform 0.2s ease;
+    }
+
+    .competition-toggle input[type="checkbox"]:checked {
+        background: linear-gradient(90deg, #ef6c00, #fb923c);
+    }
+
+    .competition-toggle input[type="checkbox"]:checked::after {
+        transform: translateX(22px);
+    }
+
+    .competition-side-card {
+        position: sticky;
+        top: 24px;
+    }
+
+    @media (max-width: 992px) {
+        .competition-form-shell,
+        .competition-form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .competition-side-card {
+            position: static;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h4 style="margin:0;">{{ title }}</h4>
+        <p class="grey-text text-darken-1" style="margin-top:8px;">{{ subtitle }}</p>
+    </div>
+</div>
+
+<div class="competition-form-shell">
+    <div class="competition-form-card">
+        <div class="competition-form-intro">
+            <span class="competition-eyebrow">Competition Setup</span>
+            <p class="competition-form-note">
+                Isi detail kompetisi utama dulu. Koneksi ke sumber data eksternal bisa ditambahkan nanti kalau memang dibutuhkan.
+            </p>
+        </div>
+        {% if form.non_field_errors %}
+            <div class="form-errors">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="competition-form-grid">
+                {% for field in form %}
+                    {% if field.name == "is_league" %}
+                        <div class="full">
+                            <label class="competition-form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            <label class="competition-toggle">
+                                <div class="competition-toggle-copy">
+                                    <strong>League competition</strong>
+                                    <span>{{ field.help_text|default:"Aktifkan untuk kompetisi berbasis klasemen. Matikan untuk cup atau knockout tournament." }}</span>
+                                </div>
+                                {{ field }}
+                            </label>
+                            {% for error in field.errors %}
+                                <div class="red-text">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {% if field.name == "format" %}
+                            <div class="competition-divider"></div>
+                        {% endif %}
+                        <div class="competition-field {% if field.name == 'logo' %}full{% endif %}">
+                            <label class="competition-form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <div class="helper-text">{{ field.help_text }}</div>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <div class="red-text">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <div class="competition-submit-row">
+                <button type="submit" class="btn waves-effect waves-light">{{ submit_label }}</button>
+                <a href="{% url 'admin-competition-list' %}" class="btn-flat">Cancel</a>
+                <span class="competition-actions-note">External ID boleh dikosongkan untuk workflow manual.</span>
+            </div>
+        </form>
+    </div>
+
+    <aside class="competition-side-card">
+        <h5 style="margin-top:0;">Manual Entry Guide</h5>
+        <p class="competition-form-note">
+            Competition data can be created directly here. External linkage is optional, so you can start with internal data first and enrich it later.
+        </p>
+        <div class="competition-tip-list">
+            <div class="competition-tip">
+                <strong>Name & Code</strong>
+                Use the public-facing competition name and a short code that is easy to recognize across seasons.
+            </div>
+            <div class="competition-tip">
+                <strong>League vs Cup</strong>
+                Turn on <code>is_league</code> for standings-based competitions. Turn it off for knockout cups and tournaments.
+            </div>
+            <div class="competition-tip">
+                <strong>External ID</strong>
+                Leave it empty unless you explicitly want to map this record to another data source.
+            </div>
+            {% if competition %}
+                <div class="competition-tip">
+                    <strong>Editing {{ competition.name }}</strong>
+                    Changes here affect future season selection and admin data entry screens immediately.
+                </div>
+            {% endif %}
+        </div>
+    </aside>
+</div>
+{% endblock %}

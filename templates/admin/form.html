@@ -17,25 +17,28 @@
     {% endif %}
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        {% for field in form %}
-            <div class="input-field" style="margin-bottom: 24px;">
-                {% if field.widget_type == "checkbox" %}
-                    <label>
+        <div class="form-grid">
+            {% for field in form %}
+                <div class="{% if field.widget_type == 'checkbox' or field.widget_type == 'file' %}full-width{% endif %}">
+                    {% if field.widget_type == "checkbox" %}
+                        <label class="field-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        <label style="display:flex; align-items:center; gap:10px;">
+                            {{ field }}
+                            <span>{{ field.help_text|default:"Toggle this option on or off." }}</span>
+                        </label>
+                    {% else %}
+                        <label class="field-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
                         {{ field }}
-                        <span>{{ field.label }}</span>
-                    </label>
-                {% else %}
-                    <label class="active" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {{ field }}
-                {% endif %}
-                {% if field.help_text %}
-                    <span class="helper-text">{{ field.help_text }}</span>
-                {% endif %}
-                {% for error in field.errors %}
-                    <div class="red-text">{{ error }}</div>
-                {% endfor %}
-            </div>
-        {% endfor %}
+                        {% if field.help_text %}
+                            <span class="helper-text">{{ field.help_text }}</span>
+                        {% endif %}
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <div class="red-text" style="margin-top:8px;">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
         <div style="display: flex; gap: 12px;">
             <button type="submit" class="btn waves-effect waves-light">{{ submit_label }}</button>
             <a href="javascript:history.back()" class="btn-flat">Cancel</a>

@@ -61,7 +61,7 @@
         {% else %}
           <p class="home-spotlight-time">Kickoff • {{ spotlight.match.match_date|date:"D, d M Y H:i" }}</p>
         {% endif %}
-        <a class="home-spotlight-link" href="{% url 'match-detail' spotlight.match.match_id %}">
+        <a class="home-spotlight-link" href="{% url 'match-detail' spotlight.match.external_id %}">
           {% if spotlight_mode == "result" %}View Result{% else %}Match Detail{% endif %}
         </a>
       {% else %}
@@ -137,7 +137,7 @@
       {% if recent_results %}
         <div class="home-result-list">
           {% for item in recent_results %}
-            <a class="home-result-item" href="{% url 'match-detail' item.match.match_id %}">
+            <a class="home-result-item" href="{% url 'match-detail' item.match.external_id %}">
               <div class="home-result-top">
                 <span class="league">{{ item.match.season.competition.name }}</span>
                 <span class="badge">FT</span>
@@ -169,7 +169,7 @@
       {% if next_fixtures %}
         <div class="home-mini-list">
           {% for item in next_fixtures %}
-            <a class="home-mini-item" href="{% url 'match-detail' item.match.match_id %}">
+            <a class="home-mini-item" href="{% url 'match-detail' item.match.external_id %}">
               <span class="league">{{ item.match.season.competition.name }}</span>
               <strong>{{ item.match.home_team.name }} vs {{ item.match.away_team.name }}</strong>
               <small>{{ item.match.match_date|date:"D, d M Y H:i" }}</small>

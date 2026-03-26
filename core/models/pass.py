@@ -3,6 +3,7 @@
 from django.core.exceptions import ValidationError
 from django.db import models
 
+from core.models.event import Event
 from core.models.match import Match
 from core.models.player import Player
 from core.models.team import Team
@@ -54,6 +55,13 @@ class Pass(models.Model):
         unique=True,
         null=True,
         blank=True,
+    )
+    event = models.OneToOneField(
+        Event,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="pass_detail",
     )
     event_index = models.PositiveIntegerField(default=0)
     period = models.PositiveIntegerField(default=1)
@@ -142,6 +150,12 @@ class Pass(models.Model):
 
         if self.recipient_id and self.player_id and self.recipient_id == self.player_id:
             raise ValidationError("Pass recipient cannot be the same as the passer")
+
+        if self.event_id and self.event.match_id != self.match_id:
+            raise ValidationError("Pass event must belong to the same match")
+
+        if self.event_id and self.event.type != Event.Type.PASS:
+            raise ValidationError("Pass event must have type pass")
 
     def save(self, *args, **kwargs):
         self.clean()

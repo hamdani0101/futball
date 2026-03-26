@@ -74,7 +74,7 @@
                   <span class="team-name">{{ item.match.away_team.name }}</span>
                   {% if item.match.away_team.logo %}<img src="{{ item.match.away_team.logo.url }}" alt="{{ item.match.away_team.name }}">{% endif %}
                 </div>
-                <a class="fixture-link" href="{% url 'match-detail' item.match.match_id %}">Match Detail</a>
+                <a class="fixture-link" href="{% url 'match-detail' item.match.external_id %}">Match Detail</a>
               </div>
             </article>
           {% endfor %}

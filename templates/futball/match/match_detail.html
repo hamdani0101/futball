@@ -4,6 +4,134 @@
 
 {% block extra_css %}
 <style>
+  .score-card {
+    position: relative;
+    overflow: hidden;
+    padding: 28px !important;
+    background:
+      radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 24%),
+      radial-gradient(circle at bottom left, rgba(249, 115, 22, 0.12), transparent 22%),
+      linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  }
+
+  .score-card::after {
+    content: "";
+    position: absolute;
+    inset: auto -10% -55% auto;
+    width: 240px;
+    height: 240px;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.03);
+    pointer-events: none;
+  }
+
+  .score-meta {
+    align-items: flex-start;
+  }
+
+  .score-meta-stack {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .score-status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(37, 99, 235, 0.1);
+    color: #1d4ed8;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .score-date {
+    margin-top: 2px;
+  }
+
+  .score-main {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+    gap: 18px !important;
+    align-items: stretch !important;
+  }
+
+  .score-team {
+    background: rgba(255, 255, 255, 0.82);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    border-radius: 24px;
+    padding: 20px 18px;
+    display: grid !important;
+    justify-items: center;
+    align-content: center;
+    gap: 12px;
+    text-align: center;
+    min-height: 148px;
+  }
+
+  .score-team.away {
+    justify-content: unset !important;
+  }
+
+  .score-team img {
+    width: 60px !important;
+    height: 60px !important;
+  }
+
+  .score-team-label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+  }
+
+  .score-team-name {
+    font-size: 28px !important;
+    line-height: 1.15 !important;
+    color: #0f172a;
+  }
+
+  .score-number-wrap {
+    min-width: 220px;
+    padding: 18px 24px;
+    border-radius: 28px;
+    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+    color: #fff;
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: 10px;
+    box-shadow: 0 22px 40px rgba(15, 23, 42, 0.18);
+  }
+
+  .score-number {
+    font-size: 70px !important;
+    line-height: 0.95 !important;
+    color: #fff !important;
+    letter-spacing: -0.04em;
+  }
+
+  .score-status-note {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .score-penalties {
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
   .match-kpi-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -113,6 +241,102 @@
     font-size: 15px;
     line-height: 1.4;
     color: #0f172a;
+  }
+
+  .overview-card {
+    display: grid;
+    gap: 18px;
+  }
+
+  .overview-grid {
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 18px;
+  }
+
+  .overview-section h5 {
+    margin: 0 0 12px;
+    color: #102a43;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .overview-aside {
+    display: grid;
+    gap: 18px;
+  }
+
+  .overview-mini-grid {
+    display: grid;
+    gap: 12px;
+  }
+
+  .overview-stat-card {
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    background: linear-gradient(180deg, #fff 0%, #f8fbff 100%);
+    padding: 14px 16px;
+    display: grid;
+    gap: 10px;
+  }
+
+  .overview-stat-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .overview-stat-label {
+    font-size: 11px;
+    line-height: 1.3;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 800;
+    color: #64748b;
+  }
+
+  .overview-stat-values {
+    font-size: 15px;
+    font-weight: 800;
+    color: #0f172a;
+    white-space: nowrap;
+  }
+
+  .overview-stat-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .overview-stat-side {
+    border-radius: 12px;
+    padding: 10px 12px;
+    display: grid;
+    gap: 4px;
+  }
+
+  .overview-stat-side.home {
+    background: rgba(37, 99, 235, 0.08);
+  }
+
+  .overview-stat-side.away {
+    background: rgba(245, 158, 11, 0.1);
+  }
+
+  .overview-stat-side .side-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #64748b;
+  }
+
+  .overview-stat-side strong {
+    color: #0f172a;
+    font-size: 16px;
   }
 
   .timeline-card {
@@ -296,6 +520,15 @@
   }
 
   @media (max-width: 900px) {
+    .score-main {
+      grid-template-columns: 1fr !important;
+    }
+
+    .score-number-wrap {
+      min-width: 0;
+    }
+
+    .overview-grid,
     .match-kpi-grid,
     .team-detail-grid,
     .team-detail-metrics,
@@ -323,72 +556,123 @@
 
   <section class="score-card">
     <div class="score-meta">
-      <span class="score-chip">
-        {% if match.season.competition.logo %}<img src="{{ match.season.competition.logo.url }}" alt="{{ match.season.competition.name }}">{% endif %}
-        {{ match.season.competition.name }} • {{ match.season.name }}
-      </span>
+      <div class="score-meta-stack">
+        <span class="score-chip">
+          {% if match.season.competition.logo %}<img src="{{ match.season.competition.logo.url }}" alt="{{ match.season.competition.name }}">{% endif %}
+          {{ match.season.competition.name }} • {{ match.season.name }}
+        </span>
+        <span class="score-status-badge">{{ match.status|title }}</span>
+      </div>
       <span class="score-date">{{ match.match_date|date:"D, d M Y • H:i" }}</span>
     </div>
 
     <div class="score-main">
       <div class="score-team">
+        <span class="score-team-label">Home</span>
         {% if match.home_team.logo %}<img src="{{ match.home_team.logo.url }}" alt="{{ match.home_team.name }}">{% endif %}
         <span class="score-team-name">{{ match.home_team.name }}</span>
       </div>
 
-      <div class="score-number">
-        {% if match.status == 'finished' or match.status == 'live' or match.status == 'paused' %}
-          {{ home_stats.goals|default:0 }} - {{ away_stats.goals|default:0 }}
-        {% else %}
-          VS
+      <div class="score-number-wrap">
+        <div class="score-number">
+          {% if match.status == 'finished' or match.status == 'live' or match.status == 'paused' %}
+            {{ home_stats.goals|default:0 }} - {{ away_stats.goals|default:0 }}
+          {% else %}
+            VS
+          {% endif %}
+        </div>
+        {% if home_stats.penalties or away_stats.penalties %}
+          <div class="score-penalties">
+            Penalties {{ home_stats.penalties|default:0 }} - {{ away_stats.penalties|default:0 }}
+          </div>
         {% endif %}
+        <div class="score-status-note">
+          {% if match.status == 'finished' %}
+            Full Time
+          {% elif match.status == 'live' %}
+            Live Match
+          {% elif match.status == 'paused' %}
+            Match Paused
+          {% else %}
+            Kickoff Pending
+          {% endif %}
+        </div>
       </div>
 
       <div class="score-team away">
+        <span class="score-team-label">Away</span>
         <span class="score-team-name">{{ match.away_team.name }}</span>
         {% if match.away_team.logo %}<img src="{{ match.away_team.logo.url }}" alt="{{ match.away_team.name }}">{% endif %}
       </div>
     </div>
   </section>
 
-  <section class="match-kpi-grid">
-    {% for item in headline_metrics %}
-      <article class="match-kpi-card">
-        <span class="label">{{ item.label }}</span>
-        <strong class="value">{{ item.value }}</strong>
-      </article>
-    {% endfor %}
-  </section>
-
-  <section class="stat-grid">
-    <article class="stat-card">
-      <h4>Match Comparison</h4>
-      <div class="comparison-stack">
-        {% for row in comparison_rows %}
-          <div class="comparison-row">
-            <div class="comparison-head">
-              <span class="stat-value left">{{ row.home }}</span>
-              <span class="stat-label">{{ row.label }}</span>
-              <span class="stat-value right">{{ row.away }}</span>
+  <section class="stat-card">
+    <article class="overview-card">
+      <h4>Match Overview</h4>
+      <div class="overview-section">
+        <h5>Match Info</h5>
+        <div class="comparison-stack">
+          {% for row in comparison_rows %}
+            <div class="comparison-row">
+              <div class="comparison-head">
+                <span class="stat-value left">{{ row.home }}</span>
+                <span class="stat-label">{{ row.label }}</span>
+                <span class="stat-value right">{{ row.away }}</span>
+              </div>
+              <div class="comparison-bars">
+                <span class="home-bar" style="width: {{ row.home_pct }}%;"></span>
+                <span class="away-bar" style="width: {{ row.away_pct }}%;"></span>
+              </div>
             </div>
-            <div class="comparison-bars">
-              <span class="home-bar" style="width: {{ row.home_pct }}%;"></span>
-              <span class="away-bar" style="width: {{ row.away_pct }}%;"></span>
+          {% endfor %}
+        </div>
+        <br>
+        <div class="overview-mini-grid">
+          {% for row in more_stats %}
+            <div class="overview-stat-card">
+              <div class="overview-stat-top">
+                <span class="overview-stat-label">{{ row.label }}</span>
+                <span class="overview-stat-values">{{ row.home }} / {{ row.away }}</span>
+              </div>
+              <div class="overview-stat-split">
+                <div class="overview-stat-side home">
+                  <span class="side-label">{{ match.home_team.name }}</span>
+                  <strong>{{ row.home }}</strong>
+                </div>
+                <div class="overview-stat-side away">
+                  <span class="side-label">{{ match.away_team.name }}</span>
+                  <strong>{{ row.away }}</strong>
+                </div>
+              </div>
             </div>
-          </div>
-        {% endfor %}
+          {% endfor %}
+        </div>
       </div>
-    </article>
-
-    <article class="stat-card">
-      <h4>Match Info</h4>
-      <div class="match-info-list">
-        {% for row in match_info_rows %}
-          <div class="match-info-item">
-            <span class="label">{{ row.label }}</span>
-            <strong>{{ row.value }}</strong>
+      <div class="overview-section">
+        <h4>Goal Scorers</h4>
+        <div class="goal-list">
+          <div>
+            <h5>{{ match.home_team.name }}</h5>
+            {% if home_goals %}
+              {% for g in home_goals %}
+                <div class="goal-item">{{ g.player.name|default:"Unknown" }} <span>{{ g.minute }}'</span></div>
+              {% endfor %}
+            {% else %}
+              <p class="lineup-empty">No goals.</p>
+            {% endif %}
           </div>
-        {% endfor %}
+          <div>
+            <h5>{{ match.away_team.name }}</h5>
+            {% if away_goals %}
+              {% for g in away_goals %}
+                <div class="goal-item">{{ g.player.name|default:"Unknown" }} <span>{{ g.minute }}'</span></div>
+              {% endfor %}
+            {% else %}
+              <p class="lineup-empty">No goals.</p>
+            {% endif %}
+          </div>
+        </div>
       </div>
     </article>
   </section>
@@ -420,114 +704,6 @@
     {% else %}
       <p class="lineup-empty">Belum ada event detail untuk pertandingan ini.</p>
     {% endif %}
-  </section>
-
-  <section class="team-detail-grid">
-    <article class="team-detail-card">
-      <div class="team-detail-head">
-        <h4>{{ home_summary.team.name }}</h4>
-        <span class="team-detail-score">{{ home_summary.goals }} goals</span>
-      </div>
-      <div class="team-detail-metrics">
-        <div><span class="label">xG</span><strong>{{ home_summary.xg }}</strong></div>
-        <div><span class="label">Accuracy</span><strong>{{ home_summary.shot_accuracy }}%</strong></div>
-        <div><span class="label">Conversion</span><strong>{{ home_summary.conversion }}%</strong></div>
-        <div><span class="label">Avg Distance</span><strong>{{ home_summary.avg_distance }}</strong></div>
-        <div><span class="label">Big Chances</span><strong>{{ home_summary.big_chances }}</strong></div>
-        <div><span class="label">Under Pressure</span><strong>{{ home_summary.under_pressure }}</strong></div>
-      </div>
-      <div class="mini-stat-grid">
-        <div class="mini-stat-card"><span>Open Play</span><strong>{{ home_summary.open_play_shots }}</strong></div>
-        <div class="mini-stat-card"><span>Set Piece</span><strong>{{ home_summary.set_piece_shots }}</strong></div>
-        <div class="mini-stat-card"><span>On Target</span><strong>{{ home_summary.shots_on_target }}</strong></div>
-        <div class="mini-stat-card"><span>Players Used</span><strong>{{ home_summary.lineup_count }}</strong></div>
-      </div>
-      <div class="detail-split">
-        <div>
-          <h5>Top Shooters</h5>
-          {% if home_summary.top_shooters %}
-            <div class="detail-list">
-              {% for item in home_summary.top_shooters %}
-                <div class="detail-list-item">
-                  <strong>{{ item.player }}</strong>
-                  <span>{{ item.shots }} shots • {{ item.goals }} goals • xG {{ item.xg }}</span>
-                </div>
-              {% endfor %}
-            </div>
-          {% else %}
-            <p class="lineup-empty">Belum ada data shooter.</p>
-          {% endif %}
-        </div>
-        <div>
-          <h5>Best Chances</h5>
-          {% if home_summary.shot_log %}
-            <div class="detail-list">
-              {% for item in home_summary.shot_log %}
-                <div class="detail-list-item">
-                  <strong>{{ item.minute }} {{ item.player }}</strong>
-                  <span>{{ item.outcome }} • xG {{ item.xg }}</span>
-                </div>
-              {% endfor %}
-            </div>
-          {% else %}
-            <p class="lineup-empty">Belum ada shot log.</p>
-          {% endif %}
-        </div>
-      </div>
-    </article>
-
-    <article class="team-detail-card away">
-      <div class="team-detail-head">
-        <h4>{{ away_summary.team.name }}</h4>
-        <span class="team-detail-score">{{ away_summary.goals }} goals</span>
-      </div>
-      <div class="team-detail-metrics">
-        <div><span class="label">xG</span><strong>{{ away_summary.xg }}</strong></div>
-        <div><span class="label">Accuracy</span><strong>{{ away_summary.shot_accuracy }}%</strong></div>
-        <div><span class="label">Conversion</span><strong>{{ away_summary.conversion }}%</strong></div>
-        <div><span class="label">Avg Distance</span><strong>{{ away_summary.avg_distance }}</strong></div>
-        <div><span class="label">Big Chances</span><strong>{{ away_summary.big_chances }}</strong></div>
-        <div><span class="label">Under Pressure</span><strong>{{ away_summary.under_pressure }}</strong></div>
-      </div>
-      <div class="mini-stat-grid">
-        <div class="mini-stat-card"><span>Open Play</span><strong>{{ away_summary.open_play_shots }}</strong></div>
-        <div class="mini-stat-card"><span>Set Piece</span><strong>{{ away_summary.set_piece_shots }}</strong></div>
-        <div class="mini-stat-card"><span>On Target</span><strong>{{ away_summary.shots_on_target }}</strong></div>
-        <div class="mini-stat-card"><span>Players Used</span><strong>{{ away_summary.lineup_count }}</strong></div>
-      </div>
-      <div class="detail-split">
-        <div>
-          <h5>Top Shooters</h5>
-          {% if away_summary.top_shooters %}
-            <div class="detail-list">
-              {% for item in away_summary.top_shooters %}
-                <div class="detail-list-item">
-                  <strong>{{ item.player }}</strong>
-                  <span>{{ item.shots }} shots • {{ item.goals }} goals • xG {{ item.xg }}</span>
-                </div>
-              {% endfor %}
-            </div>
-          {% else %}
-            <p class="lineup-empty">Belum ada data shooter.</p>
-          {% endif %}
-        </div>
-        <div>
-          <h5>Best Chances</h5>
-          {% if away_summary.shot_log %}
-            <div class="detail-list">
-              {% for item in away_summary.shot_log %}
-                <div class="detail-list-item">
-                  <strong>{{ item.minute }} {{ item.player }}</strong>
-                  <span>{{ item.outcome }} • xG {{ item.xg }}</span>
-                </div>
-              {% endfor %}
-            </div>
-          {% else %}
-            <p class="lineup-empty">Belum ada shot log.</p>
-          {% endif %}
-        </div>
-      </div>
-    </article>
   </section>
 
   <section class="lineup-grid">
@@ -601,45 +777,6 @@
           <p class="lineup-empty">No bench data available.</p>
         {% endif %}
       </div>
-    </article>
-  </section>
-
-  <section class="stat-grid">
-    <article class="stat-card">
-      <h4>Goal Scorers</h4>
-      <div class="goal-list">
-        <div>
-          <h5>{{ match.home_team.name }}</h5>
-          {% if home_goals %}
-            {% for g in home_goals %}
-              <div class="goal-item">{{ g.player.name|default:"Unknown" }} <span>{{ g.minute }}'</span></div>
-            {% endfor %}
-          {% else %}
-            <p class="lineup-empty">No goals.</p>
-          {% endif %}
-        </div>
-        <div>
-          <h5>{{ match.away_team.name }}</h5>
-          {% if away_goals %}
-            {% for g in away_goals %}
-              <div class="goal-item">{{ g.player.name|default:"Unknown" }} <span>{{ g.minute }}'</span></div>
-            {% endfor %}
-          {% else %}
-            <p class="lineup-empty">No goals.</p>
-          {% endif %}
-        </div>
-      </div>
-    </article>
-
-    <article class="stat-card">
-      <h4>More Stats</h4>
-      {% for row in more_stats %}
-        <div class="stat-row">
-          <span class="stat-value left">{{ row.home }}</span>
-          <span class="stat-label">{{ row.label }}</span>
-          <span class="stat-value right">{{ row.away }}</span>
-        </div>
-      {% endfor %}
     </article>
   </section>
 </div>

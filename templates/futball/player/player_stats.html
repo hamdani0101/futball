@@ -150,7 +150,7 @@
           <tr>
             <td>{{ item.match.match_date|date:"d M Y" }}</td>
             <td>
-              <a href="{% url 'match-detail' item.match.match_id %}">
+              <a href="{% url 'match-detail' item.match.external_id %}">
                 {{ item.match.home_team.name }} vs {{ item.match.away_team.name }}
               </a>
             </td>
