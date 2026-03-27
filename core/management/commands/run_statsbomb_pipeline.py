@@ -12,8 +12,7 @@ class Command(BaseCommand):
         "import_competitions",
         "import_matches",
         "import_lineups",
-        "import_shots",
-        "import_passes",
+        "import_events",
         "import_substitution",
     )
 
@@ -41,17 +40,6 @@ class Command(BaseCommand):
                 "Defaults to STATSBOMB_DATA_DIR/lineups."
             ),
         )
-        parser.add_argument(
-            "--replace-shots",
-            action="store_true",
-            help="Delete existing shots for each match before importing",
-        )
-        parser.add_argument(
-            "--replace-passes",
-            action="store_true",
-            help="Delete existing passes for each match before importing",
-        )
-
     def handle(self, *args, **options):
         path = options["path"] or settings.STATSBOMB_DATA_DIR / "competitions.json"
         events_dir = options["events_dir"] or settings.STATSBOMB_DATA_DIR / "events"
@@ -71,13 +59,8 @@ class Command(BaseCommand):
             base_dir=base_dir
         )
         self.run_step("import_lineups", lineups_dir=lineups_dir)
-        
+        self.run_step("import_events", events_dir=events_dir)
         self.run_step("import_substitution", events_dir=events_dir)
-
-        shots_kwargs = {"replace": options["replace_shots"]} if options["replace_shots"] else {}
-        self.run_step("import_shots", events_dir, **shots_kwargs)
-        pass_kwargs = {"replace": options["replace_passes"]} if options["replace_passes"] else {}
-        self.run_step("import_passes", events_dir, **pass_kwargs)
 
         self.stdout.write(self.style.SUCCESS("StatsBomb pipeline completed."))
 

@@ -49,13 +49,6 @@ class Pass(models.Model):
         KICK_OFF = "kick_off", "Kick Off"
         RECOVERY = "recovery", "Recovery"
         UNKNOWN = "unknown", "Unknown"
-
-    external_event_id = models.CharField(
-        max_length=64,
-        unique=True,
-        null=True,
-        blank=True,
-    )
     event = models.OneToOneField(
         Event,
         null=True,
@@ -63,7 +56,6 @@ class Pass(models.Model):
         on_delete=models.SET_NULL,
         related_name="pass_detail",
     )
-    event_index = models.PositiveIntegerField(default=0)
     period = models.PositiveIntegerField(default=1)
     possession = models.PositiveIntegerField(default=0)
     match = models.ForeignKey(
@@ -169,7 +161,6 @@ class Pass(models.Model):
             models.Index(fields=["player"]),
             models.Index(fields=["recipient"]),
             models.Index(fields=["possession"]),
-            models.Index(fields=["event_index"]),
             models.Index(fields=["minute", "second"]),
             models.Index(fields=["outcome"]),
             models.Index(fields=["pass_type"]),

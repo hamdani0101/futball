@@ -10,7 +10,7 @@ from core.models.player import Player
 # Shot model (Indonesian: Model tembakan)
 class Shot(models.Model):    
     
-    class OUTCOME(models.TextChoices):
+    class Outcome(models.TextChoices):
         GOAL = "goal", "Goal"
         SAVED = "saved", "Saved"
         SAVED_OFF_TARGET = "saved_off_target", "Saved Off Target"
@@ -19,24 +19,24 @@ class Shot(models.Model):
         WAYWARD = "wayward", "Wayward"
         POST = "post", "Post"
 
-    class BODY_PART(models.TextChoices):
+    class BodyPart(models.TextChoices):
         RIGHT_FOOT = "right_foot", "Right Foot"
         LEFT_FOOT = "left_foot", "Left Foot"
         HEAD = "head", "Head"
         OTHER = "other", "Other"
 
-    class SHOT_TYPE(models.TextChoices):
+    class ShotType(models.TextChoices):
         OPEN_PLAY = "open_play", "Open Play"
         PENALTY = "penalty", "Penalty"
         FREE_KICK = "free_kick", "Free Kick"
         
-    class ASSIST_TYPE(models.TextChoices):
+    class AssistType(models.TextChoices):
         CROSS = "cross", "Cross"
         THROUGH_BALL = "through_ball", "Through Ball"
         CUTBACK = "cutback", "Cutback"
         OTHER = "other", "Other"
     
-    class PLAY_PATTERN(models.TextChoices):
+    class PlayPattern(models.TextChoices):
         OPEN_PLAY = "open_play", "Open Play"
         CORNER = "corner", "Corner"
         FREE_KICK = "free_kick", "Free Kick"
@@ -49,7 +49,6 @@ class Shot(models.Model):
         on_delete=models.SET_NULL,
         related_name="shot_detail",
     )
-    external_event_id = models.CharField(max_length=64, unique=True, null=True, blank=True)
     match = models.ForeignKey(
         Match,
         on_delete=models.CASCADE,
@@ -71,20 +70,20 @@ class Shot(models.Model):
     xg = models.FloatField()
     outcome = models.CharField(
         max_length=20,
-        choices=OUTCOME.choices
+        choices=Outcome.choices
     )
     
     is_goal = models.BooleanField(default=False)
 
     body_part = models.CharField(
         max_length=20,
-        choices=BODY_PART.choices,
+        choices=BodyPart.choices,
         blank=True
     )
 
     shot_type = models.CharField(
         max_length=20,
-        choices=SHOT_TYPE.choices,
+        choices=ShotType.choices,
         blank=True
     )
     player = models.ForeignKey(
@@ -100,7 +99,7 @@ class Shot(models.Model):
     )
     assist_type = models.CharField(
         max_length=20,
-        choices=ASSIST_TYPE.choices,
+        choices=AssistType.choices,
         blank=True
     )
     shot_angle = models.FloatField(default=0)
@@ -110,7 +109,7 @@ class Shot(models.Model):
     gk_distance = models.FloatField(default=0)
     play_pattern = models.CharField(
         max_length=20,
-        choices=PLAY_PATTERN.choices,
+        choices=PlayPattern.choices,
         blank=True
     )
     is_big_chance = models.BooleanField(default=False)

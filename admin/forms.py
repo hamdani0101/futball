@@ -103,7 +103,6 @@ class ShotForm(MaterializeFormMixin, forms.ModelForm):
     class Meta:
         model = Shot
         fields = [
-            "external_event_id",
             "match",
             "team",
             "player",
@@ -119,8 +118,6 @@ class ShotForm(MaterializeFormMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["external_event_id"].required = False
-        self.fields["external_event_id"].help_text = "Optional external reference."
         self.fields["match"].queryset = Match.objects.select_related(
             "home_team", "away_team"
         ).order_by("-match_date")

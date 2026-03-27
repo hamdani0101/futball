@@ -11,7 +11,7 @@ from core.models.shots import Shot
 
 VALID_FIXTURE_TABS = {"all", "live", "postponed", "finished"}
 
-ON_TARGET_OUTCOMES = {Shot.OUTCOME.GOAL, Shot.OUTCOME.SAVED}
+ON_TARGET_OUTCOMES = {Shot.Outcome.GOAL, Shot.Outcome.SAVED}
 
 
 def _team_stat(match, team):
@@ -176,12 +176,12 @@ def _build_match_timeline(home_team, away_team, shots, lineup_rows):
         lineups_by_team[appearance.team_id].append(appearance)
 
     for shot in shots:
-        if shot.outcome == Shot.OUTCOME.GOAL or shot.is_big_chance:
+        if shot.outcome == Shot.Outcome.GOAL or shot.is_big_chance:
             period_meta = _period_meta(shot.period)
-            if shot.period == 5 or shot.shot_type == Shot.SHOT_TYPE.PENALTY:
-                badge = "PENALTY SCORED" if shot.outcome == Shot.OUTCOME.GOAL else "PENALTY MISSED"
+            if shot.period == 5 or shot.shot_type == Shot.ShotType.PENALTY:
+                badge = "PENALTY SCORED" if shot.outcome == Shot.Outcome.GOAL else "PENALTY MISSED"
             else:
-                badge = "GOAL" if shot.outcome == Shot.OUTCOME.GOAL else "BIG CHANCE"
+                badge = "GOAL" if shot.outcome == Shot.Outcome.GOAL else "BIG CHANCE"
 
             if badge == "GOAL":
                 title = f"{shot.player.name if shot.player else 'Unknown'} mencetak gol"

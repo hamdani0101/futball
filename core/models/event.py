@@ -30,7 +30,9 @@ class Event(models.Model):
     second = models.PositiveIntegerField(default=0)
     event_index = models.PositiveIntegerField(default=0)
     possession = models.PositiveIntegerField(default=0)
-    timestamp = models.TimeField(null=True, blank=True)
+    timestamp_ms = models.IntegerField(null=True, blank=True)
+    x = models.FloatField(null=True, blank=True)
+    y = models.FloatField(null=True, blank=True)
     type = models.CharField(max_length=20, choices=Type.choices)
     play_pattern = models.CharField(max_length=50, blank=True)
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="events")
@@ -41,6 +43,7 @@ class Event(models.Model):
         on_delete=models.SET_NULL,
         related_name="events",
     )
+    extra_data = models.JSONField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -58,4 +61,5 @@ class Event(models.Model):
             models.Index(fields=["team"]),
             models.Index(fields=["player"]),
             models.Index(fields=["possession"]),
+            models.Index(fields=["extra_data"]),
         ]

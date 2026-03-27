@@ -17,6 +17,9 @@ env/
 .env
 .env.*
 
+# Django migrations
+migrations/
+
 # Django user uploads
 media/
 
