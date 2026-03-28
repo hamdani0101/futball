@@ -56,6 +56,7 @@ class Pass(models.Model):
         on_delete=models.SET_NULL,
         related_name="pass_detail",
     )
+    event_index = models.PositiveIntegerField(default=0)
     period = models.PositiveIntegerField(default=1)
     possession = models.PositiveIntegerField(default=0)
     match = models.ForeignKey(
@@ -116,7 +117,13 @@ class Pass(models.Model):
         default=PassType.OPEN_PLAY,
     )
     play_pattern = models.CharField(max_length=50, blank=True)
-    assisted_shot_event_id = models.CharField(max_length=64, blank=True)
+    assisted_shot = models.ForeignKey(
+        "Shot",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="assisting_passes",
+    )
     under_pressure = models.BooleanField(default=False)
     is_cross = models.BooleanField(default=False)
     is_cut_back = models.BooleanField(default=False)
@@ -128,7 +135,7 @@ class Pass(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.player or self.team} pass ({self.match.match_id} {self.minute}:{self.second:02d})"
+        return f"{self.player or self.team} pass ({self.match_id} {self.minute}:{self.second:02d})"
 
     def clean(self):
         if not (0 <= self.x <= 120 and 0 <= self.y <= 80):
@@ -161,6 +168,7 @@ class Pass(models.Model):
             models.Index(fields=["player"]),
             models.Index(fields=["recipient"]),
             models.Index(fields=["possession"]),
+            models.Index(fields=["event_index"]),
             models.Index(fields=["minute", "second"]),
             models.Index(fields=["outcome"]),
             models.Index(fields=["pass_type"]),

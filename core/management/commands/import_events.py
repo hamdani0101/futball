@@ -8,7 +8,7 @@ from collections import defaultdict
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
-from core.models import Match, MatchTeamStats, Player, Pass, Event, Shot
+from core.models import Match, MatchState, Player, Pass, Event, Shot
 
 PASS_OUTCOME_MAP = {
     "Incomplete": Pass.Outcome.INCOMPLETE,
@@ -288,6 +288,8 @@ class Command(BaseCommand):
 
         Pass.objects.create(
             event=event_obj,
+            event_index=event_obj.event_index,
+            possession=event_obj.possession,
             match=event_obj.match,
             team=event_obj.team,
             player=event_obj.player,
@@ -341,24 +343,31 @@ class Command(BaseCommand):
         return Player.objects.filter(name=name).first()
     
     def update_match_state(self, event_obj):
-        state = MatchState.objects.get(match=event_obj.match)
+        state, _ = MatchState.objects.get_or_create(
+            match=event_obj.match,
+            defaults={"status": event_obj.match.status},
+        )
 
         state.current_minute = event_obj.minute
         state.current_second = event_obj.second
+        state.period = event_obj.period
+        state.status = event_obj.match.status
 
-        state.last_event_id = event_obj.id
+        state.last_event = event_obj
         state.save()
 
     def create_event(self, raw, match, team, player):
         location = raw.get("location") or [None, None]
 
         return Event.objects.create(
+            external_event_id=raw.get("id"),
             match=match,
             period=raw.get("period"),
             minute=int(raw.get("minute") or 0),
             second=int(raw.get("second") or 0),
             timestamp_ms=self.generate_timestamp(raw),
             event_index=raw.get("index"),
+            possession=int(raw.get("possession") or 0),
 
             type=self.map_event_type(raw),
 

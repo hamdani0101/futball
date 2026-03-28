@@ -59,7 +59,7 @@ class Command(BaseCommand):
             base_dir=base_dir
         )
         self.run_step("import_lineups", lineups_dir=lineups_dir)
-        self.run_step("import_events", events_dir=events_dir)
+        self.run_step("import_events")
         self.run_step("import_substitution", events_dir=events_dir)
 
         self.stdout.write(self.style.SUCCESS("StatsBomb pipeline completed."))

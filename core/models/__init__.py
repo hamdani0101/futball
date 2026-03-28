@@ -5,6 +5,7 @@ from importlib import import_module
 from .competition import Competition
 from .event import Event
 from .match import Match
+from .match_state import MatchState
 from .match_team_stat import MatchTeamStats
 from .player import Player
 from .season import Season
@@ -19,6 +20,7 @@ __all__ = [
     "Team",
     "Player",
     "Match",
+    "MatchState",
     "MatchTeamStats",
     "Season",
     "Shot",

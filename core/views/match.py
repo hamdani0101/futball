@@ -110,20 +110,20 @@ def _build_team_shot_summary(team, team_stats, team_shots, lineup_count):
     if not on_target:
         on_target = (team_stats.shots_on_target if team_stats else 0) or 0
     xg_total = round(sum(shot.xg for shot in team_shots), 2) if team_shots else round((team_stats.xg if team_stats else 0) or 0, 2)
-    goals = team_shots.filter(outcome=Shot.OUTCOME.GOAL).count()
+    goals = team_shots.filter(outcome=Shot.Outcome.GOAL).count()
     if not goals:
         goals = (team_stats.goals if team_stats else 0) or 0
     big_chances = team_shots.filter(is_big_chance=True).count()
     under_pressure = team_shots.filter(under_pressure=True).count()
     avg_distance = round(sum(shot.shot_distance for shot in team_shots) / len(team_shots), 1) if team_shots else 0
-    open_play_shots = team_shots.filter(play_pattern=Shot.PLAY_PATTERN.OPEN_PLAY).count()
-    set_piece_shots = team_shots.exclude(play_pattern=Shot.PLAY_PATTERN.OPEN_PLAY).exclude(play_pattern="").count()
+    open_play_shots = team_shots.filter(play_pattern=Shot.PlayPattern.OPEN_PLAY).count()
+    set_piece_shots = team_shots.exclude(play_pattern=Shot.PlayPattern.OPEN_PLAY).exclude(play_pattern="").count()
     top_shooters = []
     shooter_map = defaultdict(lambda: {"shots": 0, "goals": 0, "xg": 0.0})
     for shot in team_shots:
         player_name = shot.player.name if shot.player else "Unknown"
         shooter_map[player_name]["shots"] += 1
-        shooter_map[player_name]["goals"] += int(shot.outcome == Shot.OUTCOME.GOAL)
+        shooter_map[player_name]["goals"] += int(shot.outcome == Shot.Outcome.GOAL)
         shooter_map[player_name]["xg"] += shot.xg
     for player_name, stats in sorted(
         shooter_map.items(),
@@ -144,7 +144,7 @@ def _build_team_shot_summary(team, team_stats, team_shots, lineup_count):
             "player": shot.player.name if shot.player else "Unknown",
             "xg": round(shot.xg, 2),
             "outcome": shot.get_outcome_display(),
-            "is_goal": shot.outcome == Shot.OUTCOME.GOAL,
+            "is_goal": shot.outcome == Shot.Outcome.GOAL,
         }
         for shot in team_shots.order_by("-xg", "minute", "second")[:5]
     ]
@@ -434,8 +434,8 @@ def match_detail(request, match_id):
     shots = Shot.objects.filter(match=match).select_related("player", "assist_player", "team")
     home_team_shots = shots.filter(team=match.home_team).order_by("minute", "second", "id")
     away_team_shots = shots.filter(team=match.away_team).order_by("minute", "second", "id")
-    home_goals = home_team_shots.filter(outcome=Shot.OUTCOME.GOAL, period__in=[1, 2])
-    away_goals = away_team_shots.filter(outcome=Shot.OUTCOME.GOAL, period__in=[1, 2])
+    home_goals = home_team_shots.filter(outcome=Shot.Outcome.GOAL, period__in=[1, 2])
+    away_goals = away_team_shots.filter(outcome=Shot.Outcome.GOAL, period__in=[1, 2])
 
     home_shots = (home_stats.shots if home_stats else 0) or 0
     away_shots = (away_stats.shots if away_stats else 0) or 0
