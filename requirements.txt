@@ -4,3 +4,4 @@ requests>=2.31
 Pillow>=10.0
 mysqlclient>=2.2
 django-jazzmin>=3.0.0
+rich>=13.7.1

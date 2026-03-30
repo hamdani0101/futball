@@ -2,6 +2,9 @@
 
 import json
 from pathlib import Path
+from rich.console import Console
+from rich.progress import Progress
+from rich.table import Table
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -14,6 +17,7 @@ from core.models.player_match import PlayerMatch
 
 class Command(BaseCommand):
     help = "Import StatsBomb lineups"
+    console = Console()
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -26,20 +30,17 @@ class Command(BaseCommand):
         )
 
     def resolve_team(self, match, team_data):
-        team_name = team_data["team_name"].lower()
-        home = match.home_team.name.lower()
-        away = match.away_team.name.lower()
+        team_id = team_data.get("team_id")
 
-        if team_name in home or home in team_name:
+        if match.home_team.external_id == team_id:
             return match.home_team
-        if team_name in away or away in team_name:
+
+        if match.away_team.external_id == team_id:
             return match.away_team
 
         self.stdout.write(
             self.style.WARNING(
-                f"Team name mismatch for match {match.match_id}: "
-                f"StatsBomb='{team_data['team_name']}', "
-                f"home='{match.home_team.name}', away='{match.away_team.name}'"
+                f"Team ID mismatch for match {match.external_id}: {team_id}"
             )
         )
         return None
@@ -74,46 +75,74 @@ class Command(BaseCommand):
             self.stderr.write(f"Lineups dir not found: {lineups_dir}")
             return
 
-        matches = Match.objects.all()
+        files = list(lineups_dir.glob("*.json"))
 
-        for match in matches:
-            path = lineups_dir / f"{match.external_id}.json"
+        files = list(lineups_dir.glob("*.json"))
 
-            if not path.exists():
-                self.stdout.write(
-                    self.style.WARNING(
-                        f"Lineup file missing for match {match.external_id}: {path}"
-                    )
-                )
-                continue
+        with Progress() as progress:
+            task = progress.add_task(
+                "[cyan]Importing lineups...",
+                total=len(files)
+            )
 
-            with path.open(encoding="utf-8") as f:
-                lineups = json.load(f)
+            total_players = 0
+            total_matches = 0
+            total_skipped = 0
 
-            for team_data in lineups:
-                team = self.resolve_team(match, team_data)
-                if team is None:
+            for file in files:
+                match_id = file.stem
+                match = Match.objects.filter(external_id=match_id).first()
+
+                if not match:
+                    total_skipped += 1
+                    progress.advance(task)
                     continue
 
-                players = team_data["lineup"]
+                with file.open(encoding="utf-8") as f:
+                    lineups = json.load(f)
 
-                for index, p in enumerate(players):
-                    player, _ = Player.objects.update_or_create(
-                        external_id=p["player_id"],
-                        defaults={
-                            "name": p["player_name"],
-                            "team_now": team,
-                            "country": p.get("country", {}).get("name", ""),
-                        },
-                    )
+                player_count = 0
 
-                    self.upsert_player_match(
-                        player=player,
-                        match=match,
-                        team=team,
-                        is_starter=index < 11,
-                    )
+                for team_data in lineups:
+                    team = self.resolve_team(match, team_data)
+                    if not team:
+                        continue
 
-            self.stdout.write(f"Imported lineup {match.external_id}")
+                    for index, p in enumerate(team_data["lineup"]):
+                        player, _ = Player.objects.update_or_create(
+                            external_id=p["player_id"],
+                            defaults={
+                                "name": p["player_name"],
+                                "team_now": team,
+                                "country": p.get("country", {}).get("name", ""),
+                            },
+                        )
 
-        self.stdout.write(self.style.SUCCESS("Lineups imported"))
+                        self.upsert_player_match(
+                            player=player,
+                            match=match,
+                            team=team,
+                            is_starter=index < 11,
+                        )
+
+                        player_count += 1
+
+                total_players += player_count
+                total_matches += 1
+
+                progress.update(
+                    task,
+                    description=f"[cyan]Importing {file.name}[/cyan]"
+                )
+                progress.advance(task)
+                
+        table = Table(title="Lineup Import Summary")
+
+        table.add_column("Metric", style="cyan")
+        table.add_column("Value", style="green")
+
+        table.add_row("Matches Processed", str(total_matches))
+        table.add_row("Players Imported", str(total_players))
+        table.add_row("Skipped Matches", str(total_skipped))
+
+        self.console.print(table)
