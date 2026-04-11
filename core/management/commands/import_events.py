@@ -1,6 +1,5 @@
 """Management command to import shots."""
 
-import math
 import json
 from pathlib import Path
 from collections import defaultdict
@@ -8,6 +7,12 @@ from collections import defaultdict
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
+from analytics.services.xg import (
+    calculate_shot_angle,
+    calculate_shot_distance,
+    calculate_xg,
+    features_from_statsbomb_event,
+)
 from core.models import Match, MatchState, Player, Pass, Event, Shot
 
 PASS_OUTCOME_MAP = {
@@ -69,6 +74,16 @@ SHOT_TYPE_MAP = {
     "Open Play": Shot.ShotType.OPEN_PLAY,
     "Penalty": Shot.ShotType.PENALTY,
     "Free Kick": Shot.ShotType.FREE_KICK,
+}
+
+SHOT_PLAY_PATTERN_MAP = {
+    "Open Play": Shot.PlayPattern.OPEN_PLAY,
+    "From Corner": Shot.PlayPattern.CORNER,
+    "From Free Kick": Shot.PlayPattern.FREE_KICK,
+    "From Keeper": Shot.PlayPattern.OPEN_PLAY,
+    "From Kick Off": Shot.PlayPattern.OPEN_PLAY,
+    "From Throw In": Shot.PlayPattern.OPEN_PLAY,
+    "Regular Play": Shot.PlayPattern.OPEN_PLAY,
 }
 
 
@@ -241,7 +256,8 @@ class Command(BaseCommand):
         outcome_name = (shot_payload.get("outcome") or {}).get("name", "")
         outcome = SHOT_OUTCOME_MAP.get(outcome_name, Shot.Outcome.OFF_TARGET)
 
-        xg = float(shot_payload.get("statsbomb_xg") or 0.0)
+        shot_features = features_from_statsbomb_event(raw)
+        xg = self.get_shot_xg(shot_payload, shot_features)
 
         assist_player = None
         if prev_event_obj and prev_event_obj.type == "pass":
@@ -265,9 +281,23 @@ class Command(BaseCommand):
 
             assist_player=assist_player,
 
-            play_pattern=(raw.get("play_pattern") or {}).get("name"),
+            play_pattern=SHOT_PLAY_PATTERN_MAP.get(
+                (raw.get("play_pattern") or {}).get("name"),
+                Shot.PlayPattern.OPEN_PLAY,
+            ),
             is_big_chance=xg >= 0.3,
             under_pressure=raw.get("under_pressure", False),
+            body_part=SHOT_BODY_PART_MAP.get(
+                (shot_payload.get("body_part") or {}).get("name"),
+                Shot.BodyPart.OTHER,
+            ),
+            shot_type=SHOT_TYPE_MAP.get(
+                (shot_payload.get("type") or {}).get("name"),
+                Shot.ShotType.OPEN_PLAY,
+            ),
+            shot_distance=round(calculate_shot_distance(event_obj.x, event_obj.y), 2),
+            shot_angle=round(calculate_shot_angle(event_obj.x, event_obj.y), 4),
+            period=event_obj.period,
         )
 
         stats_by_team[event_obj.team]["xg"] += xg
@@ -444,3 +474,14 @@ class Command(BaseCommand):
         except (TypeError, ValueError):
             return None
         return max(low, min(high, value))
+
+    @staticmethod
+    def get_shot_xg(shot_payload, shot_features):
+        provider_xg = shot_payload.get("statsbomb_xg")
+        if provider_xg is not None:
+            try:
+                return float(provider_xg)
+            except (TypeError, ValueError):
+                pass
+
+        return calculate_xg(shot_features)

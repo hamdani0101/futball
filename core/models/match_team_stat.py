@@ -13,11 +13,23 @@ class MatchTeamStats(models.Model):
         related_name="team_stats"
     )
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
-    goals = models.IntegerField(default=0)
     penalties = models.IntegerField(default=0)
     xg = models.FloatField(default=0.0)
     shots = models.IntegerField(default=0)
     shots_on_target = models.IntegerField(default=0)
+    passes = models.IntegerField(default=0)
+    completed_passes = models.IntegerField(default=0)
+    pass_accuracy = models.FloatField(default=0.0)
+    goals = models.IntegerField(default=0)
+    possession = models.IntegerField(default=0)
+    possession_seconds = models.FloatField(default=0.0)
+    last_event = models.ForeignKey(
+        "Event",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="match_states",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

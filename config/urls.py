@@ -5,6 +5,7 @@ from django.urls import include, path
 from admin.views.auth import RoleAwareLoginView, register_view
 
 urlpatterns = [
+    path("api/", include("core.api.urls")),
     path("login/", RoleAwareLoginView.as_view(), name="login"),
     path("register/", register_view, name="register"),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),

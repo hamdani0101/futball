@@ -16,6 +16,9 @@ class Match(models.Model):
         PAUSED = "paused", "Paused"
         
     season = models.ForeignKey(Season, on_delete=models.CASCADE)
+    current_minute = models.IntegerField(default=0)
+    current_second = models.IntegerField(default=0)
+    period = models.IntegerField(default=1)
     home_team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="home_matches")
     away_team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="away_matches")
     stage_id = models.IntegerField(null=True, blank=True)
