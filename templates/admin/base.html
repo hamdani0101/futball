@@ -1,462 +1,144 @@
 {% load static %}
+{% load form_tags %}
+{% load range_filter %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Futball Dashboard{% endblock %}</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css">
+    <title>{% block title %}Football Analytics Admin{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ink: "#020617",
+                        slatepanel: "#0f172a",
+                        accent: "#16a34a",
+                        gold: "#f59e0b",
+                        skyline: "#38bdf8",
+                    },
+                    boxShadow: {
+                        panel: "0 24px 80px rgba(15, 23, 42, 0.16)",
+                        soft: "0 12px 40px rgba(15, 23, 42, 0.10)",
+                    },
+                    fontFamily: {
+                        sans: ["Manrope", "ui-sans-serif", "system-ui", "sans-serif"],
+                        display: ["Space Grotesk", "ui-sans-serif", "system-ui", "sans-serif"],
+                    },
+                },
+            },
+        };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --sidebar-bg: linear-gradient(180deg, #0f2740 0%, #102a43 48%, #0b1d30 100%);
-            --sidebar-hover: rgba(255, 255, 255, 0.12);
-            --surface: #f5f7fa;
-            --accent: #ef6c00;
-            --text-strong: #102a43;
-            --panel-bg: rgba(255, 255, 255, 0.86);
-            --panel-border: rgba(148, 163, 184, 0.18);
-        }
-
         body {
-            font-family: "Manrope", sans-serif;
             background:
-                radial-gradient(circle at top left, rgba(255, 214, 153, 0.35), transparent 24%),
-                radial-gradient(circle at top right, rgba(59, 130, 246, 0.14), transparent 18%),
-                linear-gradient(180deg, #f7fbff 0%, #edf3f9 100%);
-            color: #334e68;
-        }
-
-        .layout {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        .sidebar {
-            width: 260px;
-            background: var(--sidebar-bg);
-            color: #fff;
-            padding: 24px 0;
-            position: sticky;
-            top: 0;
-            min-height: 100vh;
-            box-shadow: 20px 0 50px rgba(8, 15, 29, 0.18);
-        }
-
-        .brand {
-            padding: 0 24px 24px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-            font-size: 1.55rem;
-            font-weight: 800;
-            letter-spacing: 0.03em;
-            font-family: "Space Grotesk", sans-serif;
-        }
-
-        .sidebar ul {
-            margin-top: 24px;
-            padding: 0 12px;
-        }
-
-        .sidebar a {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: rgba(255, 255, 255, 0.88);
-            padding: 14px 16px;
-            margin-bottom: 6px;
-            border-radius: 16px;
-            transition: background-color 0.2s ease, transform 0.2s ease;
-            font-weight: 700;
-        }
-
-        .sidebar a:hover,
-        .sidebar a.active {
-            background: var(--sidebar-hover);
-            transform: translateX(2px);
-        }
-
-        .content-shell {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        nav {
-            background: rgba(255, 255, 255, 0.78);
-            color: var(--text-strong);
-            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(148, 163, 184, 0.12);
-        }
-
-        nav .brand-logo,
-        nav ul a {
-            color: var(--text-strong);
-        }
-
-        nav .brand-logo {
-            font-family: "Space Grotesk", sans-serif;
-            font-weight: 700;
-        }
-
-        main {
-            padding: 36px;
-        }
-
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .stat-card .card-content {
-            min-height: 150px;
-        }
-
-        .stat-value {
-            font-size: 2.4rem;
-            font-weight: 700;
-            color: var(--text-strong);
-        }
-
-        .card-panel,
-        .card,
-        .collection,
-        table.highlight tbody tr:hover {
-            border-radius: 18px;
-        }
-
-        .btn,
-        .btn-large {
-            background: var(--accent);
-        }
-
-        .btn:hover,
-        .btn-large:hover {
-            background: #d65f00;
-        }
-
-        .btn-flat.danger-text {
-            color: #c62828;
-        }
-
-        .panel-card {
-            background: var(--panel-bg);
-            border: 1px solid var(--panel-border);
-            border-radius: 24px;
-            box-shadow: 0 20px 46px rgba(15, 23, 42, 0.08);
-            padding: 26px;
-            backdrop-filter: blur(8px);
-        }
-
-        .nav-actions {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            height: 64px;
-        }
-
-        .nav-actions a,
-        .nav-actions span,
-        .nav-actions form {
-            display: inline-flex;
-            align-items: center;
-        }
-
-        .nav-user {
-            font-weight: 600;
-            color: #486581;
-            padding: 0;
-        }
-
-        .nav-logout {
-            border: none;
-            border-radius: 999px;
-            background: rgba(239, 108, 0, 0.12);
-            color: var(--accent);
-            cursor: pointer;
-            padding: 0 14px;
-            min-height: 36px;
-            font: inherit;
-            font-weight: 700;
-        }
-
-        .nav-logout:hover {
-            background: rgba(239, 108, 0, 0.2);
-        }
-
-        .nav-link-pill {
-            border-radius: 999px;
-            padding: 0 16px;
-            min-height: 40px;
-            font-weight: 700;
-            background: rgba(16, 42, 67, 0.06);
-        }
-
-        .nav-link-pill:hover {
-            background: rgba(16, 42, 67, 0.1);
-        }
-
-        .nav-auth-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding-left: 14px;
-            border-left: 1px solid rgba(16, 42, 67, 0.12);
-        }
-
-        .nav-primary-links {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .nav-secondary-link {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 36px;
-            padding: 0 6px;
-            color: #486581;
-            font-weight: 700;
-        }
-
-        .nav-secondary-link:hover {
-            color: var(--text-strong);
-        }
-
-        @media (max-width: 992px) {
-            .nav-actions {
-                gap: 8px;
-                flex-wrap: wrap;
-                justify-content: flex-end;
-                height: auto;
-                padding: 10px 0;
-            }
-
-            .nav-primary-links,
-            .nav-auth-group {
-                flex-wrap: wrap;
-                justify-content: flex-end;
-            }
-        }
-
-        .form-errors {
-            color: #c62828;
-            margin-bottom: 16px;
-        }
-
-        .admin-input,
-        .admin-select,
-        textarea.admin-input {
-            width: 100%;
-            min-height: 54px;
-            border: 1px solid rgba(148, 163, 184, 0.28) !important;
-            border-radius: 16px !important;
-            background: rgba(248, 250, 252, 0.9) !important;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
-            padding: 0 16px !important;
-            font-size: 0.97rem !important;
-            color: #102a43 !important;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-        }
-
-        textarea.admin-input {
-            min-height: 130px;
-            padding: 14px 16px !important;
-        }
-
-        .admin-input:focus,
-        .admin-select:focus,
-        textarea.admin-input:focus {
-            border-color: rgba(239, 108, 0, 0.55) !important;
-            box-shadow: 0 0 0 4px rgba(239, 108, 0, 0.12) !important;
-            background: #fff !important;
-            outline: none;
-        }
-
-        .admin-file-input {
-            width: 100%;
-            padding: 14px 16px;
-            border: 1px dashed rgba(148, 163, 184, 0.45);
-            border-radius: 16px;
-            background: rgba(248, 250, 252, 0.9);
-        }
-
-        .admin-checkbox {
-            width: 20px !important;
-            height: 20px !important;
-            margin-right: 10px !important;
-            accent-color: var(--accent);
-        }
-
-        .helper-text {
-            display: block;
-            margin-top: 8px;
-            color: #64748b !important;
-            font-size: 0.85rem;
-            line-height: 1.45;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 18px;
-        }
-
-        .form-grid .full-width {
-            grid-column: 1 / -1;
-        }
-
-        .field-label {
-            display: block;
-            margin-bottom: 8px;
-            color: #102a43;
-            font-size: 0.92rem;
-            font-weight: 700;
-        }
-
-        @media (max-width: 992px) {
-            .layout {
-                flex-direction: column;
-            }
-
-            .sidebar {
-                width: 100%;
-                padding: 16px 0;
-                position: static;
-                min-height: auto;
-            }
-
-            main {
-                padding: 20px;
-            }
-
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .page-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
+                radial-gradient(circle at top left, rgba(56, 189, 248, 0.16), transparent 28%),
+                radial-gradient(circle at top right, rgba(34, 197, 94, 0.12), transparent 22%),
+                linear-gradient(180deg, #f8fafc 0%, #eef2ff 48%, #f8fafc 100%);
         }
     </style>
-    {% block extra_css %}{% endblock %}
+    {% block extra_css %}
+    {% endblock %}
 </head>
-<body>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="brand">Futball Data Entry</div>
-            <ul>
-                <li>
-                    <a href="{% url 'admin-dashboard' %}" class="{% if request.resolver_match.url_name == 'admin-dashboard' %}active{% endif %}">
-                        <i class="ri-dashboard-line"></i>
+<body class="min-h-screen font-sans text-slate-900 antialiased">
+    <div class="flex min-h-screen">
+        <aside class="hidden w-72 flex-col justify-between bg-slatepanel px-6 py-8 text-slate-100 lg:flex">
+            <div>
+                <div class="mb-8 flex items-center gap-3">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/10">
+                        <i data-lucide="goal" class="h-6 w-6 text-emerald-300"></i>
+                    </div>
+                    <div>
+                        <p class="font-display text-lg font-bold tracking-wide text-white">Futball Admin</p>
+                        <p class="text-sm text-slate-400">Football Analytics Suite</p>
+                    </div>
+                </div>
+
+                <nav class="space-y-2">
+                    <a href="{% url 'admin-dashboard' %}" class="{% if request.resolver_match.url_name == 'admin-dashboard' %}bg-white/12 text-white shadow-soft ring-1 ring-white/10{% else %}text-slate-300 hover:bg-white/8 hover:text-white{% endif %} group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition duration-200">
+                        <i data-lucide="layout-dashboard" class="h-5 w-5 {% if request.resolver_match.url_name == 'admin-dashboard' %}text-emerald-300{% else %}text-slate-400 group-hover:text-emerald-300{% endif %}"></i>
                         Dashboard
                     </a>
-                </li>
-                <li>
-                    <a href="{% url 'admin-team-list' %}" class="{% if request.resolver_match.url_name == 'admin-team-list' or request.resolver_match.url_name == 'admin-team-create' or request.resolver_match.url_name == 'admin-team-update' or request.resolver_match.url_name == 'admin-team-delete' %}active{% endif %}">
-                        <i class="ri-team-line"></i>
+                    <a href="{% url 'admin-team-list' %}" class="{% if 'admin-team' in request.resolver_match.url_name %}bg-white/12 text-white shadow-soft ring-1 ring-white/10{% else %}text-slate-300 hover:bg-white/8 hover:text-white{% endif %} group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition duration-200">
+                        <i data-lucide="shield" class="h-5 w-5 {% if 'admin-team' in request.resolver_match.url_name %}text-sky-300{% else %}text-slate-400 group-hover:text-sky-300{% endif %}"></i>
                         Teams
                     </a>
-                </li>
-                <li>
-                    <a href="{% url 'admin-stadium-list' %}" class="{% if request.resolver_match.url_name == 'admin-stadium-list' or request.resolver_match.url_name == 'admin-stadium-create' or request.resolver_match.url_name == 'admin-stadium-update' or request.resolver_match.url_name == 'admin-stadium-delete' %}active{% endif %}">
-                        <i class="ri-building-line"></i>
-                        Stadiums
-                    </a>
-                </li>
-                <li>
-                    <a href="{% url 'admin-player-list' %}" class="{% if request.resolver_match.url_name == 'admin-player-list' or request.resolver_match.url_name == 'admin-player-create' or request.resolver_match.url_name == 'admin-player-update' or request.resolver_match.url_name == 'admin-player-delete' %}active{% endif %}">
-                        <i class="ri-user-star-line"></i>
+                    <a href="{% url 'admin-player-list' %}" class="{% if 'admin-player' in request.resolver_match.url_name %}bg-white/12 text-white shadow-soft ring-1 ring-white/10{% else %}text-slate-300 hover:bg-white/8 hover:text-white{% endif %} group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition duration-200">
+                        <i data-lucide="users" class="h-5 w-5 {% if 'admin-player' in request.resolver_match.url_name %}text-amber-300{% else %}text-slate-400 group-hover:text-amber-300{% endif %}"></i>
                         Players
                     </a>
-                </li>
-                <li>
-                    <a href="{% url 'admin-competition-list' %}" class="{% if request.resolver_match.url_name == 'admin-competition-list' or request.resolver_match.url_name == 'admin-competition-create' or request.resolver_match.url_name == 'admin-competition-update' or request.resolver_match.url_name == 'admin-competition-delete' %}active{% endif %}">
-                        <i class="ri-trophy-line"></i>
-                        Competitions
-                    </a>
-                </li>
-                <li>
-                    <a href="{% url 'admin-season-list' %}" class="{% if request.resolver_match.url_name == 'admin-season-list' or request.resolver_match.url_name == 'admin-season-create' or request.resolver_match.url_name == 'admin-season-update' or request.resolver_match.url_name == 'admin-season-delete' %}active{% endif %}">
-                        <i class="ri-calendar-line"></i>
-                        Seasons
-                    </a>
-                </li>
-                <li>
-                    <a href="{% url 'admin-match-list' %}" class="{% if request.resolver_match.url_name == 'admin-match-list' or request.resolver_match.url_name == 'admin-match-create' or request.resolver_match.url_name == 'admin-match-update' or request.resolver_match.url_name == 'admin-match-delete' %}active{% endif %}">
-                        <i class="ri-football-line"></i>
+                    <a href="{% url 'admin-match-list' %}" class="{% if 'admin-match-list' == request.resolver_match.url_name or 'admin-match-create' == request.resolver_match.url_name or 'admin-match-update' == request.resolver_match.url_name or 'admin-match-delete' == request.resolver_match.url_name %}bg-white/12 text-white shadow-soft ring-1 ring-white/10{% else %}text-slate-300 hover:bg-white/8 hover:text-white{% endif %} group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition duration-200">
+                        <i data-lucide="trophy" class="h-5 w-5 {% if 'admin-match-list' == request.resolver_match.url_name or 'admin-match-create' == request.resolver_match.url_name or 'admin-match-update' == request.resolver_match.url_name or 'admin-match-delete' == request.resolver_match.url_name %}text-emerald-300{% else %}text-slate-400 group-hover:text-emerald-300{% endif %}"></i>
                         Matches
                     </a>
-                </li>
-                <li>
-                    <a href="{% url 'admin-match-stat-list' %}" class="{% if request.resolver_match.url_name == 'admin-match-stat-list' or request.resolver_match.url_name == 'admin-match-stat-create' or request.resolver_match.url_name == 'admin-match-stat-update' or request.resolver_match.url_name == 'admin-match-stat-delete' %}active{% endif %}">
-                        <i class="ri-bar-chart-box-line"></i>
-                        Match Stats
+                    <a href="{% url 'admin-competition-list' %}" class="{% if 'admin-competition' in request.resolver_match.url_name %}bg-white/12 text-white shadow-soft ring-1 ring-white/10{% else %}text-slate-300 hover:bg-white/8 hover:text-white{% endif %} group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition duration-200">
+                        <i data-lucide="medal" class="h-5 w-5 {% if 'admin-competition' in request.resolver_match.url_name %}text-fuchsia-300{% else %}text-slate-400 group-hover:text-fuchsia-300{% endif %}"></i>
+                        Competitions
                     </a>
-                </li>
-                <li>
-                    <a href="{% url 'admin-shot-list' %}" class="{% if request.resolver_match.url_name == 'admin-shot-list' or request.resolver_match.url_name == 'admin-shot-create' or request.resolver_match.url_name == 'admin-shot-update' or request.resolver_match.url_name == 'admin-shot-delete' %}active{% endif %}">
-                        <i class="ri-focus-2-line"></i>
+                    <a href="{% url 'admin-match-stat-list' %}" class="{% if 'admin-match-stat' in request.resolver_match.url_name %}bg-white/12 text-white shadow-soft ring-1 ring-white/10{% else %}text-slate-300 hover:bg-white/8 hover:text-white{% endif %} group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition duration-200">
+                        <i data-lucide="bar-chart-3" class="h-5 w-5 {% if 'admin-match-stat' in request.resolver_match.url_name %}text-cyan-300{% else %}text-slate-400 group-hover:text-cyan-300{% endif %}"></i>
+                        Stats
+                    </a>
+                    <a href="{% url 'admin-shot-list' %}" class="{% if 'admin-shot' in request.resolver_match.url_name %}bg-white/12 text-white shadow-soft ring-1 ring-white/10{% else %}text-slate-300 hover:bg-white/8 hover:text-white{% endif %} group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition duration-200">
+                        <i data-lucide="crosshair" class="h-5 w-5 {% if 'admin-shot' in request.resolver_match.url_name %}text-rose-300{% else %}text-slate-400 group-hover:text-rose-300{% endif %}"></i>
                         Shots
                     </a>
-                </li>
-            </ul>
+                </nav>
+            </div>
+
+            <div class="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur">
+                <p class="text-xs uppercase tracking-[0.24em] text-slate-400">Control Room</p>
+                <p class="mt-2 text-lg font-semibold text-white">Live data, match ops, and scouting workflows in one place.</p>
+                <a href="{% url 'home' %}" class="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-emerald-300 transition hover:text-emerald-200">
+                    Open Frontend
+                    <i data-lucide="arrow-up-right" class="h-4 w-4"></i>
+                </a>
+            </div>
         </aside>
-        <div class="content-shell">
-            <nav>
-                <div class="nav-wrapper white">
-                    <a href="{% url 'admin-dashboard' %}" class="brand-logo" style="padding-left: 24px;">Custom Dashboard</a>
-                    <ul class="right" style="padding-right: 24px;">
-                        <li class="nav-actions">
-                            {% if user.is_authenticated %}
-                                <div class="nav-primary-links">
-                                    <a href="{% url 'admin-dashboard' %}" class="nav-link-pill">Overview</a>
-                                    <a href="{% url 'home' %}" class="nav-secondary-link">Frontend</a>
-                                </div>
-                                <div class="nav-auth-group">
-                                    <span class="nav-user">{{ user.username }}</span>
-                                    <form method="post" action="{% url 'logout' %}" style="margin: 0;">
-                                        {% csrf_token %}
-                                        <button type="submit" class="nav-logout">Logout</button>
-                                    </form>
-                                </div>
-                            {% else %}
-                                <div class="nav-primary-links">
-                                    <a href="{% url 'home' %}" class="nav-secondary-link">Frontend</a>
-                                </div>
-                                <div class="nav-auth-group">
-                                    <a href="{% url 'login' %}" class="nav-secondary-link">Login</a>
-                                    <a href="{% url 'register' %}" class="nav-logout" style="text-decoration: none;">Register</a>
-                                </div>
-                            {% endif %}
-                        </li>
-                    </ul>
+
+        <main class="flex-1">
+            <div class="sticky top-0 z-20 border-b border-white/60 bg-white/60 backdrop-blur-xl">
+                <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">Admin Dashboard</p>
+                        <h1 class="font-display text-2xl font-bold text-slate-950 sm:text-3xl">Football Analytics Overview</h1>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <a href="{% url 'home' %}" class="hidden rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:text-slate-950 sm:inline-flex">Frontend</a>
+                        {% if user.is_authenticated %}
+                            <div class="hidden rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-right shadow-sm sm:block">
+                                <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Signed in</p>
+                                <p class="text-sm font-semibold text-slate-900">{{ user.username }}</p>
+                            </div>
+                            <form method="post" action="{% url 'logout' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="rounded-2xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800">Logout</button>
+                            </form>
+                        {% endif %}
+                    </div>
                 </div>
-            </nav>
-            <main>
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="card-panel {% if message.tags == 'success' %}green lighten-4 green-text text-darken-4{% elif message.tags == 'error' %}red lighten-5 red-text text-darken-3{% else %}blue lighten-5 blue-text text-darken-4{% endif %}">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
-                {% endif %}
-                {% block content %}{% endblock %}
-            </main>
-        </div>
+            </div>
+
+
+            <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+                {% block content %}
+                {% endblock %}
+            </div>
+        </main>
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            M.AutoInit();
-        });
+        lucide.createIcons();
     </script>
-    {% block extra_js %}{% endblock %}
+    {% block extra_js %}
+    {% endblock %}
 </body>
 </html>

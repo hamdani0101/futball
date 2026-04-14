@@ -24,6 +24,7 @@ class KafkaProducerSettings:
     flush_timeout_seconds: float = 10.0
     max_retries: int = 3
     retry_backoff_seconds: float = 0.5
+    reconnect_on_failure: bool = True
 
 
 class MatchEventProducer:
@@ -49,7 +50,7 @@ class MatchEventProducer:
         """Validate and publish one event JSON object to Kafka."""
         self._validate_event(event)
 
-        payload = json.dumps(event, separators=(",", ":"), default=str).encode("utf-8")
+        payload = self._serialize_event(event)
         key = str(event["match_id"]).encode("utf-8")
         last_error = None
 
@@ -91,6 +92,8 @@ class MatchEventProducer:
                 self._producer.poll(0.5)
             except Exception as exc:
                 last_error = exc
+                if self.settings.reconnect_on_failure:
+                    self._reconnect_producer()
 
             logger.warning(
                 "Kafka match event delivery failed; retrying",
@@ -112,6 +115,16 @@ class MatchEventProducer:
     def close(self) -> None:
         """Flush pending messages before shutdown."""
         self._producer.flush(self.settings.flush_timeout_seconds)
+
+    def _serialize_event(self, event: dict[str, Any]) -> bytes:
+        return json.dumps(event, separators=(",", ":"), default=str).encode("utf-8")
+
+    def _reconnect_producer(self) -> None:
+        try:
+            self._producer.flush(self.settings.flush_timeout_seconds)
+        except Exception:
+            logger.debug("Kafka producer flush failed during reconnect", exc_info=True)
+        self._producer = self._build_producer()
 
     def _build_producer(self):
         try:

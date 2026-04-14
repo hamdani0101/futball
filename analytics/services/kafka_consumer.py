@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 from dataclasses import dataclass
 from typing import Any
 
@@ -38,6 +39,9 @@ class KafkaConsumerSettings:
     client_id: str = "futball-live-event-consumer"
     poll_timeout_seconds: float = 1.0
     auto_offset_reset: str = "earliest"
+    reconnect_backoff_seconds: float = 2.0
+    reconnect_max_attempts: int = 5
+    processing_max_retries: int = 3
 
 
 @dataclass(frozen=True)
@@ -55,21 +59,69 @@ class MatchEventConsumer:
         self.settings = settings or KafkaConsumerSettings(**overrides)
         self._consumer = self._build_consumer()
         self._running = False
+        self._subscribed = False
 
     def run_forever(self) -> None:
         """Poll Kafka continuously and process messages one at a time."""
-        self._consumer.subscribe([self.settings.topic])
         self._running = True
+        reconnect_attempt = 0
 
         try:
             while self._running:
-                message = self._consumer.poll(self.settings.poll_timeout_seconds)
-                if message is None:
-                    continue
+                try:
+                    self._ensure_subscription()
+                    message = self._consumer.poll(self.settings.poll_timeout_seconds)
+                    if message is None:
+                        reconnect_attempt = 0
+                        continue
 
-                if message.error():
-                    raise KafkaConsumerError(str(message.error()))
+                    if message.error():
+                        raise KafkaConsumerError(str(message.error()))
 
+                    self._process_message_with_retry(message)
+                    reconnect_attempt = 0
+                except KafkaConsumerError as exc:
+                    reconnect_attempt += 1
+                    logger.warning(
+                        "Kafka consumer error; reconnecting",
+                        extra={
+                            "topic": self.settings.topic,
+                            "attempt": reconnect_attempt,
+                            "max_attempts": self.settings.reconnect_max_attempts,
+                            "error": str(exc),
+                        },
+                    )
+                    if reconnect_attempt >= self.settings.reconnect_max_attempts:
+                        raise
+                    self._reconnect()
+                    time.sleep(self.settings.reconnect_backoff_seconds * reconnect_attempt)
+        finally:
+            self.close()
+
+    def stop(self) -> None:
+        self._running = False
+
+    def close(self) -> None:
+        self._consumer.close()
+
+    def _ensure_subscription(self) -> None:
+        if not self._subscribed:
+            self._consumer.subscribe([self.settings.topic])
+            self._subscribed = True
+
+    def _reconnect(self) -> None:
+        try:
+            self._consumer.close()
+        except Exception:
+            logger.debug("Kafka consumer close failed during reconnect", exc_info=True)
+        self._consumer = self._build_consumer()
+        self._subscribed = False
+
+    def _process_message_with_retry(self, message) -> None:
+        last_error = None
+
+        for attempt in range(1, self.settings.processing_max_retries + 1):
+            try:
                 event = self._decode_message(message)
                 result = process_match_event(event)
                 self._consumer.commit(message=message, asynchronous=False)
@@ -84,14 +136,21 @@ class MatchEventConsumer:
                         "detail_created": result.detail_created,
                     },
                 )
-        finally:
-            self.close()
+                return
+            except Exception as exc:
+                last_error = exc
+                logger.warning(
+                    "Kafka message processing failed; retrying",
+                    extra={
+                        "attempt": attempt,
+                        "max_retries": self.settings.processing_max_retries,
+                        "error": str(exc),
+                    },
+                )
+                if attempt < self.settings.processing_max_retries:
+                    time.sleep(self.settings.reconnect_backoff_seconds * attempt)
 
-    def stop(self) -> None:
-        self._running = False
-
-    def close(self) -> None:
-        self._consumer.close()
+        raise KafkaConsumerError(f"Failed to process Kafka message: {last_error}") from last_error
 
     def _build_consumer(self):
         try:

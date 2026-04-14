@@ -25,7 +25,70 @@ class ShotFeatures:
     body_part: str = ""
     shot_type: str = ""
     play_pattern: str = ""
+    assist_type: str = ""
     under_pressure: bool = False
+
+
+class XGCalculator:
+    """Logistic-regression xG calculator with a swappable service interface."""
+
+    def calculate_xg(self, shot) -> float:
+        """Calculate xG from a shot-like object or ShotFeatures payload."""
+        features = self._coerce_features(shot)
+        return self._score(features)
+
+    def _coerce_features(self, shot) -> ShotFeatures:
+        if isinstance(shot, ShotFeatures):
+            return shot
+
+        return ShotFeatures(
+            x=float(getattr(shot, "x")),
+            y=float(getattr(shot, "y")),
+            body_part=getattr(shot, "body_part", "") or "",
+            shot_type=getattr(shot, "shot_type", "") or "",
+            play_pattern=getattr(shot, "play_pattern", "") or "",
+            assist_type=getattr(shot, "assist_type", "") or "",
+            under_pressure=bool(getattr(shot, "under_pressure", False)),
+        )
+
+    def _score(self, features: ShotFeatures) -> float:
+        if _normalize(features.shot_type) == "penalty":
+            return PENALTY_XG
+
+        distance = calculate_shot_distance(features.x, features.y)
+        angle = calculate_shot_angle(features.x, features.y)
+
+        logit = -1.35
+        logit += -0.09 * distance
+        logit += 1.25 * angle
+
+        body_part = _normalize(features.body_part)
+        if body_part == "head":
+            logit -= 0.35
+        elif body_part and body_part not in {"right_foot", "left_foot"}:
+            logit -= 0.2
+
+        shot_type = _normalize(features.shot_type)
+        if shot_type == "free_kick":
+            logit -= 0.55
+
+        play_pattern = _normalize(features.play_pattern)
+        if play_pattern == "corner":
+            logit -= 0.25
+
+        assist_type = _normalize(features.assist_type)
+        if assist_type == "through_ball":
+            logit += 0.18
+        elif assist_type == "cross":
+            logit -= 0.12
+        elif assist_type == "cutback":
+            logit += 0.12
+
+        if features.under_pressure:
+            logit -= 0.25
+
+        probability = 1 / (1 + math.exp(-logit))
+        return round(max(0.01, min(0.99, probability)), 4)
 
 
 def calculate_shot_distance(x: float, y: float) -> float:
@@ -49,35 +112,7 @@ def calculate_shot_angle(x: float, y: float) -> float:
 
 def calculate_xg(features: ShotFeatures) -> float:
     """Estimate xG as a probability between 0 and 1."""
-    if _normalize(features.shot_type) == "penalty":
-        return PENALTY_XG
-
-    distance = calculate_shot_distance(features.x, features.y)
-    angle = calculate_shot_angle(features.x, features.y)
-
-    logit = -1.35
-    logit += -0.09 * distance
-    logit += 1.25 * angle
-
-    body_part = _normalize(features.body_part)
-    if body_part == "head":
-        logit -= 0.35
-    elif body_part and body_part not in {"right_foot", "left_foot"}:
-        logit -= 0.2
-
-    shot_type = _normalize(features.shot_type)
-    if shot_type == "free_kick":
-        logit -= 0.55
-
-    play_pattern = _normalize(features.play_pattern)
-    if play_pattern == "corner":
-        logit -= 0.25
-
-    if features.under_pressure:
-        logit -= 0.25
-
-    probability = 1 / (1 + math.exp(-logit))
-    return round(max(0.01, min(0.99, probability)), 4)
+    return XGCalculator().calculate_xg(features)
 
 
 def calculate_xg_from_shot(shot) -> float:
@@ -89,6 +124,7 @@ def calculate_xg_from_shot(shot) -> float:
             body_part=shot.body_part,
             shot_type=shot.shot_type,
             play_pattern=shot.play_pattern,
+            assist_type=getattr(shot, "assist_type", ""),
             under_pressure=shot.under_pressure,
         )
     )
@@ -143,6 +179,7 @@ def features_from_statsbomb_event(raw_event) -> ShotFeatures:
         body_part=((shot.get("body_part") or {}).get("name") or ""),
         shot_type=((shot.get("type") or {}).get("name") or ""),
         play_pattern=((raw_event.get("play_pattern") or {}).get("name") or ""),
+        assist_type=((shot.get("key_pass_id") and "through_ball") or ""),
         under_pressure=bool(raw_event.get("under_pressure", False)),
     )
 

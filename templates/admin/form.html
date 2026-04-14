@@ -1,48 +1,85 @@
 {% extends "admin/base.html" %}
 
+{% load form_tags %}
+
 {% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <div>
-        <h4>{{ title }}</h4>
-    </div>
+
+<!-- HEADER -->
+<div class="mb-6">
+    <h1 class="text-2xl font-semibold text-gray-900">
+        {{ title }}
+    </h1>
+    <p class="text-sm text-gray-500 mt-1">
+        Fill in the details below
+    </p>
 </div>
 
-<div class="panel-card">
+<!-- FORM CARD -->
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+
     {% if form.non_field_errors %}
-        <div class="form-errors">
+        <div class="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm">
             {{ form.non_field_errors }}
         </div>
     {% endif %}
-    <form method="post" enctype="multipart/form-data">
+
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
         {% csrf_token %}
-        <div class="form-grid">
+
+        <!-- GRID -->
+        <div class="grid grid-cols-2 gap-6">
+
             {% for field in form %}
-                <div class="{% if field.widget_type == 'checkbox' or field.widget_type == 'file' %}full-width{% endif %}">
-                    {% if field.widget_type == "checkbox" %}
-                        <label class="field-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                        <label style="display:flex; align-items:center; gap:10px;">
-                            {{ field }}
-                            <span>{{ field.help_text|default:"Toggle this option on or off." }}</span>
-                        </label>
-                    {% else %}
-                        <label class="field-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                        {{ field }}
-                        {% if field.help_text %}
-                            <span class="helper-text">{{ field.help_text }}</span>
-                        {% endif %}
+                <div class="{% if field.widget_type == 'checkbox' or field.widget_type == 'file' %}col-span-2{% endif %}">
+
+                    <!-- LABEL -->
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                        {{ field.label }}
+                    </label>
+
+                    <!-- INPUT -->
+                    <div class="relative">
+                        {{ field|add_class:"w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" }}
+                    </div>
+
+                    <!-- HELP TEXT -->
+                    {% if field.help_text %}
+                        <p class="text-xs text-gray-400 mt-1">
+                            {{ field.help_text }}
+                        </p>
                     {% endif %}
+
+                    <!-- ERROR -->
                     {% for error in field.errors %}
-                        <div class="red-text" style="margin-top:8px;">{{ error }}</div>
+                        <p class="text-xs text-red-500 mt-1">
+                            {{ error }}
+                        </p>
                     {% endfor %}
+
                 </div>
             {% endfor %}
+
         </div>
-        <div style="display: flex; gap: 12px;">
-            <button type="submit" class="btn waves-effect waves-light">{{ submit_label }}</button>
-            <a href="javascript:history.back()" class="btn-flat">Cancel</a>
+
+        <!-- ACTIONS -->
+        <div class="flex items-center gap-3 pt-4 border-t border-gray-100">
+
+            <button type="submit"
+                    class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-indigo-700 transition">
+                {{ submit_label }}
+            </button>
+
+            <a href="javascript:history.back()"
+               class="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">
+                Cancel
+            </a>
+
         </div>
+
     </form>
+
 </div>
+
 {% endblock %}

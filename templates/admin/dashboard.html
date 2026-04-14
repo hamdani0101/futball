@@ -1,58 +1,445 @@
-{% extends "admin/base.html" %}
+{% extends 'admin/base.html' %}
 
-{% block title %}Dashboard{% endblock %}
+{% load static %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <div>
-        <h4>Dashboard</h4>
-        <p class="grey-text text-darken-1">Overview of teams, players, matches, and manually entered data.</p>
-    </div>
-</div>
+        {% if messages %}
+            <div class="mb-6 space-y-3">
+                {% for message in messages %}
+                    <div class="rounded-2xl border px-4 py-3 text-sm font-medium shadow-sm {% if message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-800{% elif message.tags == 'error' %}border-rose-200 bg-rose-50 text-rose-700{% else %}border-sky-200 bg-sky-50 text-sky-800{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
 
-<div class="row">
-    <div class="col s12 m6 l3">
-        <div class="card stat-card">
-            <div class="card-content">
-                <span class="card-title">Total Teams</span>
-                <p class="stat-value">{{ total_teams }}</p>
+        <section class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+            <div class="rounded-[28px] border border-white/70 bg-white/80 p-6 shadow-panel backdrop-blur xl:p-8">
+                <div class="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+                    <div class="max-w-2xl">
+                        <p class="text-sm font-semibold uppercase tracking-[0.28em] text-emerald-600">Match Intelligence</p>
+                        <h2 class="mt-3 font-display text-3xl font-bold text-slate-950">A cleaner view of team operations, match volume, and shooting output.</h2>
+                        <p class="mt-3 text-sm leading-7 text-slate-600">Built for fast decision-making with premium visual hierarchy, responsive layouts, and live-ready football context.</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 sm:min-w-[280px]">
+                        <div class="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-4">
+                            <p class="text-xs uppercase tracking-[0.24em] text-slate-500">Entities</p>
+                            <p class="mt-2 text-2xl font-bold text-slate-950">{{ total_teams|add:total_players }}</p>
+                            <p class="mt-1 text-sm text-slate-500">Teams + players tracked</p>
+                        </div>
+                        <div class="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-4">
+                            <p class="text-xs uppercase tracking-[0.24em] text-slate-500">Stat Rows</p>
+                            <p class="mt-2 text-2xl font-bold text-slate-950">{{ total_match_stats }}</p>
+                            <p class="mt-1 text-sm text-slate-500">Structured match records</p>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-    <div class="col s12 m6 l3">
-        <div class="card stat-card">
-            <div class="card-content">
-                <span class="card-title">Total Players</span>
-                <p class="stat-value">{{ total_players }}</p>
-            </div>
-        </div>
-    </div>
-    <div class="col s12 m6 l3">
-        <div class="card stat-card">
-            <div class="card-content">
-                <span class="card-title">Total Matches</span>
-                <p class="stat-value">{{ total_matches }}</p>
-            </div>
-        </div>
-    </div>
-    <div class="col s12 m6 l3">
-        <div class="card stat-card">
-            <div class="card-content">
-                <span class="card-title">Match Stat Rows</span>
-                <p class="stat-value">{{ total_match_stats }}</p>
-            </div>
-        </div>
-    </div>
-</div>
 
-<div class="row">
-    <div class="col s12 m6 l3">
-        <div class="card stat-card">
-            <div class="card-content">
-                <span class="card-title">Shots Logged</span>
-                <p class="stat-value">{{ total_shots }}</p>
+            <div class="rounded-[28px] border border-emerald-200/70 bg-gradient-to-br from-emerald-500 via-emerald-600 to-slate-950 p-6 text-white shadow-panel">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs uppercase tracking-[0.24em] text-emerald-100/80">Performance Snapshot</p>
+                        <h3 class="mt-3 font-display text-2xl font-bold">Data pipeline is matchday-ready.</h3>
+                    </div>
+                    <div class="rounded-2xl bg-white/10 p-3 ring-1 ring-white/10">
+                        <i data-lucide="activity" class="h-6 w-6 text-emerald-100"></i>
+                    </div>
+                </div>
+                <div class="mt-8 grid grid-cols-3 gap-3 text-center">
+                    <div class="rounded-2xl bg-white/10 px-3 py-4 ring-1 ring-white/10">
+                        <p class="text-2xl font-bold">{{ total_matches }}</p>
+                        <p class="mt-1 text-xs uppercase tracking-[0.2em] text-emerald-100/80">Matches</p>
+                    </div>
+                    <div class="rounded-2xl bg-white/10 px-3 py-4 ring-1 ring-white/10">
+                        <p class="text-2xl font-bold">{{ total_shots }}</p>
+                        <p class="mt-1 text-xs uppercase tracking-[0.2em] text-emerald-100/80">Shots</p>
+                    </div>
+                    <div class="rounded-2xl bg-white/10 px-3 py-4 ring-1 ring-white/10">
+                        <p class="text-2xl font-bold">{{ recent_matches|length }}</p>
+                        <p class="mt-1 text-xs uppercase tracking-[0.2em] text-emerald-100/80">Recent</p>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-</div>
+        </section>
+
+        <section class="mt-6 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+            <article class="group rounded-[28px] border border-white/70 bg-white/80 p-6 shadow-soft backdrop-blur transition duration-300 hover:-translate-y-1 hover:shadow-panel">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-sm font-semibold text-slate-500">Total Teams</p>
+                        <p class="mt-4 text-4xl font-extrabold tracking-tight text-slate-950">{{ total_teams }}</p>
+                    </div>
+                    <div class="rounded-2xl bg-emerald-50 p-3 text-emerald-600 ring-1 ring-emerald-100">
+                        <i data-lucide="shield-check" class="h-6 w-6"></i>
+                    </div>
+                </div>
+                <div class="mt-6 flex items-center justify-between">
+                    <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                        <i data-lucide="{% if team_trend >= 0 %}trending-up{% else %}trending-down{% endif %}" class="h-3.5 w-3.5"></i>
+                        {% if team_trend >= 0 %}+{% endif %}{{ team_trend }}%
+                    </span>
+                    <span class="text-xs uppercase tracking-[0.2em] text-slate-400">30d trend</span>
+                </div>
+            </article>
+
+            <article class="group rounded-[28px] border border-white/70 bg-white/80 p-6 shadow-soft backdrop-blur transition duration-300 hover:-translate-y-1 hover:shadow-panel">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-sm font-semibold text-slate-500">Total Players</p>
+                        <p class="mt-4 text-4xl font-extrabold tracking-tight text-slate-950">{{ total_players }}</p>
+                    </div>
+                    <div class="rounded-2xl bg-sky-50 p-3 text-sky-600 ring-1 ring-sky-100">
+                        <i data-lucide="users-round" class="h-6 w-6"></i>
+                    </div>
+                </div>
+                <div class="mt-6 flex items-center justify-between">
+                    <span class="inline-flex items-center gap-1 rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">
+                        <i data-lucide="{% if player_trend >= 0 %}trending-up{% else %}trending-down{% endif %}" class="h-3.5 w-3.5"></i>
+                        {% if player_trend >= 0 %}+{% endif %}{{ player_trend }}%
+                    </span>
+                    <span class="text-xs uppercase tracking-[0.2em] text-slate-400">30d trend</span>
+                </div>
+            </article>
+
+            <article class="group rounded-[28px] border border-white/70 bg-white/80 p-6 shadow-soft backdrop-blur transition duration-300 hover:-translate-y-1 hover:shadow-panel">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-sm font-semibold text-slate-500">Total Matches</p>
+                        <p class="mt-4 text-4xl font-extrabold tracking-tight text-slate-950">{{ total_matches }}</p>
+                    </div>
+                    <div class="rounded-2xl bg-amber-50 p-3 text-amber-600 ring-1 ring-amber-100">
+                        <i data-lucide="calendar-range" class="h-6 w-6"></i>
+                    </div>
+                </div>
+                <div class="mt-6 flex items-center justify-between">
+                    <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+                        <i data-lucide="{% if match_trend >= 0 %}trending-up{% else %}trending-down{% endif %}" class="h-3.5 w-3.5"></i>
+                        {% if match_trend >= 0 %}+{% endif %}{{ match_trend }}%
+                    </span>
+                    <span class="text-xs uppercase tracking-[0.2em] text-slate-400">30d trend</span>
+                </div>
+            </article>
+
+            <article class="group rounded-[28px] border border-white/70 bg-white/80 p-6 shadow-soft backdrop-blur transition duration-300 hover:-translate-y-1 hover:shadow-panel">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-sm font-semibold text-slate-500">Shots Logged</p>
+                        <p class="mt-4 text-4xl font-extrabold tracking-tight text-slate-950">{{ total_shots }}</p>
+                    </div>
+                    <div class="rounded-2xl bg-rose-50 p-3 text-rose-600 ring-1 ring-rose-100">
+                        <i data-lucide="target" class="h-6 w-6"></i>
+                    </div>
+                </div>
+                <div class="mt-6 flex items-center justify-between">
+                    <span class="inline-flex items-center gap-1 rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700">
+                        <i data-lucide="{% if shot_trend >= 0 %}trending-up{% else %}trending-down{% endif %}" class="h-3.5 w-3.5"></i>
+                        {% if shot_trend >= 0 %}+{% endif %}{{ shot_trend }}%
+                    </span>
+                    <span class="text-xs uppercase tracking-[0.2em] text-slate-400">30d trend</span>
+                </div>
+            </article>
+        </section>
+
+        <section class="mt-6 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+            <div class="rounded-[28px] border border-white/70 bg-white/80 p-6 shadow-soft backdrop-blur">
+                <div class="mb-6 flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Line Chart</p>
+                        <h3 class="mt-2 text-xl font-bold text-slate-950">Matches over time</h3>
+                    </div>
+                    <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">Last 6 months</span>
+                </div>
+                <div class="h-[320px]">
+                    <canvas id="matchesOverTimeChart"></canvas>
+                </div>
+            </div>
+
+            <div class="rounded-[28px] border border-white/70 bg-white/80 p-6 shadow-soft backdrop-blur">
+                <div class="mb-6 flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Bar Chart</p>
+                        <h3 class="mt-2 text-xl font-bold text-slate-950">Goals and shots per match</h3>
+                    </div>
+                    <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">Recent fixtures</span>
+                </div>
+                <div class="h-[320px]">
+                    <canvas id="goalsShotsChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section class="mt-6 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+            <div class="rounded-[28px] border border-white/70 bg-white/80 p-6 shadow-soft backdrop-blur">
+                <div class="mb-6 flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Recent Matches</p>
+                        <h3 class="mt-2 text-xl font-bold text-slate-950">Latest fixtures and scorelines</h3>
+                    </div>
+                    <a href="{% url 'admin-match-list' %}" class="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-slate-300 hover:text-slate-950">View all matches</a>
+                </div>
+
+                <div class="overflow-hidden rounded-[24px] border border-slate-200/80">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-slate-200 text-sm">
+                            <thead class="bg-slate-50/90">
+                                <tr class="text-left text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                                    <th class="px-5 py-4">Match</th>
+                                    <th class="px-5 py-4">Score</th>
+                                    <th class="px-5 py-4">Competition</th>
+                                    <th class="px-5 py-4">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200/80 bg-white/70">
+                                {% for match in recent_matches %}
+                                    <tr class="transition hover:bg-slate-50">
+                                        <td class="px-5 py-4">
+                                            <div class="flex items-center gap-3">
+                                                <div class="flex items-center gap-2">
+                                                    {% if match.home_team.logo %}
+                                                        <img src="{{ match.home_team.logo.url }}" alt="{{ match.home_team.name }}" class="h-9 w-9 rounded-full object-cover ring-1 ring-slate-200">
+                                                    {% else %}
+                                                        <div class="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-700 ring-1 ring-slate-200">{{ match.home_team.name|slice:":2"|upper }}</div>
+                                                    {% endif %}
+                                                    <span class="font-semibold text-slate-900">{{ match.home_team.name }}</span>
+                                                </div>
+                                                <span class="text-slate-400">vs</span>
+                                                <div class="flex items-center gap-2">
+                                                    {% if match.away_team.logo %}
+                                                        <img src="{{ match.away_team.logo.url }}" alt="{{ match.away_team.name }}" class="h-9 w-9 rounded-full object-cover ring-1 ring-slate-200">
+                                                    {% else %}
+                                                        <div class="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-700 ring-1 ring-slate-200">{{ match.away_team.name|slice:":2"|upper }}</div>
+                                                    {% endif %}
+                                                    <span class="font-semibold text-slate-900">{{ match.away_team.name }}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-5 py-4">
+                                            <div class="inline-flex items-center rounded-2xl bg-slate-950 px-3 py-2 font-bold tracking-wide text-white shadow-sm">
+                                                {{ match.home_goals }} - {{ match.away_goals }}
+                                            </div>
+                                        </td>
+                                        <td class="px-5 py-4 text-slate-600">
+                                            {% if match.season and match.season.competition %}
+                                                {{ match.season.competition.name }}
+                                            {% else %}
+                                                Friendly
+                                            {% endif %}
+                                        </td>
+                                        <td class="px-5 py-4 text-slate-600">{{ match.match_date|date:"M d, Y" }}</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="px-5 py-10 text-center text-sm text-slate-500">No recent matches available yet.</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <div class="rounded-[28px] border border-white/70 bg-white/80 p-6 shadow-soft backdrop-blur">
+                    <p class="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Operational Notes</p>
+                    <h3 class="mt-2 text-xl font-bold text-slate-950">Fast paths for admins</h3>
+                    <div class="mt-6 grid gap-3">
+                        <a href="{% url 'admin-match-create' %}" class="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4 transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white">
+                            <div>
+                                <p class="font-semibold text-slate-900">Create Match</p>
+                                <p class="text-sm text-slate-500">Schedule a new fixture quickly</p>
+                            </div>
+                            <i data-lucide="plus" class="h-5 w-5 text-slate-400"></i>
+                        </a>
+                        <a href="{% url 'admin-shot-list' %}" class="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4 transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white">
+                            <div>
+                                <p class="font-semibold text-slate-900">Review Shots</p>
+                                <p class="text-sm text-slate-500">Audit xG and shot outcomes</p>
+                            </div>
+                            <i data-lucide="arrow-right" class="h-5 w-5 text-slate-400"></i>
+                        </a>
+                        <a href="{% url 'admin-player-list' %}" class="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4 transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white">
+                            <div>
+                                <p class="font-semibold text-slate-900">Manage Players</p>
+                                <p class="text-sm text-slate-500">Update squad and identity data</p>
+                            </div>
+                            <i data-lucide="arrow-right" class="h-5 w-5 text-slate-400"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="rounded-[28px] border border-slate-900/90 bg-slate-950 p-6 text-white shadow-panel">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-semibold uppercase tracking-[0.24em] text-slate-400">Coverage</p>
+                            <h3 class="mt-2 text-xl font-bold">Scouting pulse</h3>
+                        </div>
+                        <i data-lucide="radar" class="h-6 w-6 text-emerald-300"></i>
+                    </div>
+                    <div class="mt-6 space-y-4">
+                        <div>
+                            <div class="mb-2 flex items-center justify-between text-sm">
+                                <span class="text-slate-300">Match data depth</span>
+                                <span class="font-semibold text-white">{{ total_match_stats }}</span>
+                            </div>
+                            <div class="h-2 rounded-full bg-white/10">
+                                <div class="h-2 rounded-full bg-emerald-400" style="width: 82%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="mb-2 flex items-center justify-between text-sm">
+                                <span class="text-slate-300">Shooting logs</span>
+                                <span class="font-semibold text-white">{{ total_shots }}</span>
+                            </div>
+                            <div class="h-2 rounded-full bg-white/10">
+                                <div class="h-2 rounded-full bg-sky-400" style="width: 76%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="mb-2 flex items-center justify-between text-sm">
+                                <span class="text-slate-300">Team coverage</span>
+                                <span class="font-semibold text-white">{{ total_teams }}</span>
+                            </div>
+                            <div class="h-2 rounded-full bg-white/10">
+                                <div class="h-2 rounded-full bg-amber-400" style="width: 68%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+    {{ matches_over_time_labels|json_script:"matches-over-time-labels" }}
+    {{ matches_over_time_values|json_script:"matches-over-time-values" }}
+    {{ match_bar_labels|json_script:"match-bar-labels" }}
+    {{ match_bar_goals|json_script:"match-bar-goals" }}
+    {{ match_bar_shots|json_script:"match-bar-shots" }}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const lineLabels = JSON.parse(document.getElementById("matches-over-time-labels").textContent);
+    const lineValues = JSON.parse(document.getElementById("matches-over-time-values").textContent);
+    const barLabels = JSON.parse(document.getElementById("match-bar-labels").textContent);
+    const barGoals = JSON.parse(document.getElementById("match-bar-goals").textContent);
+    const barShots = JSON.parse(document.getElementById("match-bar-shots").textContent);
+
+    const fallbackLineLabels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
+    const fallbackLineValues = [4, 8, 6, 10, 9, 12];
+    const fallbackBarLabels = ["M1", "M2", "M3", "M4", "M5", "M6"];
+    const fallbackBarGoals = [2, 3, 1, 4, 2, 3];
+    const fallbackBarShots = [10, 12, 8, 15, 11, 13];
+
+    const sharedGrid = {
+        color: "rgba(148, 163, 184, 0.18)",
+        drawBorder: false,
+    };
+
+    new Chart(document.getElementById("matchesOverTimeChart"), {
+        type: "line",
+        data: {
+            labels: lineLabels.length ? lineLabels : fallbackLineLabels,
+            datasets: [{
+                label: "Matches",
+                data: lineValues.length ? lineValues : fallbackLineValues,
+                borderColor: "#16a34a",
+                backgroundColor: "rgba(22, 163, 74, 0.16)",
+                fill: true,
+                tension: 0.38,
+                pointRadius: 4,
+                pointHoverRadius: 5,
+                pointBackgroundColor: "#ffffff",
+                pointBorderColor: "#16a34a",
+                pointBorderWidth: 2,
+            }],
+        },
+        options: {
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false,
+                },
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false,
+                    },
+                    ticks: {
+                        color: "#64748b",
+                    },
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: sharedGrid,
+                    ticks: {
+                        precision: 0,
+                        color: "#64748b",
+                    },
+                },
+            },
+        },
+    });
+
+    new Chart(document.getElementById("goalsShotsChart"), {
+        type: "bar",
+        data: {
+            labels: barLabels.length ? barLabels : fallbackBarLabels,
+            datasets: [
+                {
+                    label: "Goals",
+                    data: barGoals.length ? barGoals : fallbackBarGoals,
+                    backgroundColor: "#0f172a",
+                    borderRadius: 999,
+                    maxBarThickness: 18,
+                },
+                {
+                    label: "Shots",
+                    data: barShots.length ? barShots : fallbackBarShots,
+                    backgroundColor: "#38bdf8",
+                    borderRadius: 999,
+                    maxBarThickness: 18,
+                },
+            ],
+        },
+        options: {
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: "#334155",
+                        usePointStyle: true,
+                        boxWidth: 8,
+                        boxHeight: 8,
+                    },
+                },
+            },
+            scales: {
+                x: {
+                    stacked: false,
+                    grid: {
+                        display: false,
+                    },
+                    ticks: {
+                        color: "#64748b",
+                    },
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: sharedGrid,
+                    ticks: {
+                        precision: 0,
+                        color: "#64748b",
+                    },
+                },
+            },
+        },
+    });
+</script>
 {% endblock %}

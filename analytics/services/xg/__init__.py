@@ -2,6 +2,7 @@
 
 from .calculator import (
     ShotFeatures,
+    XGCalculator,
     calculate_match_xg,
     calculate_shot_angle,
     calculate_shot_distance,
@@ -14,6 +15,7 @@ from .calculator import (
 
 __all__ = [
     "ShotFeatures",
+    "XGCalculator",
     "calculate_match_xg",
     "calculate_shot_angle",
     "calculate_shot_distance",

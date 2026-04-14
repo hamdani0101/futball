@@ -5,6 +5,7 @@ from unittest import TestCase
 from analytics.services.xg.calculator import (
     PENALTY_XG,
     ShotFeatures,
+    XGCalculator,
     calculate_shot_angle,
     calculate_shot_distance,
     calculate_xg,
@@ -13,6 +14,9 @@ from analytics.services.xg.calculator import (
 
 
 class XGCalculatorTests(TestCase):
+    def setUp(self):
+        self.calculator = XGCalculator()
+
     def test_penalty_has_fixed_xg(self):
         features = ShotFeatures(x=108, y=40, shot_type="Penalty")
 
@@ -52,3 +56,52 @@ class XGCalculatorTests(TestCase):
         self.assertEqual(features.shot_type, "Open Play")
         self.assertEqual(features.play_pattern, "From Corner")
         self.assertTrue(features.under_pressure)
+
+    def test_class_api_calculates_xg_from_shot_features(self):
+        features = ShotFeatures(
+            x=110,
+            y=40,
+            body_part="Right Foot",
+            assist_type="through_ball",
+        )
+
+        self.assertEqual(self.calculator.calculate_xg(features), calculate_xg(features))
+
+    def test_through_ball_rates_better_than_cross_for_same_shot(self):
+        through_ball = ShotFeatures(
+            x=106,
+            y=39,
+            body_part="Right Foot",
+            assist_type="through_ball",
+        )
+        cross = ShotFeatures(
+            x=106,
+            y=39,
+            body_part="Right Foot",
+            assist_type="cross",
+        )
+
+        self.assertGreater(
+            self.calculator.calculate_xg(through_ball),
+            self.calculator.calculate_xg(cross),
+        )
+
+    def test_class_api_accepts_shot_like_objects(self):
+        shot = type(
+            "ShotStub",
+            (),
+            {
+                "x": 111,
+                "y": 40,
+                "body_part": "Left Foot",
+                "shot_type": "Open Play",
+                "play_pattern": "Open Play",
+                "assist_type": "cutback",
+                "under_pressure": False,
+            },
+        )()
+
+        result = self.calculator.calculate_xg(shot)
+
+        self.assertIsInstance(result, float)
+        self.assertGreater(result, 0)

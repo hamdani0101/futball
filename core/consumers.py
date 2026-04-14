@@ -8,6 +8,7 @@ from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.layers import get_channel_layer
 from django.db.models import Prefetch
 
+from analytics.services.live_dashboard import invalidate_live_stats_cache
 from core.api.serializers import LiveMatchSerializer, RecentEventSerializer
 from core.models.event import Event
 from core.models.match import Match
@@ -54,6 +55,7 @@ class LiveMatchConsumer(AsyncJsonWebsocketConsumer):
 def broadcast_live_match_update(event: Event) -> None:
     """Send updated stats and the new event to the match WebSocket group."""
     channel_layer = get_channel_layer()
+    invalidate_live_stats_cache(event.match_id)
     if channel_layer is None:
         return
 

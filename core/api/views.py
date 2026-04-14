@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from analytics.services.live_dashboard import get_live_stats_payload
 from core.api.serializers import LiveMatchSerializer
 from core.models.event import Event
 from core.models.match import Match
@@ -92,3 +93,11 @@ class LiveMatchView(APIView):
             return Q(external_id__isnull=True) & Q(pk__isnull=True)
 
         return Q(pk=numeric_match_id) | Q(external_id=numeric_match_id)
+
+
+class LiveMatchStatsView(APIView):
+    """Return aggregated live stats for one match."""
+
+    def get(self, request, match_id):
+        match = get_object_or_404(Match.objects.only("id", "external_id"), LiveMatchView._match_lookup(match_id))
+        return Response(get_live_stats_payload(match.id))
