@@ -157,9 +157,10 @@ class Command(BaseCommand):
 
                 raw_map[external_id] = m
             except Exception as e:
-                self.console.log(
-                    f"[red]Error[/red] match_id={external_id} → {e}"
-                )
+                # self.console.log(
+                #     f"[red]Error[/red] match_id={external_id} → {e}"
+                # )
+                pass
             
         Match.objects.bulk_create(to_create, ignore_conflicts=True)
 

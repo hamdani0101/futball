@@ -8,15 +8,6 @@
 {% endblock %}
 
 {% block content %}
-        {% if messages %}
-            <div class="mb-6 space-y-3">
-                {% for message in messages %}
-                    <div class="rounded-2xl border px-4 py-3 text-sm font-medium shadow-sm {% if message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-800{% elif message.tags == 'error' %}border-rose-200 bg-rose-50 text-rose-700{% else %}border-sky-200 bg-sky-50 text-sky-800{% endif %}">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
 
         <section class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
             <div class="rounded-[28px] border border-white/70 bg-white/80 p-6 shadow-panel backdrop-blur xl:p-8">

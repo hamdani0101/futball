@@ -13,7 +13,7 @@ from analytics.services.xg import (
     calculate_xg,
     features_from_statsbomb_event,
 )
-from core.models import Match, MatchState, Player, Pass, Event, Shot
+from core.models import Match, MatchTeamStats, Player, Pass, Event, Shot
 
 PASS_OUTCOME_MAP = {
     "Incomplete": Pass.Outcome.INCOMPLETE,
@@ -263,7 +263,7 @@ class Command(BaseCommand):
         if prev_event_obj and prev_event_obj.type == "pass":
             assist_player = prev_event_obj.player
 
-        Shot.objects.create(
+        Shot.objects.update_or_create(
             event=event_obj,
             match=event_obj.match,
             team=event_obj.team,
@@ -305,8 +305,18 @@ class Command(BaseCommand):
             
     def create_pass(self, event_obj, raw):
         p = raw.get("pass") or {}
+        
+        start_x, start_y = self.normalize_coordinate(event_obj.x, event_obj.y)
 
         end = p.get("end_location") or [None, None]
+        end = p.get("end_location")
+
+        if not isinstance(end, (list, tuple)) or len(end) < 2:
+            end_x, end_y = None, None
+        else:
+            end_x, end_y = self.normalize_coordinate(end[0], end[1])
+        if end_x is None or end_y is None:
+            return  # skip event (recommended)
 
         recipient = None
         recipient_payload = p.get("recipient") or {}
@@ -316,7 +326,7 @@ class Command(BaseCommand):
                 defaults={"name": recipient_payload.get("name", "Unknown")},
             )
 
-        Pass.objects.create(
+        Pass.objects.update_or_create(
             event=event_obj,
             event_index=event_obj.event_index,
             possession=event_obj.possession,
@@ -329,10 +339,10 @@ class Command(BaseCommand):
             second=event_obj.second,
             period=event_obj.period,
 
-            x=event_obj.x,
-            y=event_obj.y,
-            end_x=end[0],
-            end_y=end[1],
+            x=start_x,
+            y=start_y,
+            end_x=end_x,
+            end_y=end_y,
 
             length=self.to_float(p.get("length")),
             angle=self.to_float(p.get("angle")),
@@ -355,6 +365,16 @@ class Command(BaseCommand):
             shot_assist=p.get("shot_assist", False),
             goal_assist=p.get("goal_assist", False),
         )
+    
+    
+    def normalize_coordinate(self, x, y):
+        if not isinstance(x, (int, float)) or not isinstance(y, (int, float)):
+            return None, None
+
+        x = max(0, min(x, 120))
+        y = max(0, min(y, 80))
+
+        return x, y
 
     def resolve_team(self, match, team_id):
         if not team_id:
@@ -373,7 +393,7 @@ class Command(BaseCommand):
         return Player.objects.filter(name=name).first()
     
     def update_match_state(self, event_obj):
-        state, _ = MatchState.objects.get_or_create(
+        state, _ = MatchTeamStats.objects.get_or_create(
             match=event_obj.match,
             defaults={"status": event_obj.match.status},
         )
@@ -389,7 +409,7 @@ class Command(BaseCommand):
     def create_event(self, raw, match, team, player):
         location = raw.get("location") or [None, None]
 
-        return Event.objects.create(
+        event_obj, created =Event.objects.update_or_create(
             external_event_id=raw.get("id"),
             match=match,
             period=raw.get("period"),
@@ -409,6 +429,8 @@ class Command(BaseCommand):
 
             extra_data=raw,
         )
+        
+        return event_obj
         
     def map_event_type(self, raw):
         t = (raw.get("type") or {}).get("name", "")

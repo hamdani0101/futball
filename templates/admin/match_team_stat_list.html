@@ -3,85 +3,156 @@
 {% block title %}Match Stats{% endblock %}
 
 {% block content %}
-<div class="page-header">
+
+<!-- HEADER -->
+<div class="flex items-center justify-between">
     <div>
-        <h4>Match Stats</h4>
-        <p class="grey-text text-darken-1">Manage manual per-team stats for each match.</p>
+        <h1 class="text-2xl font-semibold text-gray-900">Match Stats</h1>
+        <p class="text-sm text-gray-500 mt-1">
+            Manage per-team performance metrics for each match
+        </p>
     </div>
-    <a href="{% url 'admin-match-stat-create' %}" class="btn waves-effect waves-light">
-        <i class="ri-add-line left"></i>
-        Add Match Stats
+
+    <a href="{% url 'admin-match-stat-create' %}"
+       class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-indigo-700 transition">
+        + Add Match Stats
     </a>
 </div>
 
-<div class="panel-card">
-    <table class="highlight responsive-table">
-        <thead>
-            <tr>
-                <th>Match</th>
-                <th>Team</th>
-                <th>Goals</th>
-                <th>xG</th>
-                <th>Shots</th>
-                <th>On Target</th>
-                <th class="right-align">Actions</th>
+<!-- TABLE CARD -->
+<div class="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+
+    <!-- TOP BAR -->
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <h2 class="text-sm font-semibold text-gray-700">Performance Table</h2>
+        <span class="text-xs text-gray-400">
+            {{ stats.paginator.count }} records
+        </span>
+    </div>
+
+    <table class="w-full text-sm">
+
+        <!-- HEADER -->
+        <thead class="bg-gray-50 border-b border-gray-100">
+            <tr class="text-xs font-semibold text-gray-400 uppercase tracking-wider text-left">
+                <th class="px-6 py-4">Match</th>
+                <th class="px-6 py-4">Team</th>
+                <th class="px-6 py-4">Goals</th>
+                <th class="px-6 py-4">xG</th>
+                <th class="px-6 py-4">Shots</th>
+                <th class="px-6 py-4">On Target</th>
+                <th class="px-6 py-4 text-right">Actions</th>
             </tr>
         </thead>
-        <tbody>
+
+        <!-- BODY -->
+        <tbody class="divide-y divide-gray-100">
             {% for stat in stats %}
-                <tr>
-                    <td>{{ stat.match.home_team }} vs {{ stat.match.away_team }}</td>
-                    <td>{{ stat.team }}</td>
-                    <td>{{ stat.goals }}</td>
-                    <td>{{ stat.xg }}</td>
-                    <td>{{ stat.shots }}</td>
-                    <td>{{ stat.shots_on_target }}</td>
-                    <td class="right-align">
-                        <a href="{% url 'admin-match-stat-update' stat.pk %}" class="btn-small waves-effect waves-light">
-                            Edit
-                        </a>
-                        <a href="{% url 'admin-match-stat-delete' stat.pk %}" class="btn-flat danger-text">
-                            Delete
-                        </a>
-                    </td>
-                </tr>
+            <tr class="hover:bg-gray-50 even:bg-gray-50/40 transition">
+
+                <!-- MATCH -->
+                <td class="px-6 py-4">
+                    <div class="flex items-center gap-2 text-sm">
+
+                        <span class="font-medium text-gray-900">
+                            {{ stat.match.home_team }}
+                        </span>
+
+                        <span class="text-gray-400 text-xs">vs</span>
+
+                        <span class="font-medium text-gray-900">
+                            {{ stat.match.away_team }}
+                        </span>
+
+                    </div>
+                </td>
+
+                <!-- TEAM -->
+                <td class="px-6 py-4 text-gray-600">
+                    {{ stat.team }}
+                </td>
+
+                <!-- GOALS -->
+                <td class="px-6 py-4 font-semibold text-gray-900">
+                    {{ stat.goals }}
+                </td>
+
+                <!-- xG -->
+                <td class="px-6 py-4">
+                    <span class="px-2 py-1 text-xs bg-indigo-50 text-indigo-600 rounded-md font-medium">
+                        {{ stat.xg }}
+                    </span>
+                </td>
+
+                <!-- SHOTS -->
+                <td class="px-6 py-4 text-gray-600">
+                    {{ stat.shots }}
+                </td>
+
+                <!-- ON TARGET -->
+                <td class="px-6 py-4 text-gray-600">
+                    {{ stat.shots_on_target }}
+                </td>
+
+                <!-- ACTIONS -->
+                <td class="px-6 py-4 text-right space-x-2">
+
+                    <a href="{% url 'admin-match-stat-update' stat.pk %}"
+                       class="px-3 py-1.5 text-xs bg-gray-100 rounded-lg hover:bg-gray-200 transition">
+                        Edit
+                    </a>
+
+                    <a href="{% url 'admin-match-stat-delete' stat.pk %}"
+                       class="px-3 py-1.5 text-xs bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition">
+                        Delete
+                    </a>
+
+                </td>
+
+            </tr>
             {% empty %}
-                <tr>
-                    <td colspan="7" class="center-align">No match stats available.</td>
-                </tr>
+            <tr>
+                <td colspan="7" class="px-6 py-10 text-center text-gray-400">
+                    No match stats available
+                </td>
+            </tr>
             {% endfor %}
         </tbody>
+
     </table>
-    <ul class="pagination center-align">
+
+    <!-- PAGINATION -->
+    <div class="flex items-center justify-center gap-1 p-4 border-t border-gray-100">
+
         {% if stats.has_previous %}
-            <li class="waves-effect">
-                <a href="?page={{ stats.previous_page_number }}">
-                    <i class="ri-arrow-left-s-line"></i>
-                </a>
-            </li>
+            <a href="?page={{ stats.previous_page_number }}"
+               class="px-3 py-1 text-sm bg-gray-100 rounded-lg hover:bg-gray-200">
+                ←
+            </a>
         {% endif %}
 
         {% for num in stats.paginator.page_range %}
-            {% if num == 1 or num == stats.paginator.num_pages or num >= stats.number|add:'-2' and num <= stats.number|add:'2' %}
-                {% if stats.number == num %}
-                    <li class="active blue">
-                        <a href="?page={{ num }}">{{ num }}</a>
-                    </li>
-                {% else %}
-                    <li class="waves-effect">
-                        <a href="?page={{ num }}">{{ num }}</a>
-                    </li>
-                {% endif %}
+            {% if stats.number == num %}
+                <span class="px-3 py-1 text-sm bg-indigo-600 text-white rounded-lg">
+                    {{ num }}
+                </span>
+            {% elif num >= stats.number|add:'-2' and num <= stats.number|add:'2' %}
+                <a href="?page={{ num }}"
+                   class="px-3 py-1 text-sm bg-gray-100 rounded-lg hover:bg-gray-200">
+                    {{ num }}
+                </a>
             {% endif %}
         {% endfor %}
 
         {% if stats.has_next %}
-            <li class="waves-effect">
-                <a href="?page={{ stats.next_page_number }}">
-                    <i class="ri-arrow-right-s-line"></i>
-                </a>
-            </li>
+            <a href="?page={{ stats.next_page_number }}"
+               class="px-3 py-1 text-sm bg-gray-100 rounded-lg hover:bg-gray-200">
+                →
+            </a>
         {% endif %}
-    </ul>
+
+    </div>
+
 </div>
+
 {% endblock %}
