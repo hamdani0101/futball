@@ -3,6 +3,7 @@
 import json
 from pathlib import Path
 from collections import defaultdict
+from rich.progress import Progress, BarColumn, TextColumn, TimeRemainingColumn
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -132,15 +133,31 @@ class Command(BaseCommand):
 
         total_created = total_skipped = total_events = 0
 
-        for file_path in files:
-            created, skipped, events = self.import_file(
-                file_path=file_path,
-                replace=replace,
-                dry_run=dry_run,
+        with Progress(
+            TextColumn("[bold blue]{task.description}"),
+            BarColumn(),
+            "[progress.percentage]{task.percentage:>3.0f}%",
+            TimeRemainingColumn(),
+        ) as progress:
+
+            file_task = progress.add_task(
+                "[cyan]Processing files...",
+                total=len(files),
             )
-            total_created += created
-            total_skipped += skipped
-            total_events += events
+
+            for file_path in files:
+                created, skipped, events = self.import_file(
+                    file_path=file_path,
+                    replace=replace,
+                    dry_run=dry_run,
+                    progress=progress,   # 👈 kirim progress
+                )
+
+                total_created += created
+                total_skipped += skipped
+                total_events += events
+
+                progress.update(file_task, advance=1)
 
         if dry_run:
             self.stdout.write(
@@ -175,7 +192,7 @@ class Command(BaseCommand):
             if f.name not in {"matches.json", "competitions.json"}
         ]
 
-    def import_file(self, file_path, replace, dry_run):
+    def import_file(self, file_path, replace, dry_run, progress=None):
         statsbomb_id = file_path.stem
         match = Match.objects.filter(external_id=statsbomb_id).first()
         if not match:
@@ -207,6 +224,14 @@ class Command(BaseCommand):
 
         skipped = 0
         prev_event_obj = None
+        
+        event_task = None
+
+        if progress:
+            event_task = progress.add_task(
+                f"[green]Match {statsbomb_id}",
+                total=len(events),
+            )
 
         for raw in events:
             event_type = (raw.get("type") or {}).get("name")
@@ -240,6 +265,8 @@ class Command(BaseCommand):
 
             prev_event_obj = event_obj
             
+            if progress and event_task is not None:
+                progress.update(event_task, advance=1)
             
         self.stdout.write(
             self.style.SUCCESS(
