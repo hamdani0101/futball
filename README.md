@@ -34,9 +34,6 @@ Futball dibangun sebagai dua experience utama:
 - `analytics/`: service layer untuk standings, xG, player metrics, passing, dan event processing.
 - `admin/`: admin panel internal untuk data entry dan manajemen data pertandingan.
 - `templates/` dan `static/`: UI public site dan admin panel.
-- `docs/app-diagram.md`: diagram arsitektur aplikasi.
-
-Lihat diagram detail di [docs/app-diagram.md](docs/app-diagram.md).
 
 ## Teknologi
 
