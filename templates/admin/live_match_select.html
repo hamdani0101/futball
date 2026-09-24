@@ -1,0 +1,39 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Select Live Match{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for match in matches %}
+    <a href="{% url 'admin-live-match' match.id %}" class="block group">
+        <div class="rounded-3xl bg-white p-6 shadow-soft transition hover:-translate-y-1 hover:shadow-panel">
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-xs font-semibold uppercase tracking-widest text-slate-400">{{ match.match_date|date:"F j, Y, H:i" }}</span>
+                <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest {% if match.status == 'live' %}bg-rose-100 text-rose-600{% else %}bg-slate-100 text-slate-600{% endif %}">
+                    {{ match.status }}
+                </span>
+            </div>
+            <div class="flex items-center justify-between gap-4">
+                <div class="flex-1 text-center">
+                    <p class="font-display font-bold text-slate-900">{{ match.home_team.name }}</p>
+                </div>
+                <div class="text-2xl font-black text-slate-200">VS</div>
+                <div class="flex-1 text-center">
+                    <p class="font-display font-bold text-slate-900">{{ match.away_team.name }}</p>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-center">
+                <span class="inline-flex items-center gap-2 text-sm font-bold text-emerald-600 group-hover:text-emerald-500 transition">
+                    Start Collection
+                    <i data-lucide="arrow-right" class="h-4 w-4"></i>
+                </span>
+            </div>
+        </div>
+    </a>
+    {% empty %}
+    <div class="col-span-full py-12 text-center text-slate-500">
+        No matches found.
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

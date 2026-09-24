@@ -54,6 +54,8 @@ from admin.views.shot import (
 )
 
 
+from admin.views.live_match import live_match, live_match_select
+
 urlpatterns = [
     #dashboard
     path("", dashboard, name="admin-dashboard"),
@@ -88,6 +90,10 @@ urlpatterns = [
     path("seasons/add/", season_create, name="admin-season-create"),
     path("seasons/<int:pk>/edit/", season_update, name="admin-season-update"),
     path("seasons/<int:pk>/delete/", season_delete, name="admin-season-delete"),
+
+    # live matches
+    path("live-match/", live_match_select, name="admin-live-match-select"),
+    path("live-match/<int:match_id>/", live_match, name="admin-live-match"),
 
     # matches
     path("matches/", match_list, name="admin-match-list"),

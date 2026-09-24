@@ -64,6 +64,10 @@
                         <i data-lucide="layout-dashboard" class="h-5 w-5 {% if request.resolver_match.url_name == 'admin-dashboard' %}text-emerald-300{% else %}text-slate-400 group-hover:text-emerald-300{% endif %}"></i>
                         Dashboard
                     </a>
+                    <a href="{% url 'admin-live-match-select' %}" class="{% if 'admin-live-match' in request.resolver_match.url_name %}bg-white/12 text-white shadow-soft ring-1 ring-white/10{% else %}text-slate-300 hover:bg-white/8 hover:text-white{% endif %} group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition duration-200">
+                        <i data-lucide="radio" class="h-5 w-5 {% if 'admin-live-match' in request.resolver_match.url_name %}text-emerald-300{% else %}text-slate-400 group-hover:text-emerald-300{% endif %}"></i>
+                        Live Match
+                    </a>
                     <a href="{% url 'admin-team-list' %}" class="{% if 'admin-team' in request.resolver_match.url_name %}bg-white/12 text-white shadow-soft ring-1 ring-white/10{% else %}text-slate-300 hover:bg-white/8 hover:text-white{% endif %} group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition duration-200">
                         <i data-lucide="shield" class="h-5 w-5 {% if 'admin-team' in request.resolver_match.url_name %}text-sky-300{% else %}text-slate-400 group-hover:text-sky-300{% endif %}"></i>
                         Teams
@@ -79,14 +83,6 @@
                     <a href="{% url 'admin-competition-list' %}" class="{% if 'admin-competition' in request.resolver_match.url_name %}bg-white/12 text-white shadow-soft ring-1 ring-white/10{% else %}text-slate-300 hover:bg-white/8 hover:text-white{% endif %} group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition duration-200">
                         <i data-lucide="medal" class="h-5 w-5 {% if 'admin-competition' in request.resolver_match.url_name %}text-fuchsia-300{% else %}text-slate-400 group-hover:text-fuchsia-300{% endif %}"></i>
                         Competitions
-                    </a>
-                    <a href="{% url 'admin-match-stat-list' %}" class="{% if 'admin-match-stat' in request.resolver_match.url_name %}bg-white/12 text-white shadow-soft ring-1 ring-white/10{% else %}text-slate-300 hover:bg-white/8 hover:text-white{% endif %} group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition duration-200">
-                        <i data-lucide="bar-chart-3" class="h-5 w-5 {% if 'admin-match-stat' in request.resolver_match.url_name %}text-cyan-300{% else %}text-slate-400 group-hover:text-cyan-300{% endif %}"></i>
-                        Stats
-                    </a>
-                    <a href="{% url 'admin-shot-list' %}" class="{% if 'admin-shot' in request.resolver_match.url_name %}bg-white/12 text-white shadow-soft ring-1 ring-white/10{% else %}text-slate-300 hover:bg-white/8 hover:text-white{% endif %} group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition duration-200">
-                        <i data-lucide="crosshair" class="h-5 w-5 {% if 'admin-shot' in request.resolver_match.url_name %}text-rose-300{% else %}text-slate-400 group-hover:text-rose-300{% endif %}"></i>
-                        Shots
                     </a>
                 </nav>
             </div>

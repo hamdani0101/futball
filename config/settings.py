@@ -163,3 +163,10 @@ LOGIN_REDIRECT_URL = "dashboard"
 LOGOUT_REDIRECT_URL = "login"
 
 STATSBOMB_DATA_DIR = BASE_DIR / "data" / "statsbomb"
+
+# Realtime distribution. MySQL is the source of truth; Kafka publish is
+# best-effort and skipped entirely when disabled (e.g. tests, local dev
+# without a broker).
+import os as _os
+
+KAFKA_ENABLED = _os.environ.get("FUTBALL_KAFKA_ENABLED", "1") == "1"

@@ -7,6 +7,7 @@ from .event import Event
 from .match import Match
 from .match_team_stat import MatchTeamStats
 from .player import Player
+from .save import Save
 from .season import Season
 from .shots import Shot
 from .stadium import Stadium
@@ -26,5 +27,6 @@ __all__ = [
     "Competition",
     "Event",
     "Pass",
+    "Save",
     "Substitution",
 ]

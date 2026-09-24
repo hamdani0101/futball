@@ -15,8 +15,8 @@ class Event(models.Model):
         CARD = "card", "Card"
         SUBSTITUTION = "substitution", "Substitution"
         DUEL = "duel", "Duel"
-        RECOVERY = "recovery", "Recovery"
-        CLEARANCE = "clearance", "Clearance"
+        GOAL = "goal", "Goal"
+        SAVE = "save", "Save"
 
     external_event_id = models.CharField(
         max_length=64,
@@ -44,6 +44,13 @@ class Event(models.Model):
         related_name="events",
     )
     extra_data = models.JSONField(null=True, blank=True)
+    related_event = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="related_events",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

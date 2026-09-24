@@ -67,7 +67,9 @@ class Shot(models.Model):
     x = models.FloatField()
     y = models.FloatField()
 
-    xg = models.FloatField()
+    # SYSTEM-CALCULATED. Never entered by the operator; populated from the
+    # pluggable xG service (see analytics.services.xg) on save.
+    xg = models.FloatField(default=0.0)
     outcome = models.CharField(
         max_length=20,
         choices=Outcome.choices

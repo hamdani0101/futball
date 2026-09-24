@@ -102,6 +102,8 @@ class MatchTeamStatsForm(MaterializeFormMixin, forms.ModelForm):
 class ShotForm(MaterializeFormMixin, forms.ModelForm):
     class Meta:
         model = Shot
+        # NOTE: xG / distance / angle / zone are SYSTEM-CALCULATED, never
+        # human-entered. The operator records what happened; analytics derives.
         fields = [
             "match",
             "team",
@@ -110,7 +112,6 @@ class ShotForm(MaterializeFormMixin, forms.ModelForm):
             "second",
             "x",
             "y",
-            "xg",
             "outcome",
             "body_part",
             "shot_type",

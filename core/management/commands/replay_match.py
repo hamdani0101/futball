@@ -1,7 +1,7 @@
 import time
 from django.core.management.base import BaseCommand
-from core.models import Event, Match, MatchState
-from analytics.services.event_processor import process_event
+from django.db.models import F
+from core.models import Event, Match, MatchTeamStats
 
 
 class Command(BaseCommand):
@@ -16,42 +16,48 @@ class Command(BaseCommand):
         speed = options["speed"]
 
         match = Match.objects.get(id=match_id)
-        
+
         self.reset_match_state(match)
 
-        events = Event.objects.filter(match=match).order_by("event_index")
+        events = Event.objects.filter(match=match).order_by(
+            "period", "minute", "second", "event_index", "id",
+        )
 
         self.stdout.write(self.style.SUCCESS(f"Replaying match {match.id}..."))
 
         for event in events:
-            state = process_event(event)
+            from analytics.services.live_match_stats import update_live_match_stats
+            update_live_match_stats(event)
+
+            home_score = MatchTeamStats.objects.filter(
+                match=match, team=match.home_team,
+            ).values_list("goals", flat=True).first() or 0
+            away_score = MatchTeamStats.objects.filter(
+                match=match, team=match.away_team,
+            ).values_list("goals", flat=True).first() or 0
 
             self.stdout.write(
-                f"[{event.minute}:{event.second}] "
-                f"{event.type} | Score: {state.home_score}-{state.away_score}"
+                f"[{event.minute}:{event.second:02d}] "
+                f"{event.type} | Score: {home_score}-{away_score}"
             )
 
             time.sleep(speed)
-            
+
     def reset_match_state(self, match):
-        state, _ = MatchState.objects.get_or_create(
-            match=match,
-            defaults={"status": match.status},
+        MatchTeamStats.objects.filter(match=match).update(
+            goals=0,
+            xg=0.0,
+            shots=0,
+            shots_on_target=0,
+            passes=0,
+            completed_passes=0,
+            pass_accuracy=0.0,
+            possession=0,
+            possession_seconds=0.0,
+            last_event=None,
         )
-
-        state.home_score = 0
-        state.away_score = 0
-        state.home_xg = 0
-        state.away_xg = 0
-        state.home_shots = 0
-        state.away_shots = 0
-
-        state.current_minute = 0
-        state.current_second = 0
-        state.period = 1
-        state.status = match.status
-        state.home_possession = 0
-        state.away_possession = 0
-        state.last_event = None
-
-        state.save()
+        Match.objects.filter(pk=match.pk).update(
+            current_minute=0,
+            current_second=0,
+            period=1,
+        )

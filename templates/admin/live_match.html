@@ -1,0 +1,1223 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}Live — {{ match.home_team.name }} vs {{ match.away_team.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .pitch-wrap { background: #1a8f3c; border-radius: 1rem; overflow: hidden; position: relative; cursor: crosshair; }
+    .pitch-svg { width: 100%; display: block; }
+    .marker { fill: #f59e0b; stroke: white; stroke-width: 2; r: 7; }
+    .pass-line { stroke: #38bdf8; stroke-width: 2.5; stroke-dasharray: 6 3; fill: none; }
+    .event-btn { transition: all 0.15s; }
+    .event-btn.active { ring: 2px; transform: translateY(-2px); }
+    #save-prompt { display: none; }
+    .timeline-item { animation: slideIn 0.2s ease; }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
+    .shortcut-badge { display: inline-flex; align-items: center; justify-content: center;
+        background: #1e293b; color: #94a3b8; border-radius: 0.35rem;
+        font-size: 0.7rem; font-weight: 800; padding: 1px 5px; letter-spacing: 0.05em; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="flex flex-col gap-5">
+
+    <!-- Match Header -->
+    <div class="rounded-3xl bg-slatepanel px-6 py-5 text-white shadow-panel">
+        <div class="flex items-center justify-between gap-4">
+            <div class="flex flex-1 items-center gap-6">
+                <div class="text-right flex-1">
+                    <p class="font-display text-xl font-bold">{{ match.home_team.name }}</p>
+                    <p class="text-xs text-slate-400 uppercase tracking-widest">Home</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="text-5xl font-black tabular-nums" id="score-home">0</span>
+                    <span class="text-xl text-slate-500">–</span>
+                    <span class="text-5xl font-black tabular-nums" id="score-away">0</span>
+                </div>
+                <div class="flex-1">
+                    <p class="font-display text-xl font-bold">{{ match.away_team.name }}</p>
+                    <p class="text-xs text-slate-400 uppercase tracking-widest">Away</p>
+                </div>
+            </div>
+            <div class="text-center ml-6">
+                <div class="mb-1">
+                    <span id="match-state-badge" class="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[11px] font-black uppercase tracking-widest text-slate-300">Not started</span>
+                </div>
+                <div class="inline-flex items-center gap-2 rounded-xl bg-rose-500/20 px-4 py-2 text-rose-300 mb-1">
+                    <span class="relative flex h-2 w-2" id="live-dot" style="display:none">
+                        <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75"></span>
+                        <span class="relative inline-flex h-2 w-2 rounded-full bg-rose-500"></span>
+                    </span>
+                    <span class="font-display text-2xl font-black tabular-nums" id="match-clock">00:00</span>
+                </div>
+                <div id="ws-status" class="hidden mb-1 text-[11px] font-bold text-amber-300">Reconnecting…</div>
+                <div id="clock-controls" class="flex gap-2 justify-center mb-1"></div>
+                <div class="flex gap-2 justify-center">
+                    <select id="period-select" class="text-xs bg-white/10 text-white rounded-lg px-2 py-1 border-0">
+                        <option value="1">1st Half</option>
+                        <option value="2">2nd Half</option>
+                        <option value="3">Extra 1st</option>
+                        <option value="4">Extra 2nd</option>
+                        <option value="5">Penalties</option>
+                    </select>
+                    <input type="number" id="clock-minute" min="0" max="130" value="0"
+                        class="w-14 text-xs bg-white/10 text-white rounded-lg px-2 py-1 border-0 text-center tabular-nums"
+                        placeholder="Min">
+                    <span class="text-slate-500 self-center">:</span>
+                    <input type="number" id="clock-second" min="0" max="59" value="0"
+                        class="w-14 text-xs bg-white/10 text-white rounded-lg px-2 py-1 border-0 text-center tabular-nums"
+                        placeholder="Sec">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-5">
+
+        <!-- Left: Pitch + Event Controls -->
+        <div class="lg:col-span-3 space-y-4">
+
+            <!-- Pitch -->
+            <div class="rounded-3xl bg-white p-2 shadow-soft">
+                <div class="pitch-wrap" id="pitch">
+                    <svg id="pitch-svg" class="pitch-svg" viewBox="0 0 120 80">
+                        <!-- Grass -->
+                        <rect width="120" height="80" fill="#1a8f3c"/>
+                        <!-- Pitch stripes -->
+                        <rect x="0" y="0" width="12" height="80" fill="#1c9940" opacity="0.4"/>
+                        <rect x="24" y="0" width="12" height="80" fill="#1c9940" opacity="0.4"/>
+                        <rect x="48" y="0" width="12" height="80" fill="#1c9940" opacity="0.4"/>
+                        <rect x="72" y="0" width="12" height="80" fill="#1c9940" opacity="0.4"/>
+                        <rect x="96" y="0" width="12" height="80" fill="#1c9940" opacity="0.4"/>
+                        <!-- Pitch border -->
+                        <rect x="1" y="1" width="118" height="78" fill="none" stroke="white" stroke-width="0.8"/>
+                        <!-- Halfway line -->
+                        <line x1="60" y1="1" x2="60" y2="79" stroke="white" stroke-width="0.8"/>
+                        <!-- Centre circle -->
+                        <circle cx="60" cy="40" r="9.15" fill="none" stroke="white" stroke-width="0.8"/>
+                        <circle cx="60" cy="40" r="0.5" fill="white"/>
+                        <!-- Left penalty area -->
+                        <rect x="1" y="18" width="16.5" height="44" fill="none" stroke="white" stroke-width="0.8"/>
+                        <!-- Left 6-yard box -->
+                        <rect x="1" y="30" width="5.5" height="20" fill="none" stroke="white" stroke-width="0.8"/>
+                        <!-- Left penalty spot -->
+                        <circle cx="12" cy="40" r="0.5" fill="white"/>
+                        <!-- Right penalty area -->
+                        <rect x="102.5" y="18" width="16.5" height="44" fill="none" stroke="white" stroke-width="0.8"/>
+                        <!-- Right 6-yard box -->
+                        <rect x="113.5" y="30" width="5.5" height="20" fill="none" stroke="white" stroke-width="0.8"/>
+                        <!-- Right penalty spot -->
+                        <circle cx="108" cy="40" r="0.5" fill="white"/>
+                        <!-- Left goal -->
+                        <rect x="-2" y="33" width="2" height="14" fill="none" stroke="white" stroke-width="0.8"/>
+                        <!-- Right goal -->
+                        <rect x="120" y="33" width="2" height="14" fill="none" stroke="white" stroke-width="0.8"/>
+                        <!-- Dynamic markers -->
+                        <g id="pitch-markers"></g>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Pitch hint -->
+            <p class="text-center text-xs text-slate-400 font-medium" id="pitch-hint">Select an event type, then click the pitch to place it.</p>
+
+            <!-- Event type buttons -->
+            <div class="grid grid-cols-4 gap-3">
+                <button onclick="setEventType('pass')" data-type="pass" class="event-btn flex flex-col items-center gap-1.5 rounded-2xl bg-white p-3 shadow-soft ring-1 ring-slate-200 hover:ring-emerald-400 hover:bg-emerald-50">
+                    <i data-lucide="arrow-right-circle" class="h-5 w-5 text-emerald-600"></i>
+                    <span class="text-xs font-bold text-slate-700">Pass</span>
+                    <span class="shortcut-badge">P</span>
+                </button>
+                <button onclick="setEventType('shot')" data-type="shot" class="event-btn flex flex-col items-center gap-1.5 rounded-2xl bg-white p-3 shadow-soft ring-1 ring-slate-200 hover:ring-rose-400 hover:bg-rose-50">
+                    <i data-lucide="crosshair" class="h-5 w-5 text-rose-600"></i>
+                    <span class="text-xs font-bold text-slate-700">Shot</span>
+                    <span class="shortcut-badge">S</span>
+                </button>
+                <button onclick="setEventType('goal')" data-type="goal" class="event-btn flex flex-col items-center gap-1.5 rounded-2xl bg-white p-3 shadow-soft ring-1 ring-slate-200 hover:ring-amber-400 hover:bg-amber-50">
+                    <i data-lucide="goal" class="h-5 w-5 text-amber-600"></i>
+                    <span class="text-xs font-bold text-slate-700">Goal</span>
+                    <span class="shortcut-badge">G</span>
+                </button>
+                <button onclick="setEventType('foul')" data-type="foul" class="event-btn flex flex-col items-center gap-1.5 rounded-2xl bg-white p-3 shadow-soft ring-1 ring-slate-200 hover:ring-orange-400 hover:bg-orange-50">
+                    <i data-lucide="alert-triangle" class="h-5 w-5 text-orange-600"></i>
+                    <span class="text-xs font-bold text-slate-700">Foul</span>
+                    <span class="shortcut-badge">F</span>
+                </button>
+                <button onclick="setEventType('card')" data-type="card" class="event-btn flex flex-col items-center gap-1.5 rounded-2xl bg-white p-3 shadow-soft ring-1 ring-slate-200 hover:ring-yellow-400 hover:bg-yellow-50">
+                    <i data-lucide="square" class="h-5 w-5 text-yellow-500"></i>
+                    <span class="text-xs font-bold text-slate-700">Card</span>
+                    <span class="shortcut-badge">C</span>
+                </button>
+                <button onclick="setEventType('substitution')" data-type="substitution" class="event-btn flex flex-col items-center gap-1.5 rounded-2xl bg-white p-3 shadow-soft ring-1 ring-slate-200 hover:ring-sky-400 hover:bg-sky-50">
+                    <i data-lucide="refresh-cw" class="h-5 w-5 text-sky-600"></i>
+                    <span class="text-xs font-bold text-slate-700">Sub</span>
+                    <span class="shortcut-badge">U</span>
+                </button>
+                <button onclick="setEventType('duel')" data-type="duel" class="event-btn flex flex-col items-center gap-1.5 rounded-2xl bg-white p-3 shadow-soft ring-1 ring-slate-200 hover:ring-purple-400 hover:bg-purple-50">
+                    <i data-lucide="swords" class="h-5 w-5 text-purple-600"></i>
+                    <span class="text-xs font-bold text-slate-700">Duel</span>
+                    <span class="shortcut-badge">D</span>
+                </button>
+                <button onclick="undoLastEvent()" class="event-btn flex flex-col items-center gap-1.5 rounded-2xl bg-white p-3 shadow-soft ring-1 ring-slate-200 hover:ring-slate-400 hover:bg-slate-50">
+                    <i data-lucide="undo-2" class="h-5 w-5 text-slate-600"></i>
+                    <span class="text-xs font-bold text-slate-700">Undo</span>
+                    <span class="shortcut-badge">Z</span>
+                </button>
+            </div>
+
+            <!-- Event Form -->
+            <div id="event-form-container" class="hidden rounded-3xl bg-white shadow-soft ring-1 ring-slate-200 overflow-hidden">
+                <div class="bg-slate-950 px-5 py-3 flex items-center justify-between">
+                    <h3 class="font-display text-sm font-bold text-white uppercase tracking-widest" id="form-title">Event</h3>
+                    <button type="button" onclick="cancelEvent()" class="text-slate-400 hover:text-white transition">
+                        <i data-lucide="x" class="h-4 w-4"></i>
+                    </button>
+                </div>
+                <form id="event-form" class="p-5 space-y-4">
+                    <div id="form-error" class="hidden rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-semibold text-rose-700"></div>
+                    <!-- Team + Player row -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Team</label>
+                            <select name="team" id="team-select" class="w-full rounded-xl border border-slate-200 bg-slate-50 text-sm font-semibold px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400">
+                                <option value="{{ match.home_team.id }}">{{ match.home_team.name }}</option>
+                                <option value="{{ match.away_team.id }}">{{ match.away_team.name }}</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Player</label>
+                            <select id="player-select" name="player" class="w-full rounded-xl border border-slate-200 bg-slate-50 text-sm font-semibold px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400">
+                                {% for player in players %}
+                                <option value="{{ player.id }}" data-team="{{ player.team_now_id }}">{{ player.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Shot/Goal fields -->
+                    <div id="shot-fields" class="hidden space-y-3">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Outcome</label>
+                                <div class="grid grid-cols-2 gap-1" id="outcome-btns">
+                                    <button type="button" onclick="selectOutcome(this,'off_target')" data-val="off_target" class="outcome-btn rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100">Off Target</button>
+                                    <button type="button" onclick="selectOutcome(this,'saved')" data-val="saved" class="outcome-btn rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100">Saved</button>
+                                    <button type="button" onclick="selectOutcome(this,'blocked')" data-val="blocked" class="outcome-btn rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100">Blocked</button>
+                                    <button type="button" onclick="selectOutcome(this,'goal')" data-val="goal" class="outcome-btn rounded-lg border border-emerald-400 bg-emerald-50 px-2 py-1.5 text-xs font-bold text-emerald-700 hover:bg-emerald-100">Goal ⚽</button>
+                                </div>
+                                <input type="hidden" name="outcome" id="outcome-val" value="off_target">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Body Part</label>
+                                <div class="flex flex-col gap-1">
+                                    <button type="button" onclick="selectBodyPart(this,'right_foot')" data-val="right_foot" class="body-btn rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100">Right Foot</button>
+                                    <button type="button" onclick="selectBodyPart(this,'left_foot')" data-val="left_foot" class="body-btn rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100">Left Foot</button>
+                                    <button type="button" onclick="selectBodyPart(this,'head')" data-val="head" class="body-btn rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100">Head</button>
+                                </div>
+                                <input type="hidden" name="body_part" id="body-part-val" value="right_foot">
+                            </div>
+                        </div>
+                        <!-- Saved → show save keeper prompt -->
+                        <div id="save-prompt" class="rounded-xl bg-sky-50 border border-sky-200 p-3">
+                            <label class="block text-xs font-bold uppercase tracking-widest text-sky-600 mb-1">Goalkeeper Save — Who saved it?</label>
+                            <select name="save_player_id" id="save-player-select" class="w-full rounded-xl border border-sky-200 bg-white text-sm font-semibold px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400">
+                                <option value="">-- Select keeper --</option>
+                                {% for player in players %}
+                                <option value="{{ player.id }}" data-team="{{ player.team_now_id }}">{{ player.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <!-- Goal → assist field -->
+                        <div id="assist-prompt" class="hidden rounded-xl bg-amber-50 border border-amber-200 p-3">
+                            <label class="block text-xs font-bold uppercase tracking-widest text-amber-600 mb-1">Assist (optional)</label>
+                            <select name="assist_player_id" id="assist-player-select" class="w-full rounded-xl border border-amber-200 bg-white text-sm font-semibold px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-400">
+                                <option value="">-- No assist --</option>
+                                {% for player in players %}
+                                <option value="{{ player.id }}" data-team="{{ player.team_now_id }}">{{ player.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Pass fields -->
+                    <div id="pass-fields" class="hidden space-y-2">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Outcome</label>
+                                <div class="flex gap-1">
+                                    <button type="button" onclick="selectPassOutcome(this,'complete')" data-val="complete" class="pass-outcome-btn flex-1 rounded-lg border border-emerald-400 bg-emerald-50 px-2 py-1.5 text-xs font-bold text-emerald-700">Complete</button>
+                                    <button type="button" onclick="selectPassOutcome(this,'incomplete')" data-val="incomplete" class="pass-outcome-btn flex-1 rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100">Incomplete</button>
+                                </div>
+                                <input type="hidden" name="pass_outcome" id="pass-outcome-val" value="complete">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Recipient (optional)</label>
+                                <select name="recipient_id" class="w-full rounded-xl border border-slate-200 bg-slate-50 text-sm font-semibold px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400">
+                                    <option value="">-- No recipient --</option>
+                                    {% for player in players %}
+                                    <option value="{{ player.id }}" data-team="{{ player.team_now_id }}">{{ player.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-400 text-center" id="pass-click-hint">Click pitch for start, click again for end.</p>
+                    </div>
+
+                    <!-- Substitution fields -->
+                    <div id="sub-fields" class="hidden space-y-2">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Player Off</label>
+                                <select name="player_out_id" id="player-out-select" class="w-full rounded-xl border border-slate-200 bg-slate-50 text-sm font-semibold px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400">
+                                    {% for player in players %}
+                                    <option value="{{ player.id }}" data-team="{{ player.team_now_id }}">{{ player.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Player On</label>
+                                <select name="player_in_id" id="player-in-select" class="w-full rounded-xl border border-slate-200 bg-slate-50 text-sm font-semibold px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400">
+                                    {% for player in players %}
+                                    <option value="{{ player.id }}" data-team="{{ player.team_now_id }}">{{ player.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-400 text-center">No pitch location needed.</p>
+                    </div>
+
+                    <!-- Location readout -->
+                    <div id="location-readout" class="hidden rounded-xl bg-slate-50 border border-slate-200 px-4 py-2 text-xs font-mono text-slate-500 text-center"></div>
+
+                    <!-- Submit -->
+                    <div class="flex justify-end gap-2 pt-2">
+                        <button type="button" onclick="cancelEvent()" class="px-5 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition">
+                            Cancel <span class="shortcut-badge ml-1">Esc</span>
+                        </button>
+                        <button type="submit" id="submit-btn" class="px-5 py-2 rounded-xl bg-slate-950 text-xs font-bold text-white hover:bg-slate-800 transition">
+                            Save Event <span class="shortcut-badge ml-1">Enter</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Keyboard shortcuts -->
+            <div class="rounded-2xl bg-slate-50 border border-slate-200 px-4 py-3">
+                <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Keyboard Shortcuts</p>
+                <div class="flex flex-wrap gap-2 text-xs text-slate-500">
+                    <span><span class="shortcut-badge">P</span> Pass</span>
+                    <span><span class="shortcut-badge">S</span> Shot</span>
+                    <span><span class="shortcut-badge">G</span> Goal</span>
+                    <span><span class="shortcut-badge">F</span> Foul</span>
+                    <span><span class="shortcut-badge">C</span> Card</span>
+                    <span><span class="shortcut-badge">U</span> Sub</span>
+                    <span><span class="shortcut-badge">D</span> Duel</span>
+                    <span><span class="shortcut-badge">Z</span> Undo</span>
+                    <span><span class="shortcut-badge">Enter</span> Submit</span>
+                    <span><span class="shortcut-badge">Esc</span> Cancel</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Timeline -->
+        <div class="lg:col-span-2">
+            <div class="rounded-3xl bg-white shadow-soft ring-1 ring-slate-200 overflow-hidden" style="max-height: calc(100vh - 200px);">
+                <div class="bg-slate-950 px-5 py-3 flex items-center justify-between">
+                    <h3 class="font-display text-sm font-bold text-white uppercase tracking-widest">Match Timeline</h3>
+                    <span class="text-xs text-slate-400" id="event-count">0 events</span>
+                </div>
+                <div id="timeline" class="overflow-y-auto" style="max-height: calc(100vh - 280px);">
+                    {% for event in events %}
+                    <div class="timeline-item flex gap-3 px-4 py-3 border-b border-slate-100 hover:bg-slate-50 group" data-event-id="{{ event.id }}">
+                        <div class="flex-shrink-0 text-center">
+                            <span class="font-mono text-xs font-bold text-slate-400">{{ event.minute }}:{{ event.second|stringformat:"02d" }}</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-black uppercase tracking-wider
+                                {% if event.type == 'shot' %}text-rose-600
+                                {% elif event.type == 'goal' %}text-amber-600
+                                {% elif event.type == 'pass' %}text-emerald-600
+                                {% elif event.type == 'save' %}text-sky-600
+                                {% elif event.type == 'foul' %}text-orange-600
+                                {% elif event.type == 'card' %}text-yellow-600
+                                {% else %}text-slate-600{% endif %}">
+                                {{ event.get_type_display }}
+                            </p>
+                            <p class="text-xs text-slate-700 font-semibold truncate">
+                                {% if event.player %}{{ event.player.name }}{% else %}—{% endif %}
+                            </p>
+                            <p class="text-xs text-slate-400">{{ event.team.name }}</p>
+                        </div>
+                        <div class="flex-shrink-0 flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                            <button onclick="editEvent({{ event.id }})" class="rounded-lg p-1 hover:bg-sky-50 text-sky-400 hover:text-sky-600" title="Edit">
+                                <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
+                            </button>
+                            <button onclick="deleteEvent({{ event.id }}, this)" class="rounded-lg p-1 hover:bg-rose-50 text-rose-400 hover:text-rose-600" title="Delete">
+                                <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-12 text-slate-400 text-sm" id="no-events-msg">No events recorded yet.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'futball/pitch.js' %}"></script>
+<script>
+const matchId = {{ match.id }};
+const homeTeamId = "{{ match.home_team.id }}";
+const awayTeamId = "{{ match.away_team.id }}";
+let currentEventType = null;
+let points = [];
+let lastEventId = null;
+// Edit mode: null while creating; event id while correcting.
+let editingEventId = null;
+// Cache of full event payloads (REST + WS) for edit preload and markers.
+const eventCache = {};
+// Sticky collection context: last team + last player per team.
+const sticky = { teamId: null, playerByTeam: {} };
+// Idempotency key for the open form session (see setEventType).
+let formKey = null;
+// Server-authoritative clock base; display ticks locally from it.
+const clockState = { minute: 0, second: 0, period: 1, running: false, baseAt: Date.now(), state: 'NOT_STARTED', actions: [] };
+let ws = null;
+let wsRetryMs = 1000;
+
+const pitch = document.getElementById('pitch');
+const pitchSvg = document.getElementById('pitch-svg');
+const markersG = document.getElementById('pitch-markers');
+// Reusable pitch component: click position, markers, coordinate conversion.
+const footballPitch = FutballPitch.create(pitchSvg, markersG);
+const hint = document.getElementById('pitch-hint');
+const formContainer = document.getElementById('event-form-container');
+const eventForm = document.getElementById('event-form');
+const formError = document.getElementById('form-error');
+const teamSelect = document.getElementById('team-select');
+const playerSelect = document.getElementById('player-select');
+const savePlayerSelect = document.getElementById('save-player-select');
+const assistPlayerSelect = document.getElementById('assist-player-select');
+const playerOutSelect = document.getElementById('player-out-select');
+const playerInSelect = document.getElementById('player-in-select');
+const locationReadout = document.getElementById('location-readout');
+
+function showFormError(msg) {
+    formError.textContent = msg;
+    formError.classList.remove('hidden');
+}
+function clearFormError() {
+    formError.textContent = '';
+    formError.classList.add('hidden');
+}
+
+// --- Server clock: display ticks locally, server stays authoritative ---
+function setClockBase(minute, second, period, running, state, actions) {
+    clockState.minute = minute ?? 0;
+    clockState.second = second ?? 0;
+    if (period) clockState.period = period;
+    clockState.running = !!running;
+    clockState.baseAt = Date.now();
+    if (state) clockState.state = state;
+    if (actions) clockState.actions = actions;
+    renderClock();
+    renderMatchState();
+}
+
+function tickingClock() {
+    let total = clockState.minute * 60 + clockState.second;
+    if (clockState.running) total += Math.floor((Date.now() - clockState.baseAt) / 1000);
+    return [Math.floor(total / 60), total % 60];
+}
+
+const pad2 = (n) => String(n ?? 0).padStart(2, '0');
+
+function renderClock() {
+    const [m, s] = tickingClock();
+    document.getElementById('match-clock').textContent = `${pad2(m)}:${pad2(s)}`;
+}
+
+setInterval(renderClock, 1000);
+
+function syncClockInputs() {
+    const [m, s] = tickingClock();
+    document.getElementById('clock-minute').value = m;
+    document.getElementById('clock-second').value = s;
+    document.getElementById('period-select').value = String(clockState.period);
+}
+
+// --- Match state badge + transition controls + collection gating ---
+const ACTION_LABELS = {
+    start_match: 'Start Match',
+    half_time: 'Half Time',
+    start_second_half: 'Start Second Half',
+    full_time: 'Full Time',
+};
+
+function renderMatchState() {
+    const badge = document.getElementById('match-state-badge');
+    const labels = {
+        NOT_STARTED: 'Not started', FIRST_HALF: '● Live — 1st Half',
+        HALF_TIME: 'Half Time', SECOND_HALF: '● Live — 2nd Half',
+        FULL_TIME: 'Full Time',
+    };
+    badge.textContent = labels[clockState.state] || clockState.state;
+    document.getElementById('live-dot').style.display =
+        (clockState.state === 'FIRST_HALF' || clockState.state === 'SECOND_HALF') ? '' : 'none';
+
+    const controls = document.getElementById('clock-controls');
+    controls.innerHTML = '';
+    (clockState.actions || []).forEach(action => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = ACTION_LABELS[action] || action;
+        btn.className = 'rounded-lg bg-emerald-500 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-white hover:bg-emerald-400 transition';
+        btn.onclick = () => clockAction(action);
+        controls.appendChild(btn);
+    });
+
+    // Full time blocks normal collection; corrections (edit/delete) stay open.
+    const fullTime = clockState.state === 'FULL_TIME';
+    document.querySelectorAll('.event-btn[data-type]').forEach(b => {
+        b.disabled = fullTime;
+        b.classList.toggle('opacity-40', fullTime);
+        b.classList.toggle('pointer-events-none', fullTime);
+    });
+    if (fullTime && currentEventType && !editingEventId) cancelEvent();
+}
+
+async function clockAction(action) {
+    clearFormError();
+    try {
+        const resp = await fetch(`/api/match/${matchId}/clock/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
+            body: JSON.stringify({ action }),
+        });
+        const data = await resp.json();
+        if (!resp.ok) {
+            showFormError(data.detail || 'Clock transition failed.');
+            formContainer.classList.remove('hidden');
+            return;
+        }
+        applyClockData(data);
+    } catch (err) {
+        showFormError('Network error updating match clock.');
+        formContainer.classList.remove('hidden');
+    }
+}
+
+function applyClockData(data) {
+    setClockBase(data.minute, data.second, data.period, data.running, data.state, data.available_actions);
+    syncClockInputs();
+}
+
+// --- Team/player filtering ---
+function filterPlayersByTeam(teamId, selectEl, excludeId) {
+    let first = null;
+    Array.from(selectEl.options).forEach(opt => {
+        if (!opt.value) return;
+        const match = opt.dataset.team === String(teamId);
+        const notSelf = !excludeId || opt.value !== String(excludeId);
+        opt.hidden = !match || !notSelf;
+        if (!opt.hidden && !first) first = opt;
+    });
+    if (first) first.selected = true;
+}
+
+function opposingTeamId() {
+    return teamSelect.value === homeTeamId ? awayTeamId : homeTeamId;
+}
+
+teamSelect.addEventListener('change', () => {
+    filterPlayersByTeam(teamSelect.value, playerSelect);
+    filterPlayersByTeam(opposingTeamId(), savePlayerSelect);
+    filterPlayersByTeam(teamSelect.value, assistPlayerSelect);
+    filterPlayersByTeam(teamSelect.value, playerOutSelect);
+    filterPlayersByTeam(teamSelect.value, playerInSelect);
+});
+filterPlayersByTeam(homeTeamId, playerSelect);
+filterPlayersByTeam(awayTeamId, savePlayerSelect);
+filterPlayersByTeam(homeTeamId, assistPlayerSelect);
+filterPlayersByTeam(homeTeamId, playerOutSelect);
+filterPlayersByTeam(homeTeamId, playerInSelect);
+
+// --- Outcome button helpers ---
+function selectOutcome(btn, val) {
+    document.querySelectorAll('.outcome-btn').forEach(b => b.classList.remove('ring-2','ring-rose-400','bg-rose-50'));
+    btn.classList.add('ring-2','ring-rose-400','bg-rose-50');
+    document.getElementById('outcome-val').value = val;
+    document.getElementById('save-prompt').style.display = val === 'saved' ? 'block' : 'none';
+    document.getElementById('assist-prompt').classList.toggle('hidden', val !== 'goal');
+    if (val === 'saved') filterPlayersByTeam(opposingTeamId(), savePlayerSelect);
+}
+function selectBodyPart(btn, val) {
+    document.querySelectorAll('.body-btn').forEach(b => b.classList.remove('ring-2','ring-slate-400','bg-slate-100'));
+    btn.classList.add('ring-2','ring-slate-400','bg-slate-100');
+    document.getElementById('body-part-val').value = val;
+}
+function selectPassOutcome(btn, val) {
+    document.querySelectorAll('.pass-outcome-btn').forEach(b => {
+        b.classList.remove('border-emerald-400','bg-emerald-50','text-emerald-700');
+        b.classList.add('border-slate-200','text-slate-600');
+    });
+    btn.classList.add('border-emerald-400','bg-emerald-50','text-emerald-700');
+    btn.classList.remove('border-slate-200','text-slate-600');
+    document.getElementById('pass-outcome-val').value = val;
+}
+
+// --- Event type ---
+const typeHints = {
+    shot: 'Click the pitch where the shot was taken from.',
+    goal: 'Click the pitch where the shot/goal was taken from.',
+    pass: 'Click START of pass, then END of pass on the pitch.',
+    foul: 'Click the pitch where the foul occurred.',
+    card: 'Click the pitch location of the card incident.',
+    substitution: 'No pitch location needed — fill in the form.',
+    duel: 'Click the pitch where the duel took place.',
+};
+const typeLabels = {
+    shot: 'Shot', goal: 'Goal ⚽', pass: 'Pass', foul: 'Foul',
+    card: 'Card', substitution: 'Substitution', duel: 'Duel',
+};
+
+function setEventType(type) {
+    currentEventType = type;
+    editingEventId = null;
+    document.getElementById('submit-btn').innerHTML = 'Save Event <span class="shortcut-badge ml-1">Enter</span>';
+    points = [];
+    markersG.innerHTML = '';
+    clearFormError();
+    // One idempotency key per form session: a retried POST (double Enter,
+    // network retry) returns the original row instead of a duplicate event.
+    try {
+        formKey = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
+            : String(Date.now()) + '-' + Math.random().toString(16).slice(2);
+    } catch (err) {
+        formKey = String(Date.now()) + '-' + Math.random().toString(16).slice(2);
+    }
+    // Sticky context: keep the last-used team/player so repeated entry for
+    // one side of the ball needs no reselection.
+    if (sticky.teamId) {
+        teamSelect.value = sticky.teamId;
+        teamSelect.dispatchEvent(new Event('change'));
+        const lastPlayer = sticky.playerByTeam[sticky.teamId];
+        if (lastPlayer) {
+            const opt = playerSelect.querySelector(`option[value="${lastPlayer}"]`);
+            if (opt && !opt.hidden) playerSelect.value = String(lastPlayer);
+        }
+    }
+
+    // Update active button
+    document.querySelectorAll('.event-btn').forEach(b => {
+        b.classList.remove('ring-2','ring-offset-1','ring-emerald-400','bg-emerald-50');
+    });
+    const activeBtn = document.querySelector(`.event-btn[data-type="${type}"]`);
+    if (activeBtn) activeBtn.classList.add('ring-2','ring-offset-1','ring-emerald-400','bg-emerald-50');
+
+    // Show form
+    formContainer.classList.remove('hidden');
+    document.getElementById('form-title').textContent = typeLabels[type] || type.toUpperCase();
+    hint.textContent = typeHints[type] || '';
+
+    // Show/hide contextual fields
+    document.getElementById('shot-fields').classList.toggle('hidden', !['shot','goal'].includes(type));
+    document.getElementById('pass-fields').classList.toggle('hidden', type !== 'pass');
+    document.getElementById('sub-fields').classList.toggle('hidden', type !== 'substitution');
+    document.getElementById('save-prompt').style.display = 'none';
+    document.getElementById('assist-prompt').classList.add('hidden');
+    locationReadout.classList.add('hidden');
+
+    // For goal, auto-set outcome
+    if (type === 'goal') {
+        document.getElementById('outcome-val').value = 'goal';
+        document.querySelectorAll('.outcome-btn').forEach(b => {
+            if (b.dataset.val === 'goal') b.classList.add('ring-2','ring-rose-400','bg-rose-50');
+            else b.classList.remove('ring-2','ring-rose-400','bg-rose-50');
+        });
+        document.getElementById('assist-prompt').classList.remove('hidden');
+    }
+
+    lucide.createIcons();
+}
+
+// --- Pitch clicks (via reusable FutballPitch component) ---
+function svgCoords(e) {
+    return footballPitch.toCoords(e.clientX, e.clientY);
+}
+
+function placeMarker(x, y, color='#f59e0b', label='') {
+    markersG.innerHTML = '';
+    const dot = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    dot.setAttribute('cx', x);
+    dot.setAttribute('cy', y);
+    dot.setAttribute('r', 2.2);
+    dot.setAttribute('fill', color);
+    dot.setAttribute('stroke', 'white');
+    dot.setAttribute('stroke-width', '0.8');
+    markersG.appendChild(dot);
+    if (label) {
+        const text = document.createElementNS('http://www.w3.org/2000/svg','text');
+        text.setAttribute('x', x + 3);
+        text.setAttribute('y', y - 2);
+        text.setAttribute('fill', 'white');
+        text.setAttribute('font-size', '3');
+        text.setAttribute('font-weight', 'bold');
+        text.textContent = label;
+        markersG.appendChild(text);
+    }
+}
+
+function drawPassLine(x1, y1, x2, y2) {
+    footballPitch.markPass(x1, y1, x2, y2);
+}
+
+pitchSvg.addEventListener('click', (e) => {
+    if (!currentEventType || currentEventType === 'substitution') return;
+    const pos = svgCoords(e);
+    points.push(pos);
+
+    if (currentEventType === 'pass') {
+        if (points.length === 1) {
+            markersG.innerHTML = '';
+            placeMarker(pos.x, pos.y, '#38bdf8', 'Start');
+            hint.textContent = 'Now click the END location of the pass.';
+            locationReadout.textContent = `Start: (${pos.x.toFixed(1)}, ${pos.y.toFixed(1)})`;
+            locationReadout.classList.remove('hidden');
+        } else if (points.length === 2) {
+            placeMarker(pos.x, pos.y, '#0ea5e9', 'End');
+            drawPassLine(points[0].x, points[0].y, pos.x, pos.y);
+            hint.textContent = 'Pass plotted. Fill in the form and press Enter.';
+            locationReadout.textContent = `Start: (${points[0].x.toFixed(1)}, ${points[0].y.toFixed(1)}) → End: (${pos.x.toFixed(1)}, ${pos.y.toFixed(1)})`;
+            points = [points[0], pos];
+        }
+    } else {
+        markersG.innerHTML = '';
+        const color = currentEventType === 'goal' ? '#f59e0b' :
+                      currentEventType === 'shot' ? '#ef4444' : '#a855f7';
+        placeMarker(pos.x, pos.y, color);
+        hint.textContent = `Location set: (${pos.x.toFixed(1)}, ${pos.y.toFixed(1)}). Fill the form and press Enter.`;
+        locationReadout.textContent = `Location: (${pos.x.toFixed(1)}, ${pos.y.toFixed(1)})`;
+        locationReadout.classList.remove('hidden');
+        points = [pos];
+    }
+});
+
+// --- Form submit (create via POST, correction via PATCH) ---
+eventForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!currentEventType) return;
+    clearFormError();
+    const requiresLocation = !['substitution'].includes(currentEventType);
+    if (requiresLocation && points.length === 0 && editingEventId === null) {
+        showFormError('Please click the pitch to set a location first.');
+        return;
+    }
+    if (currentEventType === 'pass' && points.length < 2 && editingEventId === null) {
+        showFormError('Pass needs start AND end — click pitch twice.');
+        return;
+    }
+
+    const fd = new FormData(eventForm);
+    // Event time defaults to the ticking server clock; the server stamps the
+    // authoritative minute/second on receipt.
+    syncClockInputs();
+    const minute = parseInt(document.getElementById('clock-minute').value) || 0;
+    const second = parseInt(document.getElementById('clock-second').value) || 0;
+    const period = parseInt(document.getElementById('period-select').value) || clockState.period || 1;
+
+    const body = {
+        type: currentEventType,
+        period,
+        minute,
+        second,
+        team: parseInt(fd.get('team')),
+        player: parseInt(fd.get('player')) || null,
+        payload: {},
+    };
+    // Only send (possibly re-clicked) geometry; PATCH keeps stored coords otherwise.
+    if (points.length > 0) {
+        body.x = points[0]?.x ?? null;
+        body.y = points[0]?.y ?? null;
+    }
+
+    if (['shot','goal'].includes(currentEventType)) {
+        body.payload.outcome = fd.get('outcome') || 'off_target';
+        body.payload.body_part = fd.get('body_part') || 'right_foot';
+        const saveP = fd.get('save_player_id');
+        if (saveP) body.payload.save_player_id = parseInt(saveP);
+        const assistP = fd.get('assist_player_id');
+        if (assistP) body.payload.assist_player_id = parseInt(assistP);
+    }
+    if (currentEventType === 'pass') {
+        if (points.length >= 2) {
+            body.payload.end_x = points[1]?.x;
+            body.payload.end_y = points[1]?.y;
+        }
+        body.payload.outcome = fd.get('pass_outcome') || 'complete';
+        const recip = fd.get('recipient_id');
+        if (recip) body.payload.recipient_id = parseInt(recip);
+    }
+    if (currentEventType === 'substitution') {
+        const outP = fd.get('player_out_id');
+        const inP = fd.get('player_in_id');
+        if (outP) body.payload.player_out_id = parseInt(outP);
+        if (inP) body.payload.player_in_id = parseInt(inP);
+        if (editingEventId === null) {
+            body.player = null;
+            body.x = null;
+            body.y = null;
+        }
+    }
+    const isEdit = editingEventId !== null;
+    if (!isEdit && formKey) body.payload.external_event_id = formKey;
+
+    const submitBtn = document.getElementById('submit-btn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Saving…';
+
+    try {
+        const isEdit = editingEventId !== null;
+        const url = isEdit
+            ? `/api/match/${matchId}/events/${editingEventId}/`
+            : `/api/match/${matchId}/events/`;
+        const resp = await fetch(url, {
+            method: isEdit ? 'PATCH' : 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrf(),
+            },
+            body: JSON.stringify(body),
+        });
+        const data = await resp.json();
+        if (resp.ok) {
+            lastEventId = data.id ?? null;
+            eventCache[data.id] = data;
+            upsertTimelineRow(data);
+            // Remember context for the next event; the server snapshot stays
+            // authoritative for score/stats.
+            sticky.teamId = String(body.team);
+            if (body.player) sticky.playerByTeam[String(body.team)] = String(body.player);
+            // The WS broadcast echo carries the same snapshot; only pay for a
+            // full REST refresh when the socket is down.
+            if (!ws || ws.readyState !== WebSocket.OPEN) refreshFromServer();
+            cancelEvent();
+        } else {
+            // Keep match + form context; show the specific validation error.
+            showFormError(extractError(data));
+        }
+    } catch (err) {
+        showFormError('Network error — event was not saved. Your form is unchanged.');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Save Event <span class="shortcut-badge ml-1">Enter</span>';
+    }
+});
+
+function extractError(data) {
+    if (!data) return 'Event failed validation.';
+    if (typeof data === 'string') return data;
+    if (data.detail) return data.detail;
+    const first = Object.values(data)[0];
+    if (Array.isArray(first)) return String(first[0]);
+    if (typeof first === 'object') return extractError(first);
+    return String(first || 'Event failed validation.');
+}
+
+function getCsrf() {
+    return document.cookie.split(';').map(c => c.trim()).find(c => c.startsWith('csrftoken='))?.split('=')[1] || '';
+}
+
+// --- Timeline ---
+const IMPORTANT_TYPES = new Set(['goal', 'save', 'shot', 'card', 'substitution']);
+
+function typeColor(type) {
+    const map = { shot:'text-rose-600', goal:'text-amber-600', pass:'text-emerald-600',
+                  save:'text-sky-600', foul:'text-orange-600', card:'text-yellow-600', duel:'text-purple-600',
+                  substitution:'text-sky-600' };
+    return map[type] || 'text-slate-600';
+}
+
+function markerColor(type) {
+    const map = { shot:'#ef4444', goal:'#f59e0b', pass:'#38bdf8', save:'#0ea5e9',
+                  card:'#eab308', substitution:'#0ea5e9', foul:'#f97316', duel:'#a855f7' };
+    return map[type] || '#a855f7';
+}
+
+function eventSummary(ev) {
+    const type = ev.event_type || ev.type || '';
+    const p = ev.payload || {};
+    if (type === 'pass') {
+        const recip = p.recipient_name ? ` → ${p.recipient_name}` : '';
+        return `${p.outcome === 'incomplete' ? 'Incomplete' : 'Complete'}${recip}`;
+    }
+    if (type === 'shot' || type === 'goal') {
+        const bits = [];
+        if (p.outcome) bits.push(p.outcome.replace('_', ' '));
+        if (p.xg) bits.push(`xG ${Number(p.xg).toFixed(2)}`);
+        return bits.join(' · ');
+    }
+    if (type === 'substitution') return 'Substitution';
+    if (type === 'save') return 'Save';
+    if (type === 'card') return (p.card || 'Card').replace('_', ' ');
+    if (type === 'foul') return 'Foul';
+    if (type === 'duel') return 'Duel';
+    return '';
+}
+
+function timelineRowHtml(ev) {
+    const min = pad2(ev.minute);
+    const sec = pad2(ev.second);
+    const type = ev.event_type || ev.type || '';
+    const typeLabel = type.replace('_',' ').toUpperCase();
+    const player = ev.player_name || '—';
+    const team = ev.team_name || '';
+    const evId = ev.id || '';
+    const summary = eventSummary(ev);
+    const important = IMPORTANT_TYPES.has(type);
+    return `
+        <div class="flex-shrink-0 text-center w-11">
+            <span class="font-mono text-xs font-bold text-slate-400">${min}:${sec}</span>
+        </div>
+        <div class="w-1 self-stretch rounded-full ${important ? 'bg-current' : 'bg-slate-200'} ${typeColor(type)}"></div>
+        <div class="flex-1 min-w-0">
+            <p class="text-xs font-black uppercase tracking-wider ${typeColor(type)}">${typeLabel}</p>
+            <p class="text-xs text-slate-700 font-semibold truncate">${player}</p>
+            ${summary ? `<p class="text-[11px] text-slate-500 truncate">${summary}</p>` : ''}
+            <p class="text-[11px] text-slate-400">${team}</p>
+        </div>
+        <div class="flex-shrink-0 flex gap-1 opacity-0 group-hover:opacity-100 transition">
+            <button onclick="editEvent(${evId})" class="rounded-lg p-1 hover:bg-sky-50 text-sky-400 hover:text-sky-600" title="Edit">
+                <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
+            </button>
+            <button onclick="deleteEvent(${evId}, this)" class="rounded-lg p-1 hover:bg-rose-50 text-rose-400 hover:text-rose-600" title="Delete">
+                <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
+            </button>
+        </div>`;
+}
+
+function addToTimeline(ev) {
+    const noMsg = document.getElementById('no-events-msg');
+    if (noMsg) noMsg.remove();
+    eventCache[ev.id] = ev;
+
+    const div = document.createElement('div');
+    div.className = 'timeline-item flex gap-2 px-4 py-2 border-b border-slate-100 hover:bg-slate-50 group cursor-pointer';
+    div.dataset.eventId = ev.id || '';
+    div.innerHTML = timelineRowHtml(ev);
+    div.addEventListener('click', (e) => {
+        if (e.target.closest('button')) return;
+        selectTimelineEvent(ev.id);
+    });
+
+    const timeline = document.getElementById('timeline');
+    timeline.insertBefore(div, timeline.firstChild);
+    updateEventCount();
+    renderTimelineMarkers();
+    lucide.createIcons();
+}
+
+function upsertTimelineRow(ev) {
+    eventCache[ev.id] = ev;
+    const existing = document.querySelector(`.timeline-item[data-event-id="${ev.id}"]`);
+    if (existing) {
+        existing.innerHTML = timelineRowHtml(ev);
+        lucide.createIcons();
+    } else {
+        addToTimeline(ev);
+        return;
+    }
+    updateEventCount();
+    renderTimelineMarkers();
+}
+
+function removeTimelineRow(evId) {
+    delete eventCache[evId];
+    const row = document.querySelector(`.timeline-item[data-event-id="${evId}"]`);
+    if (row) row.remove();
+    renderTimelineMarkers();
+    updateEventCount();
+    const timeline = document.getElementById('timeline');
+    if (!timeline.querySelector('.timeline-item')) {
+        timeline.innerHTML = '<div class="text-center py-12 text-slate-400 text-sm" id="no-events-msg">No events recorded yet.</div>';
+    }
+}
+
+function selectTimelineEvent(evId) {
+    document.querySelectorAll('.timeline-item').forEach(r => r.classList.remove('bg-sky-50'));
+    const row = document.querySelector(`.timeline-item[data-event-id="${evId}"]`);
+    if (row) row.classList.add('bg-sky-50');
+    footballPitch.highlightMarker(`ev-${evId}`);
+}
+
+// Markers for cached timeline events; selected marker highlighted.
+// Fully redrawn from cache so deleted events leave no orphan graphics
+// (pass lines/end dots included).
+function renderTimelineMarkers() {
+    if (currentEventType) return; // don't disturb in-progress placement
+    footballPitch.clear();
+    Object.values(eventCache).forEach(ev => {
+        if (ev.x == null || ev.y == null) return;
+        const type = ev.event_type || ev.type || '';
+        if (type === 'pass' && ev.payload?.end_x != null && ev.payload?.end_y != null) {
+            footballPitch.markPass(ev.x, ev.y, ev.payload.end_x, ev.payload.end_y);
+        }
+        const label = type === 'goal' ? 'GOAL' : '';
+        footballPitch.addMarker(`ev-${ev.id}`, ev.x, ev.y, markerColor(type), label);
+    });
+}
+
+function updateEventCount() {
+    const count = document.querySelectorAll('.timeline-item').length;
+    document.getElementById('event-count').textContent = `${count} event${count !== 1 ? 's' : ''}`;
+}
+
+// --- Edit event: preload the creation form, PATCH on submit ---
+function editEvent(eventId) {
+    let ev = eventCache[eventId];
+    if (!ev) {
+        refreshFromServer().then(() => editEvent(eventId));
+        return;
+    }
+    const type = ev.event_type || ev.type;
+    setEventType(type === 'goal' ? 'goal' : type);
+    editingEventId = eventId;
+    document.getElementById('form-title').textContent = `Edit ${typeLabels[type] || type}`;
+    document.getElementById('submit-btn').innerHTML = 'Save Changes <span class="shortcut-badge ml-1">Enter</span>';
+    clearFormError();
+
+    teamSelect.value = String(ev.team_id);
+    teamSelect.dispatchEvent(new Event('change'));
+    if (ev.player_id) playerSelect.value = String(ev.player_id);
+
+    // Preload stored geometry; re-click the pitch to move it.
+    points = [];
+    if (ev.x != null && ev.y != null && type !== 'substitution') {
+        points = [{ x: ev.x, y: ev.y }];
+        if (type === 'pass' && ev.payload?.end_x != null) {
+            points.push({ x: ev.payload.end_x, y: ev.payload.end_y });
+            locationReadout.textContent = `Start: (${ev.x.toFixed(1)}, ${ev.y.toFixed(1)}) → End: (${ev.payload.end_x.toFixed(1)}, ${ev.payload.end_y.toFixed(1)})`;
+        } else {
+            locationReadout.textContent = `Location: (${ev.x.toFixed(1)}, ${ev.y.toFixed(1)}) — click pitch to move`;
+        }
+        locationReadout.classList.remove('hidden');
+        footballPitch.highlightMarker(`ev-${evId}`);
+    }
+
+    const p = ev.payload || {};
+    if (type === 'shot' || type === 'goal') {
+        document.getElementById('outcome-val').value = p.outcome || 'off_target';
+        document.querySelectorAll('.outcome-btn').forEach(b => {
+            b.classList.toggle('ring-2', b.dataset.val === (p.outcome || 'off_target'));
+            b.classList.toggle('ring-rose-400', b.dataset.val === (p.outcome || 'off_target'));
+            b.classList.toggle('bg-rose-50', b.dataset.val === (p.outcome || 'off_target'));
+        });
+        document.getElementById('body-part-val').value = p.body_part || 'right_foot';
+        document.getElementById('save-prompt').style.display = p.outcome === 'saved' ? 'block' : 'none';
+        document.getElementById('assist-prompt').classList.toggle('hidden', p.outcome !== 'goal' && type !== 'goal');
+    }
+    if (type === 'pass') {
+        document.getElementById('pass-outcome-val').value = p.outcome || 'complete';
+    }
+    if (type === 'substitution') {
+        if (p.player_out_id) playerOutSelect.value = String(p.player_out_id);
+        if (p.player_in_id) playerInSelect.value = String(p.player_in_id);
+    }
+    formContainer.classList.remove('hidden');
+    formContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// --- Delete event (identity-based; server rebuilds aggregates) ---
+async function deleteEvent(eventId, btn) {
+    if (!confirm('Delete this event? Aggregates will be recalculated.')) return;
+    try {
+        const resp = await fetch(`/api/match/${matchId}/events/${eventId}/`, {
+            method: 'DELETE',
+            headers: { 'X-CSRFToken': getCsrf() },
+        });
+        if (resp.ok || resp.status === 204) {
+            removeTimelineRow(eventId);
+            if (!ws || ws.readyState !== WebSocket.OPEN) refreshFromServer();
+        } else {
+            const data = await resp.json().catch(() => ({}));
+            alert(extractError(data));
+        }
+    } catch (err) {
+        alert('Failed to delete event.');
+    }
+}
+
+// --- Undo: deletes the newest timeline event by identity, never a blind row ---
+function undoLastEvent() {
+    const items = document.querySelectorAll('.timeline-item');
+    if (!items.length) return;
+    const first = items[0];
+    const evId = parseInt(first.dataset.eventId);
+    if (!evId) return;
+    if (!confirm('Undo the last event?')) return;
+    deleteEvent(evId, first.querySelector('button'));
+}
+
+// --- Score display follows the server snapshot (never hand-counted) ---
+function applyScore(score) {
+    if (!score) return;
+    document.getElementById('score-home').textContent = score.home ?? 0;
+    document.getElementById('score-away').textContent = score.away ?? 0;
+}
+
+// --- REST refresh: full authoritative state (also used after reconnect) ---
+async function refreshFromServer() {
+    try {
+        const resp = await fetch(`/api/live-match/${matchId}`);
+        if (!resp.ok) return;
+        applySnapshot(await resp.json());
+    } catch (err) {
+        /* keep current state on network failure */
+    }
+}
+
+function applySnapshot(data) {
+    applyScore(data.score);
+    if (data.clock) {
+        setClockBase(data.clock.minute, data.clock.second, data.clock.period,
+            data.clock.running, data.clock.state, data.match_state?.available_actions);
+    } else {
+        setClockBase(data.current_minute, data.current_second, data.period,
+            data.status === 'live', null, data.match_state?.available_actions);
+    }
+    syncClockInputs();
+    if (Array.isArray(data.recent_events)) {
+        const timeline = document.getElementById('timeline');
+        timeline.innerHTML = '';
+        Object.keys(eventCache).forEach(k => delete eventCache[k]);
+        // API returns newest-first; insert oldest-first via prepend.
+        [...data.recent_events].reverse().forEach(addToTimeline);
+    }
+}
+
+// --- Bootstrap authoritative state from the server ---
+async function bootstrapLiveState() {
+    await refreshFromServer();
+    connectWebSocket();
+}
+bootstrapLiveState();
+
+// --- WebSocket sync: no reloads; reconnect + REST refresh on drop ---
+function wsUrl() {
+    const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+    return `${proto}://${location.host}/ws/live-match/${matchId}/`;
+}
+
+function connectWebSocket() {
+    let url;
+    try {
+        ws = new WebSocket(wsUrl());
+    } catch (err) {
+        scheduleReconnect();
+        return;
+    }
+    ws.onopen = () => {
+        wsRetryMs = 1000;
+        document.getElementById('ws-status').classList.add('hidden');
+    };
+    ws.onmessage = (msg) => {
+        try {
+            handleWsMessage(JSON.parse(msg.data));
+        } catch (err) {
+            /* ignore malformed frames */
+        }
+    };
+    ws.onclose = () => {
+        document.getElementById('ws-status').classList.remove('hidden');
+        scheduleReconnect();
+    };
+    ws.onerror = () => {
+        try { ws.close(); } catch (err) { /* handled by onclose */ }
+    };
+}
+
+function scheduleReconnect() {
+    setTimeout(() => {
+        // REST refresh guarantees consistency even if frames were missed.
+        refreshFromServer().then(connectWebSocket);
+    }, wsRetryMs);
+    wsRetryMs = Math.min(wsRetryMs * 2, 15000);
+}
+
+function handleWsMessage(frame) {
+    const data = frame.data || frame;
+    if (frame.type === 'live_match.snapshot' && data.match) {
+        applySnapshot(data.match);
+        return;
+    }
+    // Live update: {match, event, change}
+    if (data.match) {
+        applyScore(data.match.score);
+        if (data.match.clock) {
+            setClockBase(data.match.clock.minute, data.match.clock.second,
+                data.match.clock.period, data.match.clock.running,
+                data.match.clock.state, data.match.match_state?.available_actions);
+        }
+    }
+    const change = data.change || 'created';
+    if (change === 'deleted' && data.event?.id) {
+        removeTimelineRow(data.event.id);
+        return;
+    }
+    if (data.event?.id) {
+        if (change === 'edited' || eventCache[data.event.id]) upsertTimelineRow(data.event);
+        else addToTimeline(data.event);
+    }
+}
+
+// --- Cancel ---
+function cancelEvent() {
+    currentEventType = null;
+    editingEventId = null;
+    document.getElementById('submit-btn').innerHTML = 'Save Event <span class="shortcut-badge ml-1">Enter</span>';
+    points = [];
+    markersG.innerHTML = '';
+    clearFormError();
+    renderTimelineMarkers();
+    formContainer.classList.add('hidden');
+    hint.textContent = 'Select an event type, then click the pitch to place it.';
+    document.querySelectorAll('.event-btn').forEach(b => {
+        b.classList.remove('ring-2','ring-offset-1','ring-emerald-400','bg-emerald-50');
+    });
+    locationReadout.classList.add('hidden');
+    document.getElementById('save-prompt').style.display = 'none';
+    document.getElementById('assist-prompt').classList.add('hidden');
+    document.getElementById('pass-fields').classList.add('hidden');
+    document.getElementById('sub-fields').classList.add('hidden');
+    document.getElementById('shot-fields').classList.add('hidden');
+}
+
+// --- Keyboard shortcuts ---
+document.addEventListener('keydown', (e) => {
+    const tag = e.target.tagName;
+    if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+    const k = e.key.toLowerCase();
+    if (k === 's') setEventType('shot');
+    else if (k === 'p') setEventType('pass');
+    else if (k === 'g') setEventType('goal');
+    else if (k === 'f') setEventType('foul');
+    else if (k === 'c') setEventType('card');
+    else if (k === 'u') setEventType('substitution');
+    else if (k === 'd') setEventType('duel');
+    else if (k === 'z') undoLastEvent();
+    else if (k === 'escape') cancelEvent();
+    else if (k === 'enter' && currentEventType) {
+        e.preventDefault();
+        eventForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    }
+});
+
+updateEventCount();
+</script>
+{% endblock %}

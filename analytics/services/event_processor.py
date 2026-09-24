@@ -21,6 +21,8 @@ logger = logging.getLogger(__name__)
 SUPPORTED_EVENT_TYPES = {
     Event.Type.PASS,
     Event.Type.SHOT,
+    Event.Type.GOAL,
+    Event.Type.SAVE,
     Event.Type.SUBSTITUTION,
 }
 ON_TARGET_OUTCOMES = {"goal", "saved", "saved_off_target"}
@@ -261,6 +263,22 @@ class EventProcessor:
                 stats.shots_on_target += 1
             if event.outcome == "goal":
                 stats.goals += 1
+            return
+
+        if event.event_type == Event.Type.GOAL:
+            # A goal is a shot on target that scored: count it exactly once
+            # via the normalized shot context (shots, on-target, xG, goal).
+            # Bare goal rows without shot context contribute only the goal.
+            if event.xg is not None:
+                stats.shots += 1
+                stats.xg += float(event.xg or 0.0)
+                stats.shots_on_target += 1
+            stats.goals += 1
+            return
+
+        if event.event_type == Event.Type.SAVE:
+            # Saves inherit context from the originating shot; no aggregate
+            # change beyond clock/possession.
             return
 
         if event.event_type == Event.Type.SUBSTITUTION:

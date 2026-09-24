@@ -54,22 +54,71 @@ class LiveMatchConsumer(AsyncJsonWebsocketConsumer):
 
 def broadcast_live_match_update(event: Event) -> None:
     """Send updated stats and the new event to the match WebSocket group."""
+    schedule_broadcast(event.match_id, kind="created", event=event)
+
+
+def schedule_broadcast(match_id, *, kind="created", event=None, event_id=None) -> None:
+    """Broadcast after commit; WS failure must never fail the DB operation."""
+    from django.db import transaction
+
+    def _send():
+        try:
+            broadcast_event_change(match_id, kind=kind, event=event, event_id=event_id)
+        except Exception:
+            return
+
+    try:
+        transaction.on_commit(_send)
+    except Exception:
+        return
+
+
+def broadcast_event_change(match_id, *, kind="created", event=None, event_id=None) -> None:
+    """Push snapshot + change notice to all clients watching one match.
+
+    Best-effort: never raises. ``kind`` is created/edited/deleted/clock.
+    For deletions the row is gone, so only the id is sent and clients drop
+    the timeline entry and refresh score/stats from the snapshot.
+    """
+    import logging
+
+    logger = logging.getLogger(__name__)
     channel_layer = get_channel_layer()
-    invalidate_live_stats_cache(event.match_id)
+    invalidate_live_stats_cache(match_id)
     if channel_layer is None:
         return
 
+    try:
+        snapshot = get_live_match_snapshot_sync(match_id)
+    except Exception:
+        logger.warning("Live snapshot failed for match %s", match_id, exc_info=True)
+        return
+
+    if event is not None:
+        try:
+            event_payload = serialize_recent_event(event)
+        except Exception:
+            event_payload = None
+    elif event_id is not None:
+        event_payload = {"id": event_id}
+    else:
+        event_payload = None
+
     payload = {
-        "match": get_live_match_snapshot_sync(event.match_id),
-        "event": serialize_recent_event(event),
+        "match": snapshot,
+        "event": event_payload,
+        "change": kind,
     }
-    async_to_sync(channel_layer.group_send)(
-        live_match_group_name(event.match_id),
-        {
-            "type": "live.match.update",
-            "data": payload,
-        },
-    )
+    try:
+        async_to_sync(channel_layer.group_send)(
+            live_match_group_name(match_id),
+            {
+                "type": "live.match.update",
+                "data": payload,
+            },
+        )
+    except Exception:
+        logger.warning("Live broadcast failed for match %s", match_id, exc_info=True)
 
 
 @database_sync_to_async
@@ -90,7 +139,7 @@ def get_live_match_snapshot_sync(match_id):
                     "team_id",
                     "team__id",
                     "team__name",
-                    "score",
+                    "goals",
                     "possession",
                     "shots",
                     "shots_on_target",

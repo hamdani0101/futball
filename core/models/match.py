@@ -55,7 +55,7 @@ class Match(models.Model):
         ]
         constraints = [
             models.CheckConstraint(
-                condition=~models.Q(home_team=models.F("away_team")),
+                check=~models.Q(home_team=models.F("away_team")),
                 name="home_team_not_equal_away_team"
             ),
         ]

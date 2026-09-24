@@ -423,7 +423,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='match',
-            constraint=models.CheckConstraint(condition=models.Q(('home_team', models.F('away_team')), _negated=True), name='home_team_not_equal_away_team'),
+            constraint=models.CheckConstraint(check=models.Q(('home_team', models.F('away_team')), _negated=True), name='home_team_not_equal_away_team'),
         ),
         migrations.AddIndex(
             model_name='event',
