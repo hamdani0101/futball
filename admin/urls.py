@@ -52,6 +52,7 @@ from admin.views.shot import (
     shot_list,
     shot_update,
 )
+from admin.views.news import news_list
 
 
 from admin.views.live_match import live_match, live_match_select
@@ -112,6 +113,11 @@ urlpatterns = [
     path("shots/add/", shot_create, name="admin-shot-create"),
     path("shots/<int:pk>/edit/", shot_update, name="admin-shot-update"),
     path("shots/<int:pk>/delete/", shot_delete, name="admin-shot-delete"),
+    
+    #news
+    path("news/", news_list, name="admin-news-list"),
+    
+    
     
     path("logout", auth_views.LogoutView.as_view(), name='admin-logout')
 ]

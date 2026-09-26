@@ -84,6 +84,10 @@
                         <i data-lucide="medal" class="h-5 w-5 {% if 'admin-competition' in request.resolver_match.url_name %}text-fuchsia-300{% else %}text-slate-400 group-hover:text-fuchsia-300{% endif %}"></i>
                         Competitions
                     </a>
+                    <a href="{% url 'admin-news-list' %}" class="{% if 'admin-news' in request.resolver_match.url_name %}bg-white/12 text-white shadow-soft ring-1 ring-white/10{% else %}text-slate-300 hover:bg-white/8 hover:text-white{% endif %} group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition duration-200">
+                        <i data-lucide="news" class="h-5 w-5 {% if 'admin-news' in request.resolver_match.url_name %}text-fuchsia-300{% else %}text-slate-400 group-hover:text-fuchsia-300{% endif %}"></i>
+                        News
+                    </a>
                 </nav>
             </div>
 
